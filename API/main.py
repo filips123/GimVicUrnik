@@ -1,17 +1,26 @@
-import atexit
-import datetime
-import hashlib
-import os
-import re
-import requests
-import urllib.request
-import yaml
-from apscheduler.schedulers.background import BackgroundScheduler
-from docx import Document
-from flask import Flask, jsonify
-from flask import request
-from flask_sqlalchemy import SQLAlchemy
+from __future__ import absolute_import
 from pdf2docx import parse
+from docx import Document
+import urllib.request
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import os, re, datetime
+import atexit
+from sqlalchemy.ext.declarative import DeclarativeMeta
+import json
+from flask import request
+import yaml, requests
+from apscheduler.schedulers.background import BackgroundScheduler
+import hashlib
+from database.db import db
+from database.base import *
+
+dirname = os.path.dirname(os.path.realpath(__file__))
+fileloc = dirname + "/nadconfig.yaml"
+with open(fileloc) as yamlfile:
+    config = yaml.load(yamlfile, Loader=yaml.FullLoader)
+if config == None:
+    raise FileNotFoundError("Yaml file does not exist")
 
 
 def debug(*args):
@@ -21,49 +30,9 @@ def debug(*args):
 debug("App started")
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-dirname = os.path.dirname(os.path.realpath(__file__))
-db = SQLAlchemy(app)
 
 
-class nadomescanje(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ura = db.Column(db.Integer)
-    dan = db.Column(db.Integer)
-    razred = db.Column(db.String(80))
-    ucilnica = db.Column(db.String(80))
-    ucitelj = db.Column(db.String(80))
-    predmet = db.Column(db.String(80))
-
-    def get_dict(self):
-        return {
-            "ura": self.ura,
-            "dan": self.dan.replace("/", ""),
-            "razred": self.razred.replace(". ", "").replace("/", ""),
-            "ucilnica": str(self.ucilnica).replace("/", ""),
-            "ucitelj": self.ucitelj.replace("/", ""),
-            "predmet": self.predmet.replace("/", ""),
-        }
-
-
-class Urlstring(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(100))
-    dan = db.Column(db.String(80))
-    file_hash = db.Column(db.String(300))
-
-    def get_dict(self):
-        return {"dan": self.dan.replace("/", ""), "url": self.url}
-
-
-class Lasttime(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    time = db.Column(db.Integer)
-
-
-db.create_all()
+db = db(config)
 
 
 def getday(url):
@@ -129,12 +98,14 @@ class PdfFile:
             tabl = []
             for row in table.rows:
                 rrow = []
-
                 for cell in row.cells:
+                    ccell = ""
                     for para in cell.paragraphs:
-                        rrow.append(" ".join(para.text.split()))
+                        ccell += para.text.replace("\n", " ") + " "
+                    rrow.append(" ".join(ccell.split()))
                 tabl.append(rrow)
             ttable.append(tabl)
+        print(ttable)
 
         return self.parsenad(ttable)
 
@@ -191,7 +162,7 @@ class nadomescanja:
         self.external_cron = config["external_cron"]
 
     def saveid(self, ids):
-        id_ = Lasttime.query.get(1)
+        id_ = db.session.query(Lasttime).get(1)
         if id_ == None:
             db.session.add(Lasttime(time=0))
         else:
@@ -199,7 +170,7 @@ class nadomescanja:
         db.session.commit()
 
     def loadid(self):
-        id_ = Lasttime.query.get(1)
+        id_ = db.session.query(Lasttime).get(1)
         if id_ == None:
             db.session.add(Lasttime(time=0))
             db.session.commit()
@@ -260,7 +231,7 @@ def procces_urls():
     for url in url_list:
         urlfile = PdfFile(url)
         h = urlfile.download()
-        u = Urlstring.query.filter_by(dan=getday(url)).first()
+        u = db.session.query(Urlstring).filter_by(dan=getday(url)).first()
         print(h)
         if u:
             if not u.file_hash.strip() == h:
@@ -281,9 +252,12 @@ def procces_urls():
 
         objcts = urlfile.parsepdf()
         for ele in objcts:
-            c = nadomescanje.query.filter_by(
-                ura=ele.ura, dan=ele.dan, razred=ele.razred
-            ).first()
+            c = (
+                db.session.query(nadomescanje)
+                .filter_by(ura=ele.ura, dan=ele.dan, razred=ele.razred)
+                .first()
+            )
+
             if c:
                 c.predmet = ele.predmet
                 c.ucilnica = ele.ucilnica
@@ -309,18 +283,22 @@ if not ndg.external_cron:
 @app.route("/nad")
 def getnad():
     if request.args.get("razred"):
-        qry = nadomescanje.query.filter_by(
-            dan=request.args.get("dan"), razred=request.args.get("razred")
-        ).all()
+        qry = (
+            db.session.query(nadomescanje)
+            .filter_by(dan=request.args.get("dan"), razred=request.args.get("razred"))
+            .all()
+        )
     else:
-        qry = nadomescanje.query.filter_by(dan=request.args.get("dan")).all()
+        qry = (
+            db.session.query(nadomescanje).filter_by(dan=request.args.get("dan")).all()
+        )
     json_lst = [x.get_dict() for x in qry]
     return jsonify(json_lst)
 
 
 @app.route("/url")
 def geturl():
-    qry = Urlstring.query.filter_by(dan=request.args.get("dan")).all()
+    qry = db.session.query(Urlstring).filter_by(dan=request.args.get("dan")).all()
     json_lst = [x.get_dict() for x in qry]
     return jsonify(json_lst)
 
