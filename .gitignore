@@ -1,0 +1,111 @@
+# IDE & System
+$RECYCLE.BIN/
+.AppleDouble
+.DS_Store
+.LSOverride
+.Trash-*
+.buildpath
+.c9
+.c9revisions
+.directory
+.fuse_hidden*
+.idea
+.nfs*
+.project
+.settings
+.vs
+.vscode
+*.iml
+[Dd]esktop.ini
+[Tt]humbs.db
+
+# Logs
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Runtime
+pids/
+*.pid
+*.pid.lock
+*.seed
+
+# Environments
+.python-version
+.env
+.venv
+ENV/
+env/
+env.bak/
+VENV/
+venv/
+venv.bak/
+
+# Distribution & Packaging
+build/
+develop-eggs/
+dist/
+docs/_build/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+pkg/
+sdist/
+var/
+wheels/
+.Python
+.eggs/
+.installed.cfg
+MANIFEST
+*.egg
+*.egg-info/
+
+# Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Cache & Temporary files
+cache/
+tmp/
+.eslintcache
+.grunt
+.lock-wscript
+.node_repl_history
+.npm
+.nyc_output
+.yarn-integrity
+*.tmp
+
+# Test reports & Coverage reports
+coverage/
+htmlcov/
+lib-cov/
+.nyc_output/
+.hypothesis/
+.tox/
+.cache
+.coverage
+.coverage.*
+coverage.xml
+nosetests.xml
+*.cover
+*,cover
+
+# Dependencies
+bower_components/
+jspm_packages/
+node_modules/
+web_modules/
+
+# GimVicUrnik Configuration & Database
+/API/nadconfig.yaml
+/API/app.db
+
+# Do not ignore .gitkeep files
+!.gitkeep
