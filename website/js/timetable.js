@@ -148,6 +148,7 @@ function fillClassData(className) {
 
           const cellElement = document.getElementById(time)
           cellElement.classList.add('substitution-highlight')
+          cellElement.innerHTML = '/'
 
           if (isMobile && parseInt(time.split('-')[1]) === currentDay) {
             const rowElement = document.getElementById(`time-${time.split('-')[0]}`)
@@ -180,6 +181,8 @@ function fillClassData(className) {
     if (isMobile) cellElement.innerHTML = '<div><div>' + cellData.join('</div><div>') + '</div></div>'
     else cellElement.innerHTML = cellData.join(' - ')
   }
+
+  hideEmptyContent()
 }
 
 function fillTeacherData(teacherName) {
@@ -238,6 +241,8 @@ function fillTeacherData(teacherName) {
     if (isMobile) cellElement.innerHTML = '<div><div>' + cellData.join('</div><div>') + '</div></div>'
     else cellElement.innerHTML = cellData.join(' - ')
   }
+
+  hideEmptyContent()
 }
 
 function fillClassroomData(classroomName) {
@@ -301,6 +306,8 @@ function fillClassroomData(classroomName) {
     if (isMobile) cellElement.innerHTML = '<div><div>' + cellData.join('</div><div>') + '</div></div>'
     else cellElement.innerHTML = cellData.join(' - ')
   }
+
+  hideEmptyContent()
 }
 
 function fillEmptyClassrooms() {
@@ -340,13 +347,45 @@ function fillEmptyClassrooms() {
   }
 }
 
-// TODO: Step 1: Better UI
-// Hide lines where whole line for the whole week is empty (on desktop)
-// Hide cells where cell for current day is empty (on mobile)
+function hideEmptyContent() {
+  if (isMobile) {
+    for (let time = 0; time <= 8; time++) {
+      const cellElement = document.getElementById(`${time}-${currentDay}`)
+      if (!cellElement.innerHTML) {
+        cellElement.style = 'display: none'
+        document.getElementById(`time-${time}`).style = 'display: none'
+      } else {
+        cellElement.style = ''
+        document.getElementById(`time-${time}`).style = ''
+      }
+    }
+
+  } else {
+    for (let time = 0; time <= 8; time++) {
+      let isTimeEmpty = true
+
+      for (let day = 1; day <= 5; day++) {
+        const cellElement = document.getElementById(`${time}-${day}`)
+        cellElement.style = ''
+        if (cellElement.innerHTML) {
+          isTimeEmpty = false
+        }
+      }
+
+      document.getElementById(`time-${time}`).style = ''
+      if (isTimeEmpty) {
+        document.getElementById(`time-${time}`).parentElement.style = 'display: none'
+      } else {
+        document.getElementById(`time-${time}`).parentElement.style = ''
+      }
+    }
+  }
+}
 
 // TODO: Step 3: More features
 // Display menu and lunch schedule
 // Display all announcements and substitutions as link
+// Display substitutions for teachers and classrooms
 
 // TODO Step 4: Make those features even better
 // Use https://pdfobject.com/ (detection) with PDF.js (display) for PDF files
@@ -528,6 +567,8 @@ for (let link of document.getElementsByClassName('nav-link')) {
       magicLine.style.width = boundingRect.width + 'px'
       magicLine.style.left = newLeftPosition  + 'px'
     }
+
+    event.preventDefault()
   }
 }
 
@@ -803,6 +844,7 @@ document.getElementById('class-selection-classroom').onclick = () => {
 
 function saveChoice(type, value, store = true) {
   document.getElementById('day-switcher').classList.remove('d-none')
+  document.getElementById('magic-line').classList.remove('d-none')
   $('#class-selection-modal').modal('hide')
 
   value = value.filter(option => option !== 'null')
