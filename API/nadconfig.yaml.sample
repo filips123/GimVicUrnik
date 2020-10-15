@@ -1,0 +1,10 @@
+token: XXXX
+
+courseid: 118
+minid: 30000
+
+url: https://ucilnica.gimvic.org/webservice/rest/server.php
+tokenizeurls:
+- https://ucilnica.gimvic.org/webservice/pluginfile.php
+
+external_cron: true
