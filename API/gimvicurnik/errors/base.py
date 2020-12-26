@@ -1,0 +1,2 @@
+class GimVicUrnikError(Exception):
+    pass

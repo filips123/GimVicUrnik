@@ -1,8 +1,0 @@
-Flask
-Flask-SQLAlchemy
-SQLAlchemy
-APScheduler
-PyYAML
-pdf2docx
-python-docx
-requests

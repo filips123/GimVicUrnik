@@ -1,0 +1,20 @@
+sources:
+  timetable:
+    url: http://old.gimvic.org/urnik/data.js
+  eclassroom:
+    url: https://ucilnica.gimvic.org/webservice/rest/server.php
+    token: YOUR-TOKEN-HERE
+    course: 118
+    restricted:
+      - https://ucilnica.gimvic.org/webservice/pluginfile.php
+
+database: sqlite:///app.db
+
+cors:
+  - https://gimvicurnik.filips.si
+
+sentry:
+  dsn: YOUR-DSN-HERE
+  enabled: true
+  traces: 0.25
+  breadcrumbs: 100
