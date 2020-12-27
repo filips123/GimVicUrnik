@@ -1,6 +1,6 @@
-from sqlalchemy import func, Column, Index, ForeignKey, Integer, Date, Text, SmallInteger
+from sqlalchemy import func, Column, Index, ForeignKey, Integer, Date, Text, SmallInteger, or_
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, aliased
 
 Base = declarative_base()
 Session = sessionmaker()
@@ -19,18 +19,22 @@ class Document(Base):
 
 
 class Entity:
+    __tablename__ = None
+
     id = Column(Integer, primary_key=True)
     name = Column(Text)
 
     @classmethod
-    def get_lessons(cls, session, names):
+    def get_lessons(cls, session, names=None):
         query = (session
                  .query(Lesson, Class.name, Teacher.name, Classroom.name)
-                 .filter(cls.name.in_(names))
                  .join(Class)
                  .join(Teacher)
                  .join(Classroom)
                  .order_by(Lesson.day, Lesson.time))
+
+        if names:
+            query = query.filter(cls.name.in_(names))
 
         for model in query:
             yield {
@@ -40,6 +44,43 @@ class Entity:
                 'class': model[1],
                 'teacher': model[2],
                 'classroom': model[3],
+            }
+
+    @classmethod
+    def get_substitutions(cls, session, date, names=None):
+        original_teacher = aliased(Teacher)
+        teacher = aliased(Teacher)
+
+        original_classroom = aliased(Classroom)
+        classroom = aliased(Classroom)
+
+        query = (session
+                 .query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
+                 .join(Class)
+                 .join(original_teacher, Substitution.original_teacher_id == original_teacher.id)
+                 .join(original_classroom, Substitution.original_classroom_id == original_classroom.id)
+                 .join(teacher, Substitution.teacher_id == teacher.id)
+                 .join(classroom, Substitution.classroom_id == classroom.id)
+                 .order_by(Substitution.day, Substitution.time))
+
+        if names:
+            if cls.__tablename__ == 'classes':
+                query = query.filter(Class.name.in_(names))
+            elif cls.__tablename__ == 'teachers':
+                query = query.filter(or_(original_teacher.name.in_(names), teacher.name.in_(names)))
+            elif cls.__tablename__ == 'classrooms':
+                query = query.filter(or_(original_classroom.name.in_(names), classroom.name.in_(names)))
+
+        for model in query:
+            yield {
+                'day': model[0].day,
+                'time': model[0].time,
+                'subject': model[0].subject,
+                'class': model[1],
+                'original-teacher': model[2],
+                'original-classroom': model[3],
+                'teacher': model[4],
+                'classroom': model[5],
             }
 
 
@@ -116,6 +157,9 @@ class Substitution(Base):
 
     original_teacher_id = Column(Integer, ForeignKey('teachers.id'))
     original_teacher = relationship('Teacher', foreign_keys=[original_teacher_id])
+
+    original_classroom_id = Column(Integer, ForeignKey('classrooms.id'))
+    original_classroom = relationship('Classroom', foreign_keys=[original_classroom_id])
 
     class_id = Column(Integer, ForeignKey('classes.id'), index=True)
     class_ = relationship('Class', backref='substitutions', foreign_keys=[class_id])

@@ -9,8 +9,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
 
 from .commands import update_eclassroom_command, update_timetable_command, create_database_command, cleanup_database_command
-from .database import Session, Document, Class, Teacher, Classroom
+from .database import Session, Document, Entity, Class, Teacher, Classroom
 from .errors import ConfigError, ConfigReadError, ConfigParseError, ConfigValidationError
+from .utils.flask import DateConverter, ListConverter
 
 
 class GimVicUrnik:
@@ -48,14 +49,14 @@ class GimVicUrnik:
             with open(configfile, encoding='utf-8') as file:
                 config = yaml.load(file, Loader=yaml.FullLoader)
         except OSError as error:
-            raise ConfigReadError(str(error))
+            raise ConfigReadError(str(error)) from error
         except yaml.YAMLError as error:
-            raise ConfigParseError(str(error))
+            raise ConfigParseError(str(error)) from error
 
         try:
             self.config = self.schema.validate(config)
         except SchemaError as error:
-            raise ConfigValidationError(str(error))
+            raise ConfigValidationError(str(error)) from error
 
         self.configure_logging()
         self.configure_sentry()
@@ -68,11 +69,12 @@ class GimVicUrnik:
         self.app = Flask('gimvicurnik')
         self.app.gimvicurnik = self
 
-        self.register_commands()
-        self.register_routes()
-
         self.create_database_hooks()
         self.create_cors_hooks()
+
+        self.register_route_converters()
+        self.register_commands()
+        self.register_routes()
 
     def configure_logging(self):
         """Configure logging from file or dict config if requested in the configuration file."""
@@ -128,6 +130,12 @@ class GimVicUrnik:
 
             return response
 
+    def register_route_converters(self):
+        """Register all custom route converters."""
+
+        self.app.url_map.converters['date'] = DateConverter
+        self.app.url_map.converters['list'] = ListConverter
+
     def register_commands(self):
         """Register all application commands."""
 
@@ -151,24 +159,41 @@ class GimVicUrnik:
         def _list_classrooms():
             return jsonify([model.name for model in self.session.query(Classroom).order_by(Classroom.name)])
 
-        @self.app.route('/timetable/classes/<classes>')
+        @self.app.route('/timetable')
+        def _get_timetable():
+            return jsonify(list(Entity.get_lessons(self.session)))
+
+        @self.app.route('/timetable/classes/<list:classes>')
         def _get_timetable_for_classes(classes):
-            classes = classes.split(',')
             return jsonify(list(Class.get_lessons(self.session, classes)))
 
-        @self.app.route('/timetable/teachers/<teachers>')
+        @self.app.route('/timetable/teachers/<list:teachers>')
         def _get_timetable_for_teachers(teachers):
-            teachers = teachers.split(',')
             return jsonify(list(Teacher.get_lessons(self.session, teachers)))
 
-        @self.app.route('/timetable/classrooms/<classrooms>')
+        @self.app.route('/timetable/classrooms/<list:classrooms>')
         def _get_timetable_for_classrooms(classrooms):
-            classrooms = classrooms.split(',')
             return jsonify(list(Classroom.get_lessons(self.session, classrooms)))
 
         @self.app.route('/timetable/classrooms/empty')
         def _get_timetable_for_empty_classrooms():
             return jsonify(list(Classroom.get_empty(self.session)))
+
+        @self.app.route('/substitutions/date/<date:date>')
+        def _get_substitutions(date):
+            return jsonify(list(Entity.get_substitutions(self.session, date)))
+
+        @self.app.route('/substitutions/date/<date:date>/classes/<list:classes>')
+        def _get_substitutions_for_classes(date, classes):
+            return jsonify(list(Class.get_substitutions(self.session, date, classes)))
+
+        @self.app.route('/substitutions/date/<date:date>/teachers/<list:teachers>')
+        def _get_substitutions_for_teachers(date, teachers):
+            return jsonify(list(Teacher.get_substitutions(self.session, date, teachers)))
+
+        @self.app.route('/substitutions/date/<date:date>/classrooms/<list:classrooms>')
+        def _get_substitutions_for_classrooms(date, classrooms):
+            return jsonify(list(Classroom.get_substitutions(self.session, date, classrooms)))
 
         # TODO: Substitutions
         # TODO: Menus

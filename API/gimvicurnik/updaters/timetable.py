@@ -5,8 +5,10 @@ import re
 from collections import defaultdict
 
 import requests
+from requests import HTTPError
 
 from ..database import Document, Class, Teacher, Classroom, Lesson
+from ..errors.timetable import TimetableApiError
 from ..utils.database import get_or_create
 
 
@@ -24,8 +26,13 @@ class TimetableUpdater:
         self._parse()
 
     def _download(self):
-        response = requests.get(self.url)
-        content = response.content
+        try:
+            response = requests.get(self.url)
+            content = response.content
+
+            response.raise_for_status()
+        except IOError as error:
+            raise TimetableApiError('Error while downloading timetable') from error
 
         self.raw = content.decode('utf8')
         self.hash = str(hashlib.sha256(content).hexdigest())

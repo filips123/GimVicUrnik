@@ -1,12 +1,14 @@
 import datetime
 import hashlib
 import logging
+import os
 import re
-from tempfile import TemporaryFile
+import tempfile
 
 import requests
+from pdf2docx import extract_tables
 
-from ..database import Document
+from ..database import Document, Class, Teacher, Classroom, Substitution
 from ..errors import InvalidTokenError, InvalidRecordError, ClassroomApiError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
@@ -42,8 +44,13 @@ class EClassroomUpdater:
             'wsfunction': 'core_course_get_contents',
         }
 
-        response = requests.post(self.url, params=params, data=data)
-        objects = response.json()
+        try:
+            response = requests.post(self.url, params=params, data=data)
+            objects = response.json()
+
+            response.raise_for_status()
+        except (IOError, ValueError) as error:
+            raise ClassroomApiError('Error while accessing e-classroom API') from error
 
         # Handle API errors
         if 'errorcode' in objects:
@@ -124,12 +131,193 @@ class EClassroomUpdater:
 
             return
 
-        with TemporaryFile() as file:
-            file.write(content)
+        date = datetime.datetime.strptime(re.search(r'_obvestila_(.+).pdf', url, re.IGNORECASE).group(1), '%d._%m._%Y').date()
+        day = date.isoweekday()
 
-            # TODO:
-            #  Parse PDF file using pdf2docx
-            #  Extract all substitutions and store them in database
+        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + '.pdf')
+
+        file = open(filename, mode='w+b')
+        file.write(content)
+        file.close()
+
+        # Extract all tables from PDF file
+        tables = with_span(op='extract')(extract_tables)(filename)
+        os.remove(filename)
+
+        header_substitutions = ['ODSOTNI UČITELJ/ICA', 'URA', 'RAZRED', 'UČILNICA', 'NADOMEŠČA', 'PREDMET', 'OPOMBA']
+        header_lesson_change = ['RAZRED', 'URA', 'UČITELJ/ICA', 'PREDMETA', 'UČILNICA', 'OPOMBA']
+        header_classroom_change = ['RAZRED', 'URA', 'UČITELJ/ICA', 'PREDMET', 'IZ UČILNICE', 'V UČILNICO', 'OPOMBA']
+        header_more_teachers = ['URA', 'UČITELJ', 'RAZRED', 'UČILNICA', 'OPOMBA']
+        header_reservations = ['URA', 'UČILNICA', 'REZERVIRAL/A', 'OPOMBA']
+
+        substitutions = []
+
+        parser_type = None
+        last_original_teacher = None
+
+        # Parse tables into substitutions
+        for table in tables:
+            for row in table:
+                row = [column.replace('\n', ' ').strip() if column else None for column in row]
+
+                # Get parser type
+                if row == header_substitutions:
+                    parser_type = 'substitutions'
+                    continue
+                elif row == header_lesson_change:
+                    parser_type = 'lesson-change'
+                    continue
+                elif row == header_classroom_change:
+                    parser_type = 'classroom-change'
+                    continue
+                elif row == header_more_teachers:
+                    parser_type = 'more-teachers'
+                    continue
+                elif row == header_reservations:
+                    parser_type = 'reservations'
+                    continue
+
+                # Parse substitutions
+                if parser_type == 'substitutions':
+                    time = row[1][:-1]
+                    subject = row[5] if row[5] != '/' else None
+
+                    # Get original teacher
+                    # Special cases: Replace ć with č, multiple Krapež teachers
+                    original_teacher = row[0].split()[0].replace('ć', 'č') if row[0] else last_original_teacher
+                    if original_teacher == 'Krapež':
+                        if 'Alenka' in row[0]:
+                            original_teacher = 'KrapežA'
+                        elif 'Marjetka' in row[0]:
+                            original_teacher = 'KrapežM'
+                    last_original_teacher = original_teacher
+
+                    original_classroom = row[3]
+
+                    # Handle multiple classes
+                    classes = row[2].replace('. ', '').split(' - ')
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    # Get new teacher
+                    # Special cases: Replace ć with č, multiple Krapež teachers
+                    teacher = row[4].split()[0].replace('ć', 'č')
+                    if teacher == 'Krapež':
+                        if 'Alenka' in row[4]:
+                            teacher = 'KrapežA'
+                        elif 'Marjetka' in row[4]:
+                            teacher = 'KrapežM'
+                    classroom = original_classroom
+
+                    for class_ in classes:
+                        substitutions.append({
+                            'date': date,
+                            'day': day,
+                            'time': time,
+                            'subject': subject,
+                            'original_teacher_id': get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                            'original_classroom_id': get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
+                            'class_id': get_or_create(self.session, model=Class, name=class_)[0].id,
+                            'teacher_id': get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher != '/' else None,
+                            'classroom_id': get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
+                        })
+
+                elif parser_type == 'lesson-change':
+                    time = row[1][:-1]
+                    subject = row[3].split(' → ')[1]
+
+                    # Get original teacher
+                    # Special cases: Replace ć with č, multiple Krapež teachers
+                    original_teacher = row[2].split(' → ')[0].split()[0].replace('ć', 'č')
+                    if original_teacher == 'Krapež':
+                        if 'Alenka' in row[2].split(' → ')[0]:
+                            original_teacher = 'KrapežA'
+                        elif 'Marjetka' in row[2].split(' → ')[0]:
+                            original_teacher = 'KrapežM'
+
+                    original_classroom = row[4]
+
+                    # Handle multiple classes
+                    classes = row[0].replace('. ', '').split(' - ')
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    # Get new teacher
+                    # Special cases: Replace ć with č, multiple Krapež teachers
+                    teacher = row[2].split(' → ')[1].split()[0].replace('ć', 'č')
+                    if teacher == 'Krapež':
+                        if 'Alenka' in row[2].split(' → ')[1]:
+                            teacher = 'KrapežA'
+                        elif 'Marjetka' in row[2].split(' → ')[1]:
+                            teacher = 'KrapežM'
+                    classroom = original_classroom
+
+                    for class_ in classes:
+                        substitutions.append({
+                            'date': date,
+                            'day': day,
+                            'time': time,
+                            'subject': subject,
+                            'original_teacher_id': get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                            'original_classroom_id': get_or_create(self.session, model=Classroom, name=original_classroom)[0].id,
+                            'class_id': get_or_create(self.session, model=Class, name=class_)[0].id,
+                            'teacher_id': get_or_create(self.session, model=Teacher, name=teacher)[0].id,
+                            'classroom_id': get_or_create(self.session, model=Classroom, name=classroom)[0].id,
+                        })
+
+                elif parser_type == 'classroom-change':
+                    time = row[1][:-1]
+                    subject = row[3]
+
+                    # Get teacher
+                    # Special cases: Replace ć with č, multiple Krapež teachers
+                    original_teacher = row[2].split()[0].replace('ć', 'č')
+                    if original_teacher == 'Krapež':
+                        if 'Alenka' in row[2]:
+                            original_teacher = 'KrapežA'
+                        elif 'Marjetka' in row[2]:
+                            original_teacher = 'KrapežM'
+
+                    original_classrooms = row[4].split(', ')
+
+                    # Handle multiple classes
+                    classes = row[0].replace('. ', '').split(' - ')
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    teacher = original_teacher
+                    classroom = row[5]
+
+                    for class_ in classes:
+                        for original_classroom in original_classrooms:
+                            substitutions.append({
+                                'date': date,
+                                'day': day,
+                                'time': time,
+                                'subject': subject,
+                                'original_teacher_id': get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                                'original_classroom_id': get_or_create(self.session, model=Classroom, name=original_classroom)[0].id,
+                                'class_id': get_or_create(self.session, model=Class, name=class_)[0].id,
+                                'teacher_id': get_or_create(self.session, model=Teacher, name=teacher)[0].id,
+                                'classroom_id': get_or_create(self.session, model=Classroom, name=classroom)[0].id,
+                            })
+
+        # Store substitutions in database
+        for substitution in substitutions:
+            model = (self.session
+                     .query(Substitution)
+                     .filter(
+                        Substitution.date == substitution['date'],
+                        Substitution.time == substitution['time'],
+                        Substitution.original_teacher_id == substitution['original_teacher_id'],
+                        Substitution.class_id == substitution['class_id'])
+                     .first())
+
+            # Update or create a substitution
+            if not model:
+                model = Substitution()
+
+            for key in substitution:
+                setattr(model, key, substitution[key])
+
+            self.session.add(model)
 
         # Update or create a document
         if not document:
@@ -138,7 +326,7 @@ class EClassroomUpdater:
         else:
             created = False
 
-        document.date = datetime.datetime.strptime(re.search(r'_obvestila_(.+).pdf', url, re.IGNORECASE).group(1), '%d._%m._%Y').date()
+        document.date = date
         document.type = 'substitutions'
         document.url = url
         document.description = name
