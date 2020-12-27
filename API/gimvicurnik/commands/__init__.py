@@ -5,7 +5,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from ..database import Base, Class, Teacher, Classroom, Substitution
+from ..database import Base, Class, Teacher, Classroom, Substitution, LunchSchedule
 from ..updaters import TimetableUpdater, EClassroomUpdater
 from ..utils.database import session_scope
 from ..utils.sentry import with_transaction
@@ -58,7 +58,7 @@ def cleanup_database_command():
     with session_scope() as session:
         # Remove old (> 14 days) substitutions/menus/schedules
         # TODO: Also implement this for menus and schedules
-        for entity in (Substitution, ):
+        for entity in (Substitution, LunchSchedule):
             for model in session.query(entity):
                 if (datetime.datetime.now().date() - model.date).days > 14:
                     logging.getLogger(__name__).info('Removing the %s from %s', model.__class__.__name__.lower(), model.date)

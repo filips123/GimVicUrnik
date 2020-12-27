@@ -5,7 +5,6 @@ import re
 from collections import defaultdict
 
 import requests
-from requests import HTTPError
 
 from ..database import Document, Class, Teacher, Classroom, Lesson
 from ..errors.timetable import TimetableApiError

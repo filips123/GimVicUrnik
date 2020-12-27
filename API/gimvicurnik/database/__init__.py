@@ -1,4 +1,4 @@
-from sqlalchemy import func, Column, Index, ForeignKey, Integer, Date, Text, SmallInteger, or_
+from sqlalchemy import func, or_, Column, Index, ForeignKey, Integer, Date, Time, Text, SmallInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, aliased
 
@@ -73,6 +73,7 @@ class Entity:
 
         for model in query:
             yield {
+                'date': model[0].date.strftime('%Y-%m-%d'),
                 'day': model[0].day,
                 'time': model[0].time,
                 'subject': model[0].subject,
@@ -169,3 +170,18 @@ class Substitution(Base):
 
     classroom_id = Column(Integer, ForeignKey('classrooms.id'), index=True)
     classroom = relationship('Classroom', backref='substitutions', foreign_keys=[classroom_id])
+
+
+class LunchSchedule(Base):
+    __tablename__ = 'lunch_schedule'
+    __table_args__ = (Index('ix_lunch_schedule_date_time', 'date', 'time'), )
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date)
+    time = Column(Time)
+
+    class_id = Column(Integer, ForeignKey('classes.id'), index=True)
+    class_ = relationship('Class')
+
+    location = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)

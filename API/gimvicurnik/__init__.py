@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
 
 from .commands import update_eclassroom_command, update_timetable_command, create_database_command, cleanup_database_command
-from .database import Session, Document, Entity, Class, Teacher, Classroom
+from .database import Session, Document, Entity, Class, Teacher, Classroom, LunchSchedule
 from .errors import ConfigError, ConfigReadError, ConfigParseError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
 
@@ -195,7 +195,34 @@ class GimVicUrnik:
         def _get_substitutions_for_classrooms(date, classrooms):
             return jsonify(list(Classroom.get_substitutions(self.session, date, classrooms)))
 
-        # TODO: Substitutions
+        @self.app.route('/schedule/date/<date:date>')
+        def _get_lunch_schedule(date):
+            return jsonify([{
+                'class': model.class_.name,
+                'date': model.date.strftime('%Y-%m-%d'),
+                'time': model.time.strftime('%H:%M'),
+                'location': model.location,
+                'notes': model.notes,
+            } for model in (self.session
+                            .query(LunchSchedule)
+                            .join(Class)
+                            .filter(LunchSchedule.date == date)
+                            .order_by(LunchSchedule.time, LunchSchedule.class_))])
+
+        @self.app.route('/schedule/date/<date:date>/classes/<list:classes>')
+        def _get_lunch_schedule_for_class(date, classes):
+            return jsonify([{
+                'class': model.class_.name,
+                'date': model.date.strftime('%Y-%m-%d'),
+                'time': model.time.strftime('%H:%M'),
+                'location': model.location,
+                'notes': model.notes,
+            } for model in (self.session
+                            .query(LunchSchedule)
+                            .join(Class)
+                            .filter(LunchSchedule.date == date, Class.name.in_(classes))
+                            .order_by(LunchSchedule.time, LunchSchedule.class_))])
+
         # TODO: Menus
 
         @self.app.route('/circulars')

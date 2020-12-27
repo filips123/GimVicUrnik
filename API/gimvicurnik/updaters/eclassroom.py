@@ -8,7 +8,7 @@ import tempfile
 import requests
 from pdf2docx import extract_tables
 
-from ..database import Document, Class, Teacher, Classroom, Substitution
+from ..database import Document, Class, Teacher, Classroom, Substitution, LunchSchedule
 from ..errors import InvalidTokenError, InvalidRecordError, ClassroomApiError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
@@ -345,5 +345,97 @@ class EClassroomUpdater:
 
     @with_span(op='document', pass_span=True)
     def _store_lunch_schedule(self, name, url, span):
-        # TODO: Store and parse lunch schedule
-        pass
+        response = requests.get(url)
+
+        content = response.content
+        hash = str(hashlib.sha256(content).hexdigest())
+
+        span.description = url
+        span.set_tag('document.url', url)
+        span.set_tag('document.type', 'lunch-schedule')
+
+        # Skip unchanged lunch schedule document documents
+        document = self.session.query(Document).filter(Document.type == 'lunch-schedule', Document.url == url).first()
+        if hash == getattr(document, 'hash', False):
+            self.logger.info('Skipped because the lunch schedule document for %s is unchanged', document.date)
+            self.logger.debug('URL: %s', document.url)
+            self.logger.debug('Date: %s', document.date)
+            self.logger.debug('Hash: %s', document.hash)
+
+            span.set_tag('document.date', document.date)
+            span.set_tag('document.hash', document.hash)
+            span.set_tag('document.action', 'skipped')
+
+            return
+
+        date = datetime.datetime.strptime(re.search(r'Razpored delitve kosila, (.+)', name, re.IGNORECASE).group(1), '%d. %m. %Y').date()
+
+        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + '.pdf')
+
+        file = open(filename, mode='w+b')
+        file.write(content)
+        file.close()
+
+        # Extract all tables from PDF file
+        tables = with_span(op='extract')(extract_tables)(filename)
+        os.remove(filename)
+
+        schedule = []
+
+        last_hour = None
+        last_notes = None
+
+        for table in tables:
+            # Skip instructions
+            if 'Dijaki prihajate v jedilnico' in table[0][0]:
+                continue
+
+            for row in table:
+                # Skip header
+                if row[0] and 'ura' in row[0]:
+                    continue
+
+                time = datetime.datetime.strptime(row[0].strip(), '%H:%M').time() if row[0] else last_hour
+                last_hour = time
+
+                notes = row[1] if row[1] else last_notes
+                last_notes = notes.strip()
+
+                class_ = row[2].strip()
+                location = row[4].strip()
+
+                schedule.append({
+                    'class_id': get_or_create(self.session, model=Class, name=class_)[0].id,
+                    'date': date,
+                    'time': time,
+                    'location': location,
+                    'notes': notes,
+                })
+
+        # Store schedule in database
+        self.session.query(LunchSchedule).filter(LunchSchedule.date == date).delete()
+        self.session.bulk_insert_mappings(LunchSchedule, schedule)
+
+        # Update or create a document
+        if not document:
+            document = Document()
+            created = True
+        else:
+            created = False
+
+        document.date = date
+        document.type = 'lunch-schedule'
+        document.url = url
+        document.description = name
+        document.hash = hash
+
+        self.session.add(document)
+
+        span.set_tag('document.date', document.date)
+        span.set_tag('document.hash', document.hash)
+        span.set_tag('document.action', 'created' if created else 'updated')
+
+        if created:
+            self.logger.info('Created a new lunch schedule document for %s', document.date)
+        else:
+            self.logger.info('Updated the lunch schedule document for %s', document.date)
