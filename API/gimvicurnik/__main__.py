@@ -2,7 +2,7 @@ import os
 import sys
 
 import click
-from flask.cli import FlaskGroup, get_version, ScriptInfo
+from flask.cli import FlaskGroup, ScriptInfo
 
 from .errors import ConfigError
 
@@ -21,6 +21,30 @@ class GimVicUrnikGroup(FlaskGroup):
             if value:
                 os.environ['GIMVICURNIK_CONFIG'] = value
 
+        def _get_version(ctx, param, value):
+            if not value or ctx.resilient_parsing:
+                return
+
+            import pkg_resources
+            import platform
+
+            python_version = platform.python_version()
+            gimvicurnik_version = pkg_resources.get_distribution('gimvicurnik').version
+            sqlalchemy_version = pkg_resources.get_distribution('sqlalchemy').version
+            requests_version = pkg_resources.get_distribution('requests').version
+            flask_version = pkg_resources.get_distribution('flask').version
+            pdf2docx_version = pkg_resources.get_distribution('pdf2docx').version
+
+            click.echo(
+                f'Python: {python_version}\n'
+                f'GimVicUrnik: {gimvicurnik_version}\n'
+                f'SQLAlchemy: {sqlalchemy_version}\n'
+                f'Requests: {requests_version}\n'
+                f'Flask: {flask_version}\n'
+                f'pdf2docx: {pdf2docx_version}'
+            )
+            ctx.exit()
+
         params = [
             click.Option(
                 ['--config'],
@@ -32,9 +56,9 @@ class GimVicUrnikGroup(FlaskGroup):
             ),
             click.Option(
                 ['--version'],
-                help='Show the Flask version and exit.',
+                help='Show the GimVicUrnik version and exit.',
                 expose_value=False,
-                callback=get_version,
+                callback=_get_version,
                 is_flag=True,
                 is_eager=True,
             )
@@ -48,7 +72,7 @@ class GimVicUrnikGroup(FlaskGroup):
                'commands won\'t be displayed in the command list if the configuration file ' \
                'is not specified as environment variable or is invalid.'
 
-        # Use custom version option to display arguments in correct order and allow possibility for future changes
+        # Use custom version option to display arguments in correct order and add other relevant versions
         super().__init__(add_version_option=False, params=params, help=help)
 
     def main(self, as_module=False):
