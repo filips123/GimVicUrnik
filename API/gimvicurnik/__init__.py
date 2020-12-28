@@ -252,11 +252,10 @@ class GimVicUrnik:
                 'lunch': lunch,
             })
 
-        @self.app.route('/circulars')
-        def _get_circulars():
+        @self.app.route('/documents')
+        def _get_documents():
             query = (self.session
                      .query(Document.date, Document.type, Document.url, Document.description)
-                     .filter(Document.type.in_(('circular', 'other')))
                      .order_by(Document.date))
 
             return jsonify([{
