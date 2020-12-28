@@ -7,7 +7,7 @@ from collections import defaultdict
 import requests
 
 from ..database import Document, Class, Teacher, Classroom, Lesson
-from ..errors.timetable import TimetableApiError
+from ..errors import TimetableApiError
 from ..utils.database import get_or_create
 
 

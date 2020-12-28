@@ -8,8 +8,9 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
 
-from .commands import update_eclassroom_command, update_timetable_command, create_database_command, cleanup_database_command
-from .database import Session, Document, Entity, Class, Teacher, Classroom, LunchSchedule
+from .commands import update_eclassroom_command, update_timetable_command, update_menu_command, \
+    create_database_command, cleanup_database_command
+from .database import Session, Document, Entity, Class, Teacher, Classroom, LunchSchedule, SnackMenu, LunchMenu
 from .errors import ConfigError, ConfigReadError, ConfigParseError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
 
@@ -31,6 +32,9 @@ class GimVicUrnik:
                 'token': str,
                 'course': int,
                 Optional('restricted'): [str],
+            },
+            'menu': {
+                'url': str,
             },
         },
         'database': str,
@@ -141,6 +145,7 @@ class GimVicUrnik:
 
         self.app.cli.add_command(update_timetable_command)
         self.app.cli.add_command(update_eclassroom_command)
+        self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(create_database_command)
         self.app.cli.add_command(cleanup_database_command)
 
@@ -223,7 +228,29 @@ class GimVicUrnik:
                             .filter(LunchSchedule.date == date, Class.name.in_(classes))
                             .order_by(LunchSchedule.time, LunchSchedule.class_))])
 
-        # TODO: Menus
+        @self.app.route('/menus/date/<date:date>')
+        def _get_menus(date):
+            snack = self.session.query(SnackMenu).filter(SnackMenu.date == date).first()
+            lunch = self.session.query(LunchMenu).filter(LunchMenu.date == date).first()
+
+            if snack:
+                snack = {
+                    'normal': snack.normal,
+                    'poultry': snack.poultry,
+                    'vegetarian': lunch.vegetarian,
+                    'fruitvegetable': lunch.fruitvegetable,
+                }
+
+            if lunch:
+                lunch = {
+                    'normal': lunch.normal,
+                    'vegetarian': lunch.vegetarian,
+                }
+
+            return jsonify({
+                'snack': snack,
+                'lunch': lunch,
+            })
 
         @self.app.route('/circulars')
         def _get_circulars():

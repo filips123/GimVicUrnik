@@ -5,8 +5,8 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from ..database import Base, Class, Teacher, Classroom, Substitution, LunchSchedule
-from ..updaters import TimetableUpdater, EClassroomUpdater
+from ..database import Base, Class, Teacher, Classroom, Substitution, LunchSchedule, SnackMenu, LunchMenu
+from ..updaters import TimetableUpdater, EClassroomUpdater, MenuUpdater
 from ..utils.database import session_scope
 from ..utils.sentry import with_transaction
 
@@ -37,6 +37,19 @@ def update_eclassroom_command():
         updater.update()
 
 
+@click.command('update-menu', help='Update the menu data.')
+@with_transaction(name='update-menu', op='command', sampled=True)
+@with_appcontext
+def update_menu_command():
+    """Update snack and lunch menu data ."""
+
+    logging.getLogger(__name__).info('Updating the menu data')
+
+    with session_scope() as session:
+        updater = MenuUpdater(current_app.gimvicurnik.config['sources']['menu'], session)
+        updater.update()
+
+
 @click.command('create-database', help='Create the database.')
 @with_transaction(name='create-database', op='command', sampled=True)
 @with_appcontext
@@ -57,8 +70,7 @@ def cleanup_database_command():
 
     with session_scope() as session:
         # Remove old (> 14 days) substitutions/menus/schedules
-        # TODO: Also implement this for menus and schedules
-        for entity in (Substitution, LunchSchedule):
+        for entity in (Substitution, LunchSchedule, SnackMenu, LunchMenu):
             for model in session.query(entity):
                 if (datetime.datetime.now().date() - model.date).days > 14:
                     logging.getLogger(__name__).info('Removing the %s from %s', model.__class__.__name__.lower(), model.date)

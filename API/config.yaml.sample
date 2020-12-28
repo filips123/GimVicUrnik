@@ -7,6 +7,8 @@ sources:
     course: 118
     restricted:
       - https://ucilnica.gimvic.org/webservice/pluginfile.php
+  menu:
+    url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
 
 database: sqlite:///app.db
 
@@ -18,3 +20,19 @@ sentry:
   enabled: true
   traces: 0.25
   breadcrumbs: 100
+
+logging:
+  version: 1
+  formatters:
+    default:
+      format: '[%(asctime)s] %(levelname)s: %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      stream: ext://sys.stdout
+      formatter: default
+  loggers:
+    gimvicurnik:
+      level: INFO
+      handlers:
+        - console

@@ -185,3 +185,25 @@ class LunchSchedule(Base):
 
     location = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
+
+
+class SnackMenu(Base):
+    __tablename__ = 'snack_menu'
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, unique=True, index=True)
+
+    normal = Column(Text, nullable=True)
+    poultry = Column(Text, nullable=True)
+    vegetarian = Column(Text, nullable=True)
+    fruitvegetable = Column(Text, nullable=True)
+
+
+class LunchMenu(Base):
+    __tablename__ = 'lunch_menu'
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, unique=True, index=True)
+
+    normal = Column(Text, nullable=True)
+    vegetarian = Column(Text, nullable=True)
