@@ -97,11 +97,24 @@ class GimVicUrnik:
         if 'sentry' in self.config and self.config['sentry']['enabled']:
             import sentry_sdk
 
+            # Try to get package version, otherwise use commit hash from Sentry
+            # Also modify version so it becomes valid SemVer version
+            try:
+                import pkg_resources
+                release = pkg_resources.get_distribution('gimvicurnik').version
+                release = release.replace('.', '$$$', 2).replace('.', '-', 1).replace('$$$', '.')
+
+            except:
+                from sentry_sdk.utils import get_default_release
+                release = get_default_release()
+
             sentry_sdk.init(
                 dsn=self.config['sentry']['dsn'],
-                integrations=[FlaskIntegration(transaction_style='url'), SqlalchemyIntegration()],
                 traces_sample_rate=self.config['sentry']['traces'],
-                max_breadcrumbs=self.config['sentry']['breadcrumbs']
+                max_breadcrumbs=self.config['sentry']['breadcrumbs'],
+                integrations=[FlaskIntegration(transaction_style='url'), SqlalchemyIntegration()],
+                environment=os.environ.get('FLASK_ENV', 'production'),
+                release=release
             )
 
     def create_database_hooks(self):
