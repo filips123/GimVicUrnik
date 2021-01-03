@@ -70,7 +70,7 @@ class GimVicUrnik:
 
         self.session = None
 
-        self.app = Flask('gimvicurnik')
+        self.app = Flask('gimvicurnik',  static_folder=None)
         self.app.gimvicurnik = self
 
         self.create_database_hooks()
