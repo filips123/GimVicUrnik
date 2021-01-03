@@ -34,8 +34,10 @@ pids/
 
 # Environments
 .python-version
-.env
-.venv
+.env*
+.venv*
+!.env*.sample
+!.venv*.sample
 ENV/
 env/
 env.bak/
