@@ -61,6 +61,7 @@ class Entity:
                  .join(original_classroom, Substitution.original_classroom_id == original_classroom.id)
                  .join(teacher, Substitution.teacher_id == teacher.id)
                  .join(classroom, Substitution.classroom_id == classroom.id)
+                 .filter(Substitution.date == date)
                  .order_by(Substitution.day, Substitution.time))
 
         if names:
