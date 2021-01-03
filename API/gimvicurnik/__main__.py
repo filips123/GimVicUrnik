@@ -19,7 +19,7 @@ class GimVicUrnikGroup(FlaskGroup):
             """Set configuration file from argument."""
 
             if value:
-                os.environ['GIMVICURNIK_CONFIG'] = value
+                os.environ["GIMVICURNIK_CONFIG"] = value
 
         def _get_version(ctx, param, value):
             if not value or ctx.resilient_parsing:
@@ -29,48 +29,49 @@ class GimVicUrnikGroup(FlaskGroup):
             import platform
 
             python_version = platform.python_version()
-            gimvicurnik_version = pkg_resources.get_distribution('gimvicurnik').version
-            sqlalchemy_version = pkg_resources.get_distribution('sqlalchemy').version
-            requests_version = pkg_resources.get_distribution('requests').version
-            flask_version = pkg_resources.get_distribution('flask').version
-            pdf2docx_version = pkg_resources.get_distribution('pdf2docx').version
+            gimvicurnik_version = pkg_resources.get_distribution("gimvicurnik").version
+            sqlalchemy_version = pkg_resources.get_distribution("sqlalchemy").version
+            requests_version = pkg_resources.get_distribution("requests").version
+            flask_version = pkg_resources.get_distribution("flask").version
+            pdf2docx_version = pkg_resources.get_distribution("pdf2docx").version
 
             click.echo(
-                f'Python: {python_version}\n'
-                f'GimVicUrnik: {gimvicurnik_version}\n'
-                f'SQLAlchemy: {sqlalchemy_version}\n'
-                f'Requests: {requests_version}\n'
-                f'Flask: {flask_version}\n'
-                f'pdf2docx: {pdf2docx_version}'
+                f"Python: {python_version}\n"
+                f"GimVicUrnik: {gimvicurnik_version}\n"
+                f"SQLAlchemy: {sqlalchemy_version}\n"
+                f"Requests: {requests_version}\n"
+                f"Flask: {flask_version}\n"
+                f"pdf2docx: {pdf2docx_version}"
             )
             ctx.exit()
 
         params = [
             click.Option(
-                ['--config'],
-                help='Set a config file name.',
-                metavar='filename',
+                ["--config"],
+                help="Set a config file name.",
+                metavar="filename",
                 type=str,
                 callback=_set_config_filename,
-
             ),
             click.Option(
-                ['--version'],
-                help='Show the GimVicUrnik version and exit.',
+                ["--version"],
+                help="Show the GimVicUrnik version and exit.",
                 expose_value=False,
                 callback=_get_version,
                 is_flag=True,
                 is_eager=True,
-            )
+            ),
         ]
 
-        help = 'A utility script for the GimVicUrnik application.\n\n' \
-               'Configuration file can be provided as --config argument or as the ' \
-               'GIMVICURNIK_CONFIG environment variable. Development mode can be ' \
-               'enabled with the FLASK_ENV environment variable to \'development\'.\n\n' \
-               'Note: Due to the limitations of the command parser, some application-specific ' \
-               'commands won\'t be displayed in the command list if the configuration file ' \
-               'is not specified as environment variable or is invalid.'
+        help = (
+            "A utility script for the GimVicUrnik application.\n\n"
+            "Configuration file can be provided as --config argument or as the "
+            "GIMVICURNIK_CONFIG environment variable. Development mode can be "
+            "enabled with the FLASK_ENV environment variable to 'development'.\n\n"
+            "Note: Due to the limitations of the command parser, some application-specific "
+            "commands won't be displayed in the command list if the configuration file "
+            "is not specified as environment variable or is invalid."
+        )
 
         # Use custom version option to display arguments in correct order and add other relevant versions
         super().__init__(add_version_option=False, params=params, help=help)
@@ -78,8 +79,8 @@ class GimVicUrnikGroup(FlaskGroup):
     def main(self, as_module=False):
         """Set a Flask app and start the main command handler."""
 
-        os.environ['FLASK_APP'] = 'gimvicurnik'
-        super().main(args=sys.argv[1:], prog_name='python -m gimvicurnik' if as_module else None)
+        os.environ["FLASK_APP"] = "gimvicurnik"
+        super().main(args=sys.argv[1:], prog_name="python -m gimvicurnik" if as_module else None)
 
 
 def main(as_module=False):
@@ -92,7 +93,7 @@ def main(as_module=False):
         try:
             rv.update(info.load_app().cli.list_commands(ctx))
         except ConfigError as error:
-            click.secho(f'Error: {error}', err=True, fg='red')
+            click.secho(f"Error: {error}", err=True, fg="red")
 
         return sorted(rv)
 
@@ -104,5 +105,5 @@ def main(as_module=False):
     cli.main(as_module)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(as_module=True)

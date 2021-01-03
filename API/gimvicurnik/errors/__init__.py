@@ -1,5 +1,5 @@
 from .base import GimVicUrnikError
-from .config import ConfigError, ConfigReadError, ConfigParseError, ConfigValidationError
-from .timetable import TimetableApiError
-from .eclassroom import ClassroomApiError, InvalidTokenError, InvalidRecordError
+from .config import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
+from .eclassroom import ClassroomApiError, InvalidRecordError, InvalidTokenError
 from .menu import MenuApiError, MenuDateError
+from .timetable import TimetableApiError

@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import requests
 
-from ..database import Document, Class, Teacher, Classroom, Lesson
+from ..database import Class, Classroom, Document, Lesson, Teacher
 from ..errors import TimetableApiError
 from ..utils.database import get_or_create
 
@@ -16,7 +16,7 @@ class TimetableUpdater:
     hash = None
 
     def __init__(self, config, session):
-        self.url = config['url']
+        self.url = config["url"]
         self.session = session
         self.logger = logging.getLogger(__name__)
 
@@ -31,18 +31,18 @@ class TimetableUpdater:
 
             response.raise_for_status()
         except IOError as error:
-            raise TimetableApiError('Error while downloading timetable') from error
+            raise TimetableApiError("Error while downloading timetable") from error
 
-        self.raw = content.decode('utf8')
+        self.raw = content.decode("utf8")
         self.hash = str(hashlib.sha256(content).hexdigest())
 
     def _parse(self):
         # Skip parsing if the timetable is unchanged
-        document = self.session.query(Document).filter(Document.type == 'timetable', Document.url == self.url).first()
-        if self.hash == getattr(document, 'hash', False):
-            self.logger.info('Skipped because the timetable is unchanged')
-            self.logger.debug('Hash: %s', document.hash)
-            self.logger.debug('Last updated: %s', document.date)
+        document = self.session.query(Document).filter(Document.type == "timetable", Document.url == self.url).first()
+        if self.hash == getattr(document, "hash", False):
+            self.logger.info("Skipped because the timetable is unchanged")
+            self.logger.debug("Hash: %s", document.hash)
+            self.logger.debug("Last updated: %s", document.date)
 
             return
 
@@ -55,14 +55,19 @@ class TimetableUpdater:
             lessons[key].append(value.strip())
 
         # Convert raw data into a model
-        models = [{
-            'day': lesson[5],
-            'time': lesson[6],
-            'subject': lesson[3] if lesson[3] else None,
-            'class_id': get_or_create(self.session, model=Class, name=lesson[1])[0].id if lesson[1] else None,
-            'teacher_id': get_or_create(self.session, model=Teacher, name=lesson[2])[0].id if lesson[2] else None,
-            'classroom_id': get_or_create(self.session, model=Classroom, name=lesson[4])[0].id if lesson[4] else None,
-        } for _, lesson in lessons.items()]
+        models = [
+            {
+                "day": lesson[5],
+                "time": lesson[6],
+                "subject": lesson[3] if lesson[3] else None,
+                "class_id": get_or_create(self.session, model=Class, name=lesson[1])[0].id if lesson[1] else None,
+                "teacher_id": get_or_create(self.session, model=Teacher, name=lesson[2])[0].id if lesson[2] else None,
+                "classroom_id": get_or_create(self.session, model=Classroom, name=lesson[4])[0].id
+                if lesson[4]
+                else None,
+            }
+            for _, lesson in lessons.items()
+        ]
 
         self.session.query(Lesson).delete()
         self.session.bulk_insert_mappings(Lesson, models)
@@ -72,10 +77,10 @@ class TimetableUpdater:
             document = Document()
 
         document.date = datetime.datetime.now().date()
-        document.type = 'timetable'
+        document.type = "timetable"
         document.url = self.url
         document.hash = self.hash
 
         self.session.add(document)
 
-        self.logger.info('Finished updating the timetable')
+        self.logger.info("Finished updating the timetable")

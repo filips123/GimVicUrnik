@@ -11,7 +11,7 @@ def session_scope():
     try:
         yield session
         session.commit()
-    except:
+    except BaseException:
         session.rollback()
         raise
     finally:

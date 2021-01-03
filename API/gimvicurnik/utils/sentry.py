@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 try:
     from sentry_sdk import Hub, start_transaction
+
     sentry_available = True
 except ImportError:
     sentry_available = False
@@ -20,15 +21,16 @@ def with_transaction(pass_transaction=False, **kwargs):
         def _transaction_wrapper(*fargs, **fkwargs):
             if not sentry_available:
                 if pass_transaction:
-                    fkwargs['transaction'] = Mock()
+                    fkwargs["transaction"] = Mock()
                 return function(*fargs, **fkwargs)
 
             with start_transaction(**kwargs) as transaction:
                 if pass_transaction:
-                    fkwargs['transaction'] = transaction
+                    fkwargs["transaction"] = transaction
                 return function(*fargs, **fkwargs)
 
         return _transaction_wrapper
+
     return _transaction_decorator
 
 
@@ -45,13 +47,14 @@ def with_span(pass_span=False, **kwargs):
         def _span_wrapper(*fargs, **fkwargs):
             if not sentry_available:
                 if pass_span:
-                    fkwargs['span'] = Mock()
+                    fkwargs["span"] = Mock()
                 return function(*fargs, **fkwargs)
 
             with Hub.current.scope.span.start_child(**kwargs) as span:
                 if pass_span:
-                    fkwargs['span'] = span
+                    fkwargs["span"] = span
                 return function(*fargs, **fkwargs)
 
         return _span_wrapper
+
     return _span_decorator
