@@ -69,8 +69,7 @@ import EntitySelection from '@/components/settings/EntitySelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import { EntityType, LunchType, SettingsModule, SnackType } from '@/store/modules/settings'
-import { StorageModule } from '@/store/modules/storage'
-import { displaySnackbar } from '@/utils/snackbar'
+import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
   components: { SettingsAction, SettingsSwitch, EntitySelection }
@@ -204,14 +203,7 @@ export default class Settings extends Vue {
   }
 
   async updateData (): Promise<void> {
-    await Promise.all([
-      StorageModule.updateLists(true),
-      StorageModule.updateTimetable(true),
-      StorageModule.updateEmptyClassrooms(true),
-      StorageModule.updateSubstitutions(true)
-    ])
-
-    displaySnackbar('Podatki posodobljeni')
+    await updateAllData()
   }
 
   closeEntityDialog (): void {

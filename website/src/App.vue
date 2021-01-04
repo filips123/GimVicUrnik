@@ -25,6 +25,8 @@
     <!-- TODO: Desktop layout without day navigation and with side navigation instead of bottom one -->
 
     <v-main id="main" v-bind:class="{ 'pb-16': isNavigationDisplayed }">
+      <span id="ptr--target"></span>
+
       <v-container fluid>
         <router-view @setDayMenuDisplay=setDayMenuDisplay
           @setNavigationDisplay=setNavigationDisplay
@@ -82,10 +84,13 @@ html, body {
 
 <script lang="ts">
 import { mdiCog } from '@mdi/js'
+import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
 import DayNavigation from '@/components/navigation/DayNavigation.vue'
 import ViewNavigation from '@/components/navigation/ViewNavigation.vue'
+import { SettingsModule } from '@/store/modules/settings'
+import { updateAllData } from '@/store/modules/storage'
 
 @Component({
   components: { ViewNavigation, DayNavigation }
@@ -108,11 +113,25 @@ export default class App extends Vue {
       this.isSnackbarDisplayed = true
     })
 
-    // TODO: Set up pull to refresh
+    // Create pull to refresh
+    PullToRefresh.init({
+      mainElement: '#ptr--target',
+      triggerElement: 'body',
+
+      instructionsPullToRefresh: 'Povlecite za posodobitev',
+      instructionsReleaseToRefresh: 'Izpustite za posodobitev',
+      instructionsRefreshing: 'Posodabljanje',
+
+      shouldPullToRefresh: () => !window.scrollY && this.isPullToRefreshAllowed && SettingsModule.enablePullToRefresh,
+      onRefresh: (): void => {
+        updateAllData()
+      }
+    })
   }
 
   destroyed (): void {
-    // TODO: Destroy pull to refresh instances
+    // Destroy pull to refresh instances
+    PullToRefresh.destroyAll()
   }
 
   setPageTitle (pageTitle: string): void {

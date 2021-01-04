@@ -38,6 +38,17 @@ export function getSubstitutionId (substitution: Substitution): string {
   return `${substitution.day}-${substitution.time}-${substitution.class}-${substitution['original-teacher']}`
 }
 
+export async function updateAllData (): Promise<void> {
+  await Promise.all([
+    StorageModule.updateLists(true),
+    StorageModule.updateTimetable(true),
+    StorageModule.updateEmptyClassrooms(true),
+    StorageModule.updateSubstitutions(true)
+  ])
+
+  displaySnackbar('Podatki posodobljeni')
+}
+
 @Module({ name: 'storage', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
 class Storage extends VuexModule {
   lastUpdated: Date | null = null

@@ -1,6 +1,6 @@
 <template>
   <v-row v-if="isReady" class="timetable" justify="center">
-    <v-tabs-items v-model="currentDay">
+    <v-tabs-items ref="tabs" v-model="currentDay" :touch="tabsItemsTouch">
       <v-tab-item v-for="(dayName, dayIndex) in daysInWeek" :key="dayIndex">
         <timetable-day :current-day="dayIndex" />
       </v-tab-item>
@@ -43,6 +43,23 @@ import { daysInWeek } from '@/utils/days'
 export default class Timetable extends Vue {
   daysInWeek = daysInWeek
   isReady = false
+
+  // Custom touch function which does not stop propagation
+  // This is needed for pull to refresh to work
+  tabsItemsTouch = {
+    left: (): void => {
+      // eslint-disable-next-line
+      // @ts-ignore
+      this.$vuetify.rtl ? this.$refs.tabs.prev() : this.$refs.tabs.next()
+    },
+    right: (): void => {
+      // eslint-disable-next-line
+      // @ts-ignore
+      this.$vuetify.rtl ? this.$refs.tabs.next() : this.$refs.tabs.prev()
+    },
+    end: (): void => undefined,
+    start: (): void => undefined
+  }
 
   get currentDay (): number {
     return StateModule.currentDay
