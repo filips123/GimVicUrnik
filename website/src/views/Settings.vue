@@ -1,8 +1,19 @@
 <template>
   <div class="settings px-8 pt-8">
-    <settings-action v-model="entitySelectionDialog" :label="selectedEntityLabel" :message="selectedEntity" />
-    <settings-action v-model="snackSelectionDialog" :message="selectedSnack" label="Izbrana malica" />
-    <settings-action v-model="lunchSelectionDialog" :message="selectedLunch" label="Izbrano kosilo" />
+    <settings-action v-model="entitySelectionDialog"
+      :icon="mdiTuneVariant"
+      :label="selectedEntityLabel"
+      :message="selectedEntity" />
+
+    <settings-action v-model="snackSelectionDialog"
+      :icon="mdiTuneVariant"
+      :message="selectedSnack"
+      label="Izbrana malica" />
+
+    <settings-action v-model="lunchSelectionDialog"
+      :icon="mdiTuneVariant"
+      :message="selectedLunch"
+      label="Izbrano kosilo" />
 
     <v-divider class="mt-6" />
 
@@ -14,7 +25,18 @@
     <!-- TODO: Use three values: Default (system), light, dark -->
     <settings-switch v-model="darkTheme" label="Temni način" />
 
-    <!-- TODO: Display last updated time and add support for force update -->
+    <v-divider class="my-6" />
+
+    <settings-action :icon="mdiUpdate"
+      :message="`Trenutna različica: ${appVersion}`"
+      label="Posodobi aplikacijo"
+      @click.native="updateApp" />
+
+    <settings-action :icon="mdiUpdate"
+      :message="`Trenutna različica: ${dataVersion}`"
+      label="Posodobi podatke"
+      @click.native="updateData" />
+
     <!-- TODO: Add dialogs for snack and lunch selection -->
 
     <v-dialog v-model="entitySelectionDialog" width="35rem">
@@ -40,17 +62,34 @@
 </style>
 
 <script lang="ts">
+import { mdiTuneVariant, mdiUpdate } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import { EntityType, LunchType, SettingsModule, SnackType } from '@/store/modules/settings'
+import { StorageModule } from '@/store/modules/storage'
+import { displaySnackbar } from '@/utils/snackbar'
 
 @Component({
   components: { SettingsAction, SettingsSwitch, EntitySelection }
 })
 export default class Settings extends Vue {
+  mdiTuneVariant = mdiTuneVariant
+  mdiUpdate = mdiUpdate
+
+  // Get app version
+  appVersion = process.env.VUE_APP_VERSION || 'Ni podatkov'
+
+  // Get data version
+  get dataVersion (): string {
+    if (!StorageModule.lastUpdated) return 'Ni podatkov'
+
+    const lastUpdated = typeof StorageModule.lastUpdated === 'string' ? new Date(StorageModule.lastUpdated) : StorageModule.lastUpdated
+    return lastUpdated.toLocaleDateString('sl', { hour: 'numeric', minute: 'numeric' })
+  }
+
   // Get label for entity switch
   selectedEntityLabel = (() => {
     switch (SettingsModule.selectedEntity?.type) {
@@ -151,6 +190,28 @@ export default class Settings extends Vue {
 
   destroyed (): void {
     this.$emit('setPullToRefreshAllowed', true)
+  }
+
+  async updateApp (): Promise<void> {
+    if (process.env.NODE_ENV === 'production' && navigator.serviceWorker.controller) {
+      // Skip service worker waiting
+      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+
+    // Add GET parameter to invalidate cache of index HTML file
+    window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
+  }
+
+  async updateData (): Promise<void> {
+    await Promise.all([
+      StorageModule.updateLists(true),
+      StorageModule.updateTimetable(true),
+      StorageModule.updateEmptyClassrooms(true),
+      StorageModule.updateSubstitutions(true)
+    ])
+
+    displaySnackbar('Podatki posodobljeni')
   }
 
   closeEntityDialog (): void {

@@ -3,6 +3,7 @@ import { getModule, Module, MutationAction, VuexModule } from 'vuex-module-decor
 import store from '@/store'
 import { SettingsModule } from '@/store/modules/settings'
 import { getMonday, getWeekDays } from '@/utils/days'
+import { displaySnackbar } from '@/utils/snackbar'
 
 export interface Lesson {
   day: number;
@@ -39,6 +40,8 @@ export function getSubstitutionId (substitution: Substitution): string {
 
 @Module({ name: 'storage', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
 class Storage extends VuexModule {
+  lastUpdated: Date | null = null
+
   classList: string[] | null = null
   teacherList: string[] | null = null
   classroomList: string[] | null = null
@@ -61,17 +64,17 @@ class Storage extends VuexModule {
   }
 
   @MutationAction
-  async updateLists () {
+  async updateLists (forceUpdate = false) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const isStoredLocally = 'storage' in localStorage && this.state.classList
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
-      // TODO: Display snackbar that user is offline
+      displaySnackbar('Internetna povezava ni na voljo')
       return
     }
-    if (!shouldUpdateStorage) {
+    if (!forceUpdate && !shouldUpdateStorage) {
       return
     }
 
@@ -82,69 +85,72 @@ class Storage extends VuexModule {
     ])
 
     const [classList, teacherList, classroomList] = await Promise.all(responses.map(response => response.json()))
-    return { classList, teacherList, classroomList }
+    const lastUpdated = new Date()
+
+    return { classList, teacherList, classroomList, lastUpdated }
   }
 
   @MutationAction
-  async updateTimetable () {
+  async updateTimetable (forceUpdate = false) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const isStoredLocally = 'storage' in localStorage && this.state.timetable
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
-      // TODO: Display snackbar that user is offline
+      displaySnackbar('Internetna povezava ni na voljo')
       return
     }
 
-    if (!shouldUpdateStorage) {
+    if (!forceUpdate && !shouldUpdateStorage) {
       return
     }
 
     const response = await fetch(process.env.VUE_APP_API + '/timetable')
-    return { timetable: await response.json() }
+    return { timetable: await response.json(), lastUpdated: new Date() }
   }
 
   @MutationAction
-  async updateSubstitutions () {
+  async updateSubstitutions (forceUpdate = false) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const isStoredLocally = 'storage' in localStorage && this.state._substitutions
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
-      // TODO: Display snackbar that user is offline
+      displaySnackbar('Internetna povezava ni na voljo')
       return
     }
 
-    if (!shouldUpdateStorage) {
+    if (!forceUpdate && !shouldUpdateStorage) {
       return
     }
 
     const responses = await Promise.all(getWeekDays(getMonday(new Date())).map(date => fetch(process.env.VUE_APP_API + '/substitutions/date/' + date.toISOString().split('T')[0])))
     const _substitutions = await Promise.all(responses.map(response => response.json()))
+    const lastUpdated = new Date()
 
-    return { _substitutions }
+    return { _substitutions, lastUpdated }
   }
 
   @MutationAction
-  async updateEmptyClassrooms () {
+  async updateEmptyClassrooms (forceUpdate = false) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const isStoredLocally = 'storage' in localStorage && this.state.emptyClassrooms
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
-      // TODO: Display snackbar that user is offline
+      displaySnackbar('Internetna povezava ni na voljo')
       return
     }
 
-    if (!shouldUpdateStorage) {
+    if (!forceUpdate && !shouldUpdateStorage) {
       return
     }
 
     const response = await fetch(process.env.VUE_APP_API + '/timetable/classrooms/empty')
-    return { emptyClassrooms: await response.json() }
+    return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
   }
 }
 

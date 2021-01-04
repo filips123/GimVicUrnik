@@ -39,7 +39,7 @@ class Settings extends VuexModule {
   showSubstitutions = true
   showLinksInTimetable = true
   enablePullToRefresh = true
-  enableUpdateOnLoad = true
+  enableUpdateOnLoad = false
   darkTheme: boolean | null = null
 
   @Mutation

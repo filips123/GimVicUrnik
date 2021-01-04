@@ -16,10 +16,6 @@
       <v-btn v-if="isDialog" color="green" text v-on:click=closeDialog>Zapri</v-btn>
       <v-btn color="green" text v-on:click=confirmClasses>V redu</v-btn>
     </v-card-actions>
-
-    <v-snackbar v-model="displaySnackbar">
-      Izberite vsaj en razred ali izbirni predmet
-    </v-snackbar>
   </v-card>
 </template>
 
@@ -28,6 +24,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { EntityType, SettingsModule } from '@/store/modules/settings'
 import { StorageModule } from '@/store/modules/storage'
+import { displaySnackbar } from '@/utils/snackbar'
 
 @Component
 export default class SelectClass extends Vue {
@@ -36,7 +33,6 @@ export default class SelectClass extends Vue {
   availableClasses = StorageModule.classList
   selectedClasses: string[] = []
   saveSelection = true
-  displaySnackbar = false
 
   closeDialog (): void {
     this.$emit('closeDialog')
@@ -44,7 +40,7 @@ export default class SelectClass extends Vue {
 
   confirmClasses (): void {
     if (this.selectedClasses.length === 0) {
-      this.displaySnackbar = true
+      displaySnackbar('Izberite vsaj en razred ali izbirni predmet')
       return
     }
 

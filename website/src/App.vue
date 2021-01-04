@@ -33,6 +33,10 @@
       </v-container>
     </v-main>
 
+    <v-snackbar v-model="isSnackbarDisplayed">
+      {{ snackbarMessage }}
+    </v-snackbar>
+
     <view-navigation v-if="isNavigationDisplayed" />
   </v-app>
 </template>
@@ -94,7 +98,16 @@ export default class App extends Vue {
   isNavigationDisplayed = true
   isDayMenuDisplayed = false
 
+  isSnackbarDisplayed = false
+  snackbarMessage = ''
+
   mounted (): void {
+    // Event listener for displaying snackbars
+    document.addEventListener('displaySnackbar', event => {
+      this.snackbarMessage = (event as CustomEvent).detail.message
+      this.isSnackbarDisplayed = true
+    })
+
     // TODO: Set up pull to refresh
   }
 

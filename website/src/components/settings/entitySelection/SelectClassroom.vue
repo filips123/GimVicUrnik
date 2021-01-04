@@ -17,10 +17,6 @@
       <v-btn v-if="isDialog" color="green" text v-on:click=closeDialog>Zapri</v-btn>
       <v-btn color="green" text v-on:click=confirmClassroom>V redu</v-btn>
     </v-card-actions>
-
-    <v-snackbar v-model="displaySnackbar">
-      Izberite učilnico
-    </v-snackbar>
   </v-card>
 </template>
 
@@ -29,6 +25,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { EntityType, SettingsModule } from '@/store/modules/settings'
 import { StorageModule } from '@/store/modules/storage'
+import { displaySnackbar } from '@/utils/snackbar'
 
 @Component
 export default class SelectClassroom extends Vue {
@@ -37,7 +34,6 @@ export default class SelectClassroom extends Vue {
   availableClassrooms = [{ value: 'empty', text: 'Proste učilnice' }, ...(StorageModule.classroomList || [])]
   selectedClassroom: string | null = null
   saveSelection = true
-  displaySnackbar = false
 
   closeDialog (): void {
     this.$emit('closeDialog')
@@ -45,7 +41,7 @@ export default class SelectClassroom extends Vue {
 
   confirmClassroom (): void {
     if (!this.selectedClassroom) {
-      this.displaySnackbar = true
+      displaySnackbar('Izberite učilnico')
       return
     }
 

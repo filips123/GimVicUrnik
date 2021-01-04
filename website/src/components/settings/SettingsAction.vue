@@ -3,10 +3,10 @@
 <template>
   <v-row>
     <v-col>
-      <v-input :append-icon="mdiTuneVariant"
+      <v-input :append-icon="icon"
         :messages="message"
         class="settings-dialog-input"
-        @click.native.stop="inputClicked = true">
+        @click.native="inputClicked = true">
         {{ label }}
       </v-input>
     </v-col>
@@ -27,13 +27,11 @@
 </style>
 
 <script lang="ts">
-import { mdiTuneVariant } from '@mdi/js'
 import { Component, ModelSync, Prop, Vue } from 'vue-property-decorator'
 
 @Component
 export default class SettingsAction extends Vue {
-  mdiTuneVariant = mdiTuneVariant
-
+  @Prop() icon!: string
   @Prop() label!: string
   @Prop() message!: string
   @ModelSync('value', 'input') inputClicked!: boolean
