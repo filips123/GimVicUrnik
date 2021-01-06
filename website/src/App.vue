@@ -37,6 +37,12 @@
 
     <v-snackbar v-model="isSnackbarDisplayed">
       {{ snackbarMessage }}
+
+      <template v-slot:action="{ attrs }" v-if="snackbarButton">
+        <v-btn v-bind="attrs" color="green" text @click="snackbarAction()">
+          {{ snackbarButton }}
+        </v-btn>
+      </template>
     </v-snackbar>
 
     <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" />
@@ -80,6 +86,11 @@ html, body {
   margin-bottom: -25px;
   margin-top: 0;
 }
+
+// Move snackbar a bit more to the top so it doesn't hide navigation
+.v-snack {
+  padding-bottom: 60px !important;
+}
 </style>
 
 <script lang="ts">
@@ -89,6 +100,7 @@ import { Component, Vue } from 'vue-property-decorator'
 
 import { SettingsModule } from '@/store/modules/settings'
 import { updateAllData } from '@/store/modules/storage'
+import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 
 @Component({
   components: {
@@ -107,21 +119,56 @@ export default class App extends Vue {
 
   isSnackbarDisplayed = false
   snackbarMessage = ''
+  snackbarButton = ''
+  snackbarAction?: () => void
 
   get isMobile (): boolean {
     return this.$vuetify.breakpoint.width < 1064
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  snackbarHandler (event: Event): any {
+  snackbarHandler (event: Event): void {
+    if (!(event as CustomEvent).detail) {
+      this.isSnackbarDisplayed = false
+      return
+    }
+
     this.snackbarMessage = (event as CustomEvent).detail.message
+    this.snackbarButton = (event as CustomEvent).detail?.button
+    this.snackbarAction = (event as CustomEvent).detail?.action
+
     this.isSnackbarDisplayed = true
   }
 
-  mounted (): void {
-    // Event listener for displaying snackbars
-    document.addEventListener('displaySnackbar', this.snackbarHandler)
+  swUpdatedHandler (event: Event): void {
+    const registration: ServiceWorkerRegistration = (event as CustomEvent).detail
 
+    displaySnackbar('Na voljo je posodobitev', 'Posodobi', () => {
+      // Hide snackbar
+      hideSnackbar()
+
+      if (!registration || !registration.waiting) return
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+    })
+  }
+
+  controllerChangedHandler (): void {
+    // Add GET parameter to invalidate cache of index HTML file
+    window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
+  }
+
+  created (): void {
+    // Event listeners for displaying and hiding snackbars
+    document.addEventListener('displaySnackbar', this.snackbarHandler)
+    document.addEventListener('hideSnackbar', this.snackbarHandler)
+
+    // Event listener for detecting service worker updates
+    document.addEventListener('serviceWorkerUpdated', this.swUpdatedHandler, { once: true })
+
+    // Event listener for detecting controller changes
+    navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
+  }
+
+  mounted (): void {
     // Create pull to refresh
     PullToRefresh.init({
       mainElement: '#ptr--target',
@@ -139,8 +186,15 @@ export default class App extends Vue {
   }
 
   destroyed (): void {
-    // Remove event listener for displaying snackbars
+    // Remove event listeners for displaying and hiding snackbars
     document.removeEventListener('displaySnackbar', this.snackbarHandler)
+    document.removeEventListener('hideSnackbar', this.snackbarHandler)
+
+    // Remove event listener for detecting service worker updates
+    document.removeEventListener('serviceWorkerUpdated', this.swUpdatedHandler)
+
+    // Remove event listener for detecting controller changes
+    navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
 
     // Destroy pull to refresh instances
     PullToRefresh.destroyAll()
