@@ -64,13 +64,3 @@ Please make sure that your changes are formatted correctly according to the code
 
 * Linting: `flakehell lint`
 * Formatting: `black gimvicunrik`
-
-## Versioning
-
-The project uses [SemVer](https://semver.org/) for versioning. For the available versions and the changelog, see [the releases](https://github.com/filips123/GimVicUrnik/releases) on this repository.
-
-The API and website at released tags are compatible with each other according to SemVer. The API and the website at non-tagged commits may *not* be compatible with each other, because it is possible that not both of them were updated at the same time.
-
-## License
-
-This library is licensed under the GPLv3+ license. See the [LICENSE](LICENSE) file for details.
