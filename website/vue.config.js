@@ -14,6 +14,8 @@ module.exports = {
     themeColor: '#007300',
     msTileColor: '#007300',
 
+    manifestPath: 'site.webmanifest',
+
     manifestOptions: {
       name: process.env.VUE_APP_TITLE,
       short_name: process.env.VUE_APP_SHORT,
@@ -21,19 +23,7 @@ module.exports = {
       keywords: process.env.VUE_APP_KEYWORDS.split(','),
 
       theme_color: '#007300',
-      background_color: '#ffffff',
-
-      start_url: process.env.BASE_URL
+      background_color: '#ffffff'
     }
-  },
-
-  chainWebpack: config => {
-    config.plugin('preload').tap(options => {
-      options[0].include = {
-        type: 'allChunks',
-        chunks: ['app', 'chunk-vendors', 'home', 'timetable']
-      }
-      return options
-    })
   }
 }
