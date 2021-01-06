@@ -15,6 +15,12 @@
   display: none !important;
 }
 
+@media (max-width: 600px) {
+  .v-tab:nth-child(2) {
+    margin-left: 0 !important;
+  }
+}
+
 // Change text color to white
 .v-tab--active {
   color: #fff !important;

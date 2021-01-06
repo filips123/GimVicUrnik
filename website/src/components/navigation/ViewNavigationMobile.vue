@@ -1,4 +1,4 @@
-<!-- Component for displaying navigation between timetable/menus/documents views -->
+<!-- Component for displaying navigation between timetable/menus/documents views on mobile -->
 
 <template>
   <v-bottom-navigation fixed grow>
@@ -24,7 +24,7 @@ import { mdiFood, mdiNewspaper, mdiTimetable } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 @Component
-export default class ViewNavigation extends Vue {
+export default class ViewNavigationMobile extends Vue {
   mdiTimetable = mdiTimetable
   mdiFood = mdiFood
   mdiNewspaper = mdiNewspaper

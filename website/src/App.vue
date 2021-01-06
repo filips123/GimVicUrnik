@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="#009300" dark extension-height="35">
+    <v-app-bar app clipped-left color="#009300" dark extension-height="35">
       <div class="d-flex align-center">
         <v-img alt="GimVičUrnik Logo"
           class="shrink mr-2"
@@ -17,14 +17,14 @@
         <v-icon>{{ mdiCog }}</v-icon>
       </v-btn>
 
-      <template v-if="isNavigationDisplayed && isDayMenuDisplayed" v-slot:extension>
+      <template v-if="isNavigationDisplayed && isMobile && isDayMenuDisplayed" v-slot:extension>
         <day-navigation />
       </template>
     </v-app-bar>
 
-    <!-- TODO: Desktop layout without day navigation and with side navigation instead of bottom one -->
+    <view-navigation-desktop v-if="!isMobile" />
 
-    <v-main id="main" v-bind:class="{ 'pb-16': isNavigationDisplayed }">
+    <v-main id="main" v-bind:class="{ 'pb-16': isNavigationDisplayed && isMobile }">
       <span id="ptr--target"></span>
 
       <v-container fluid>
@@ -39,14 +39,14 @@
       {{ snackbarMessage }}
     </v-snackbar>
 
-    <view-navigation v-if="isNavigationDisplayed" />
+    <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" />
   </v-app>
 </template>
 
 <style lang="scss">
 // Hide scrollbar that Vuetify adds by default
 html {
-  overflow-y: auto;
+  overflow-y: auto !important;
 }
 
 // Disable native pull-to-refresh and Safari elastic scrolling
@@ -87,13 +87,15 @@ import { mdiCog } from '@mdi/js'
 import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
-import DayNavigation from '@/components/navigation/DayNavigation.vue'
-import ViewNavigation from '@/components/navigation/ViewNavigation.vue'
 import { SettingsModule } from '@/store/modules/settings'
 import { updateAllData } from '@/store/modules/storage'
 
 @Component({
-  components: { ViewNavigation, DayNavigation }
+  components: {
+    ViewNavigationDesktop: () => import(/* webpackChunkName: "desktop" */ '@/components/navigation/ViewNavigationDesktop.vue'),
+    ViewNavigationMobile: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/ViewNavigationMobile.vue'),
+    DayNavigation: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/DayNavigation.vue')
+  }
 })
 export default class App extends Vue {
   mdiCog = mdiCog
@@ -106,12 +108,19 @@ export default class App extends Vue {
   isSnackbarDisplayed = false
   snackbarMessage = ''
 
+  get isMobile (): boolean {
+    return this.$vuetify.breakpoint.width < 1064
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  snackbarHandler (event: Event): any {
+    this.snackbarMessage = (event as CustomEvent).detail.message
+    this.isSnackbarDisplayed = true
+  }
+
   mounted (): void {
     // Event listener for displaying snackbars
-    document.addEventListener('displaySnackbar', event => {
-      this.snackbarMessage = (event as CustomEvent).detail.message
-      this.isSnackbarDisplayed = true
-    })
+    document.addEventListener('displaySnackbar', this.snackbarHandler)
 
     // Create pull to refresh
     PullToRefresh.init({
@@ -130,6 +139,9 @@ export default class App extends Vue {
   }
 
   destroyed (): void {
+    // Remove event listener for displaying snackbars
+    document.removeEventListener('displaySnackbar', this.snackbarHandler)
+
     // Destroy pull to refresh instances
     PullToRefresh.destroyAll()
   }

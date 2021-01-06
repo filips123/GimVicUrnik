@@ -9,11 +9,13 @@
             <td v-if="lesson.time === 0" class="timetable-time">PU</td>
             <td v-else class="timetable-time">{{ lesson.time }}.</td>
 
-            <td v-for="data in lesson.data" :key="data.type">
-                <span v-for="(value, index) in data.data" :key="index">
-                  <span v-if="index !== 0" v-html="separator"></span>
-                  <timetable-link :content="value" :type="data.type" />
-                </span>
+            <td v-for="(detail, detailIndex) in lesson.details" :key="detail.type">
+              <span v-if="detail.contents.length === 0 && detailIndex === Math.floor(lesson.details.length/2)">/</span>
+
+              <span v-for="(value, valueIndex) in detail.contents" :key="valueIndex">
+                <span v-if="valueIndex !== 0" v-html="separator"></span>
+                <timetable-link :content="value" :type="detail.type" />
+              </span>
             </td>
           </tr>
         </tbody>
@@ -40,7 +42,7 @@
 }
 
 // Move time cell a bit more to the left
-.timetable-time {
+.timetable-day .timetable-time {
   max-width: 60px;
   min-width: 40px;
   padding-right: 0 !important;
@@ -52,7 +54,7 @@
 }
 
 .theme--dark .highlight {
-  background: #616161 !important;
+  background: #393939 !important;
 }
 
 </style>
@@ -61,9 +63,9 @@
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import TimetableLink from '@/components/timetable/TimetableLink.vue'
-import { EntityType, SelectedEntity, SettingsModule } from '@/store/modules/settings'
+import { EntityType, SelectedEntity } from '@/store/modules/settings'
 import { StateModule } from '@/store/modules/state'
-import { DisplayedLesson, getLessonId, StorageModule } from '@/store/modules/storage'
+import { getTimetableData } from '@/utils/timetable'
 
 @Component({
   components: { TimetableLink }
@@ -80,70 +82,15 @@ export default class TimetableDay extends Vue {
   get lessons (): {
     time: number,
     substitution: boolean,
-    data: {
+    details: {
       type: string,
-      data: string[]
+      contents: string[]
     }[]
   }[] {
-    const dataSource = this.currentEntity?.type !== EntityType.EmptyClassrooms ? StorageModule.timetable : StorageModule.emptyClassrooms
-    const substitutionsSource = this.currentEntity?.type === EntityType.Class ? StorageModule.substitutions : new Map()
-
-    const displayedLessons: Map<number, DisplayedLesson> = new Map()
-    for (const lesson of dataSource || []) {
-      // Check if class/teacher/classroom is correct
-      let isCorrectEntity = false
-      if (this.currentEntity?.type === EntityType.Class) {
-        isCorrectEntity = this.currentEntity.data.includes(lesson.class)
-      } else if (this.currentEntity?.type === EntityType.Teacher) {
-        isCorrectEntity = this.currentEntity.data.includes(lesson.teacher)
-      } else if (this.currentEntity?.type === EntityType.Classroom) {
-        isCorrectEntity = this.currentEntity.data.includes(lesson.classroom)
-      } else if (this.currentEntity?.type === EntityType.EmptyClassrooms) isCorrectEntity = true
-
-      if (lesson.day !== this.currentDay + 1 || !isCorrectEntity) continue
-
-      // Convert data into structured format
-      if (!displayedLessons.has(lesson.time)) {
-        displayedLessons.set(lesson.time, {
-          day: lesson.day,
-          time: lesson.time,
-          subjects: [],
-          classes: [],
-          teachers: [],
-          classrooms: [],
-          substitution: false
-        })
-      }
-
-      // TODO: Add support for substitutions for teachers and classrooms
-
-      // Add substitution if it exists
-      // Currently only works for classes
-      if (SettingsModule.showSubstitutions && substitutionsSource.has(getLessonId(lesson))) {
-        const substitution = substitutionsSource.get(getLessonId(lesson))
-
-        /* eslint-disable no-unused-expressions */
-        displayedLessons.get(lesson.time)?.subjects.push(substitution.subject)
-        displayedLessons.get(lesson.time)?.classes.push(substitution.class)
-        displayedLessons.get(lesson.time)?.teachers.push(substitution.teacher)
-        displayedLessons.get(lesson.time)?.classrooms.push(substitution.classroom)
-        /* eslint-enable */
-
-        const displayedLesson = displayedLessons.get(lesson.time)
-        if (displayedLesson) displayedLesson.substitution = true
-
-        continue
-      }
-
-      /* eslint-disable no-unused-expressions */
-      displayedLessons.get(lesson.time)?.subjects.push(lesson.subject)
-      displayedLessons.get(lesson.time)?.classes.push(lesson.class)
-      displayedLessons.get(lesson.time)?.teachers.push(lesson.teacher)
-      displayedLessons.get(lesson.time)?.classrooms.push(lesson.classroom)
-      /* eslint-enable */
-    }
-
+    const displayedLessons = getTimetableData(this.currentEntity, [this.currentDay + 1]).get(this.currentDay + 1)
     const data = []
+
+    if (!displayedLessons) return []
 
     // Convert lessons of class into displayed format
     if (this.currentEntity?.type === EntityType.Class) {
@@ -151,18 +98,18 @@ export default class TimetableDay extends Vue {
         data.push({
           time: displayedLesson.time,
           substitution: displayedLesson.substitution,
-          data: [
+          details: [
             {
               type: 'subject',
-              data: displayedLesson.subjects
+              contents: displayedLesson.subjects
             },
             {
               type: 'teacher',
-              data: displayedLesson.teachers
+              contents: displayedLesson.teachers
             },
             {
               type: 'classroom',
-              data: displayedLesson.classrooms
+              contents: displayedLesson.classrooms
             }
           ]
         })
@@ -175,18 +122,18 @@ export default class TimetableDay extends Vue {
         data.push({
           time: displayedLesson.time,
           substitution: displayedLesson.substitution,
-          data: [
+          details: [
             {
               type: 'class',
-              data: displayedLesson.classes
+              contents: displayedLesson.classes
             },
             {
               type: 'subject',
-              data: displayedLesson.subjects
+              contents: displayedLesson.subjects
             },
             {
               type: 'classroom',
-              data: displayedLesson.classrooms
+              contents: displayedLesson.classrooms
             }
           ]
         })
@@ -199,18 +146,18 @@ export default class TimetableDay extends Vue {
         data.push({
           time: displayedLesson.time,
           substitution: displayedLesson.substitution,
-          data: [
+          details: [
             {
               type: 'class',
-              data: displayedLesson.classes
+              contents: displayedLesson.classes
             },
             {
               type: 'subject',
-              data: displayedLesson.subjects
+              contents: displayedLesson.subjects
             },
             {
               type: 'teacher',
-              data: displayedLesson.teachers
+              contents: displayedLesson.teachers
             }
           ]
         })
@@ -223,10 +170,10 @@ export default class TimetableDay extends Vue {
         data.push({
           time: displayedLesson.time,
           substitution: false,
-          data: [
+          details: [
             {
               type: 'classroom',
-              data: displayedLesson.classrooms
+              contents: displayedLesson.classrooms
             }
           ]
         })

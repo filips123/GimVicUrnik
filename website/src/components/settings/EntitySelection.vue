@@ -40,7 +40,7 @@ export default class EntitySelection extends Vue {
 
   @Prop() isDialog!: boolean
 
-  // eslint-disable-next-line
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-undef
   stateHandler!: (event: WindowEventMap['popstate']) => any
 
   created (): void {

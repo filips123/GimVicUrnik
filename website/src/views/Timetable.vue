@@ -1,5 +1,5 @@
 <template>
-  <v-row v-if="isReady" class="timetable" justify="center">
+  <v-row v-if="isReady && $root.$children[0].isMobile" class="timetable" justify="center">
     <v-tabs-items ref="tabs" v-model="currentDay" :touch="tabsItemsTouch">
       <v-tab-item v-for="(dayName, dayIndex) in daysInWeek" :key="dayIndex">
         <timetable-day :current-day="dayIndex" />
@@ -7,16 +7,22 @@
     </v-tabs-items>
   </v-row>
 
-  <!-- TODO: Desktop layout where whole week is displayed -->
-
+  <v-row v-else-if="isReady && !$root.$children[0].isMobile" class="timetable" justify="center">
+    <timetable-week />
+  </v-row>
   <loading v-else />
 </template>
 
 <style lang="scss">
-// Fix background on dark theme and resize table
+// Fix background on dark theme and resize mobile timetable
 .timetable > .v-tabs-items {
   background-color: unset !important;
   width: 100%;
+}
+
+// Set max desktop timetable width
+.timetable > .v-sheet {
+  width: min(110rem, 100%);
 }
 
 // Fix table height and width
@@ -31,14 +37,17 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
 
 import Loading from '@/components/base/Loading.vue'
-import TimetableDay from '@/components/timetable/TimetableDay.vue'
 import { EntityType, SettingsModule } from '@/store/modules/settings'
 import { StateModule } from '@/store/modules/state'
 import { StorageModule } from '@/store/modules/storage'
 import { daysInWeek } from '@/utils/days'
 
 @Component({
-  components: { TimetableDay, Loading }
+  components: {
+    TimetableDay: () => import(/* webpackChunkName: "mobile" */ '@/components/timetable/TimetableDay.vue'),
+    TimetableWeek: () => import(/* webpackChunkName: "desktop" */ '@/components/timetable/TimetableWeek.vue'),
+    Loading
+  }
 })
 export default class Timetable extends Vue {
   daysInWeek = daysInWeek
@@ -48,12 +57,12 @@ export default class Timetable extends Vue {
   // This is needed for pull to refresh to work
   tabsItemsTouch = {
     left: (): void => {
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.prev() : this.$refs.tabs.next()
     },
     right: (): void => {
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.next() : this.$refs.tabs.prev()
     },
