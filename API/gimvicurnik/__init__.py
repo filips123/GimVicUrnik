@@ -3,8 +3,6 @@ import os
 import yaml
 from flask import Flask, jsonify, request
 from schema import Optional, Or, Schema, SchemaError
-from sentry_sdk.integrations.flask import FlaskIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
 
@@ -103,6 +101,8 @@ class GimVicUrnik:
 
         if "sentry" in self.config and self.config["sentry"]["enabled"]:
             import sentry_sdk
+            from sentry_sdk.integrations.flask import FlaskIntegration
+            from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
             # Try to get package version, otherwise use commit hash from Sentry
             # Also modify version so it becomes valid SemVer version
