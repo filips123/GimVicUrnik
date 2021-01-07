@@ -51,7 +51,7 @@
 <style lang="scss">
 // Add back top padding that is removed by a dialog
 .v-dialog > .v-card > .v-card__text {
-  padding: 16px 24px 20px;
+  padding: 16px 24px 20px !important;
 }
 
 // Center settings page

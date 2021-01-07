@@ -13,7 +13,12 @@
 
       <v-spacer />
 
-      <v-btn v-if="isNavigationDisplayed" :to="{ name: 'settings' }" alt="Nastavitve" icon large>
+      <v-btn v-if="isNavigationDisplayed"
+        :to="{ name: 'settings' }"
+        alt="Nastavitve"
+        aria-label="Nastavitve"
+        icon
+        large>
         <v-icon>{{ mdiCog }}</v-icon>
       </v-btn>
 
@@ -38,7 +43,7 @@
     <v-snackbar v-model="isSnackbarDisplayed">
       {{ snackbarMessage }}
 
-      <template v-slot:action="{ attrs }" v-if="snackbarButton">
+      <template v-if="snackbarButton" v-slot:action="{ attrs }">
         <v-btn v-bind="attrs" color="green" text @click="snackbarAction()">
           {{ snackbarButton }}
         </v-btn>
@@ -165,7 +170,7 @@ export default class App extends Vue {
     document.addEventListener('serviceWorkerUpdated', this.swUpdatedHandler, { once: true })
 
     // Event listener for detecting controller changes
-    navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
+    navigator.serviceWorker && navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
   }
 
   mounted (): void {
@@ -194,7 +199,7 @@ export default class App extends Vue {
     document.removeEventListener('serviceWorkerUpdated', this.swUpdatedHandler)
 
     // Remove event listener for detecting controller changes
-    navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
+    navigator.serviceWorker && navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
 
     // Destroy pull to refresh instances
     PullToRefresh.destroyAll()

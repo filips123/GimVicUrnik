@@ -44,7 +44,7 @@
 .timetable-week > .v-data-table__wrapper > table > thead > tr > th,
 .timetable-week > .v-data-table__wrapper > table > tbody > tr > td {
   overflow-wrap: anywhere;
-  padding: 20px 16px;
+  padding: 20px 16px !important;
   text-align: center !important;
 }
 

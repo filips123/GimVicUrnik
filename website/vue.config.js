@@ -25,5 +25,15 @@ module.exports = {
       theme_color: '#007300',
       background_color: '#ffffff'
     }
+  },
+
+  chainWebpack: config => {
+    config.plugin('preload').tap(options => {
+      options[0].include = {
+        type: 'allChunks',
+        chunks: ['app', 'chunk-vendors', 'home', 'timetable']
+      }
+      return options
+    })
   }
 }
