@@ -12,7 +12,7 @@ from ..utils.sentry import with_transaction
 
 
 @click.command("update-timetable", help="Update the timetable data.")
-@with_transaction(name="update-timetable", op="command", sampled=True)
+@with_transaction(name="update-timetable", op="command")
 @with_appcontext
 def update_timetable_command():
     """Update data from the timetable"""
@@ -25,7 +25,7 @@ def update_timetable_command():
 
 
 @click.command("update-eclassroom", help="Update the e-classroom data.")
-@with_transaction(name="update-eclassroom", op="command", sampled=True)
+@with_transaction(name="update-eclassroom", op="command")
 @with_appcontext
 def update_eclassroom_command():
     """Update data from the e-classroom."""
@@ -38,7 +38,7 @@ def update_eclassroom_command():
 
 
 @click.command("update-menu", help="Update the menu data.")
-@with_transaction(name="update-menu", op="command", sampled=True)
+@with_transaction(name="update-menu", op="command")
 @with_appcontext
 def update_menu_command():
     """Update snack and lunch menu data ."""
@@ -51,7 +51,7 @@ def update_menu_command():
 
 
 @click.command("create-database", help="Create the database.")
-@with_transaction(name="create-database", op="command", sampled=True)
+@with_transaction(name="create-database", op="command")
 @with_appcontext
 def create_database_command():
     """Create a new database and all tables."""
@@ -61,7 +61,7 @@ def create_database_command():
 
 
 @click.command("cleanup-database", help="Clean up the database.")
-@with_transaction(name="cleanup-database", op="command", sampled=True)
+@with_transaction(name="cleanup-database", op="command")
 @with_appcontext
 def cleanup_database_command():
     """Clean up the database."""

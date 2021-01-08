@@ -46,8 +46,15 @@ class GimVicUrnik:
             Optional("sentry"): {
                 "dsn": str,
                 Optional("enabled", default=True): bool,
-                Optional("traces", default=1.0): float,
-                Optional("breadcrumbs", default=100): int,
+                Optional("collectIPs", default=False): bool,
+                Optional("releasePrefix", default=""): str,
+                Optional("releaseSuffix", default=""): str,
+                Optional("maxBreadcrumbs", default=100): int,
+                Optional("sampleRate", default={"commands": 0.5, "requests": 0.25, "other": 0.25}): {
+                    "commands": float,
+                    "requests": float,
+                    "other": float,
+                },
             },
             Optional("logging"): Or(dict, str),
             Optional("cors"): [str],
@@ -79,6 +86,7 @@ class GimVicUrnik:
         self.app = Flask("gimvicurnik", static_folder=None)
         self.app.gimvicurnik = self
 
+        self.create_sentry_hooks()
         self.create_error_hooks()
         self.create_database_hooks()
         self.create_cors_hooks()
@@ -111,22 +119,52 @@ class GimVicUrnik:
             try:
                 import pkg_resources
 
-                release = pkg_resources.get_distribution("gimvicurnik").version
-                release = release.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
+                version = pkg_resources.get_distribution("gimvicurnik").version
+                version = version.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
 
             except Exception:
                 from sentry_sdk.utils import get_default_release
 
-                release = get_default_release()
+                version = get_default_release()
 
+            environment = os.environ.get("FLASK_ENV", "production")
+            release = self.config["sentry"]["releasePrefix"] + version + self.config["sentry"]["releaseSuffix"]
+
+            # Create custom traces sampler so command and request traces can be configured separately
+            def _sentry_traces_sampler(context):
+                if context["transaction_context"]["op"] == "command":
+                    return self.config["sentry"]["sampleRate"]["commands"]
+                elif context["transaction_context"]["op"] == "http.server":
+                    return self.config["sentry"]["sampleRate"]["requests"]
+                else:
+                    return self.config["sentry"]["sampleRate"]["other"]
+
+            # Init the Sentry SDK
             sentry_sdk.init(
                 dsn=self.config["sentry"]["dsn"],
-                traces_sample_rate=self.config["sentry"]["traces"],
-                max_breadcrumbs=self.config["sentry"]["breadcrumbs"],
+                max_breadcrumbs=self.config["sentry"]["maxBreadcrumbs"],
+                traces_sampler=_sentry_traces_sampler,
                 integrations=[FlaskIntegration(transaction_style="url"), SqlalchemyIntegration()],
-                environment=os.environ.get("FLASK_ENV", "production"),
+                environment=environment,
                 release=release,
             )
+
+    def create_sentry_hooks(self):
+        """Add user IP to Sentry if this is enabled, except if user has DNT or GPC headers."""
+
+        if "sentry" in self.config and self.config["sentry"]["collectIPs"]:
+            from sentry_sdk.integrations import wsgi
+            import sentry_sdk
+
+            @self.app.before_request
+            def _add_user_ip():
+                # Add non-identifiable user ID to users with DNT or GPC headers
+                if request.headers.get("DNT") == "1" or request.headers.get("Sec-GPC") == "1":
+                    sentry_sdk.set_user({"id": "0000000000000000000000000000000000000000"})
+                    return
+
+                # Use Sentry helper to get user IP
+                sentry_sdk.set_user({"ip_address": wsgi.get_client_ip(request.environ)})
 
     def create_error_hooks(self):
         """Add error handlers that will show errors as JSON."""
@@ -169,10 +207,14 @@ class GimVicUrnik:
             if "cors" not in self.config:
                 return response
 
+            # Set request origin as allowed origin if it is allowed in config
             if "*" in self.config["cors"]:
                 response.headers["Access-Control-Allow-Origin"] = "*"
             elif "Origin" in request.headers and request.headers["Origin"] in self.config["cors"]:
                 response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
+
+            # Allow Sentry-Trace header
+            response.headers["Access-Control-Allow-Headers"] = "Sentry-Trace"
 
             return response
 

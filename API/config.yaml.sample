@@ -18,8 +18,12 @@ cors:
 sentry:
   dsn: YOUR-DSN-HERE
   enabled: true
-  traces: 0.25
-  breadcrumbs: 100
+  collectIPs: false
+  maxBreadcrumbs: 100
+  sampleRate:
+    commands: 0.5
+    requests: 0.25
+    other: 0.25
 
 logging:
   version: 1
