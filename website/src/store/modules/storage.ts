@@ -1,3 +1,4 @@
+import { captureException } from '@sentry/browser'
 import { getModule, Module, MutationAction, VuexModule } from 'vuex-module-decorators'
 
 import store from '@/store'
@@ -49,6 +50,27 @@ export async function updateAllData (): Promise<void> {
   displaySnackbar('Podatki posodobljeni')
 }
 
+class HTTPError extends Error {
+  status: number
+
+  constructor (message: string, status: number) {
+    super(message)
+
+    this.name = 'HTTPError'
+    this.status = status
+  }
+}
+
+async function fetchHandle (input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init)
+
+  if (!response.ok) {
+    throw new HTTPError(`Invalid response status from the API: ${response.status}`, response.status)
+  }
+
+  return response
+}
+
 @Module({ name: 'storage', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
 class Storage extends VuexModule {
   lastUpdated: Date | null = null
@@ -89,16 +111,23 @@ class Storage extends VuexModule {
       return
     }
 
-    const responses = await Promise.all([
-      fetch(process.env.VUE_APP_API + '/list/classes'),
-      fetch(process.env.VUE_APP_API + '/list/teachers'),
-      fetch(process.env.VUE_APP_API + '/list/classrooms')
-    ])
+    try {
+      const responses = await Promise.all([
+        fetchHandle(process.env.VUE_APP_API + '/list/classes'),
+        fetchHandle(process.env.VUE_APP_API + '/list/teachers'),
+        fetchHandle(process.env.VUE_APP_API + '/list/classrooms')
+      ])
 
-    const [classList, teacherList, classroomList] = await Promise.all(responses.map(response => response.json()))
-    const lastUpdated = new Date()
+      const [classList, teacherList, classroomList] = await Promise.all(responses.map(response => response.json()))
+      const lastUpdated = new Date()
 
-    return { classList, teacherList, classroomList, lastUpdated }
+      return { classList, teacherList, classroomList, lastUpdated }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+    }
   }
 
   @MutationAction
@@ -117,8 +146,15 @@ class Storage extends VuexModule {
       return
     }
 
-    const response = await fetch(process.env.VUE_APP_API + '/timetable')
-    return { timetable: await response.json(), lastUpdated: new Date() }
+    try {
+      const response = await fetchHandle(process.env.VUE_APP_API + '/timetable')
+      return { timetable: await response.json(), lastUpdated: new Date() }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+    }
   }
 
   @MutationAction
@@ -137,11 +173,18 @@ class Storage extends VuexModule {
       return
     }
 
-    const responses = await Promise.all(getWeekDays(getMonday(new Date())).map(date => fetch(process.env.VUE_APP_API + '/substitutions/date/' + date.toISOString().split('T')[0])))
-    const _substitutions = await Promise.all(responses.map(response => response.json()))
-    const lastUpdated = new Date()
+    try {
+      const responses = await Promise.all(getWeekDays(getMonday(new Date())).map(date => fetchHandle(process.env.VUE_APP_API + '/substitutions/date/' + date.toISOString().split('T')[0])))
+      const _substitutions = await Promise.all(responses.map(response => response.json()))
+      const lastUpdated = new Date()
 
-    return { _substitutions, lastUpdated }
+      return { _substitutions, lastUpdated }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+    }
   }
 
   @MutationAction
@@ -160,8 +203,15 @@ class Storage extends VuexModule {
       return
     }
 
-    const response = await fetch(process.env.VUE_APP_API + '/timetable/classrooms/empty')
-    return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
+    try {
+      const response = await fetchHandle(process.env.VUE_APP_API + '/timetable/classrooms/empty')
+      return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+    }
   }
 }
 

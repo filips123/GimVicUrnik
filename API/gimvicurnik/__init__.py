@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 from schema import Optional, Or, Schema, SchemaError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
+from werkzeug.exceptions import HTTPException
 
 from .commands import (
     cleanup_database_command,
@@ -78,6 +79,7 @@ class GimVicUrnik:
         self.app = Flask("gimvicurnik", static_folder=None)
         self.app.gimvicurnik = self
 
+        self.create_error_hooks()
         self.create_database_hooks()
         self.create_cors_hooks()
 
@@ -124,6 +126,24 @@ class GimVicUrnik:
                 integrations=[FlaskIntegration(transaction_style="url"), SqlalchemyIntegration()],
                 environment=os.environ.get("FLASK_ENV", "production"),
                 release=release,
+            )
+
+    def create_error_hooks(self):
+        """Add error handlers that will show errors as JSON."""
+
+        @self.app.errorhandler(HTTPException)
+        def resource_not_found(error):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "status": error.code,
+                            "name": error.name,
+                            "description": error.description,
+                        },
+                    },
+                ),
+                error.code,
             )
 
     def create_database_hooks(self):
