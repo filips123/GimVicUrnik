@@ -23,7 +23,7 @@ yarn
 
 ### Configuration
 
-GimVičUrnik website uses `.env` file for configuration. Example file can be found at [`.env.sample`](.env.sample). If you don't plan to use Sentry, you can delete its section entirely.
+GimVičUrnik website uses `.env` file for configuration. Example file can be found at [`.env.sample`](.env.sample). The official API server only allows requests from the official website, so you will also have to set up your own API server. If you don't plan to use Sentry, you can delete its section entirely.
 
 You can also set configuration using your environment variables or in one of `.env` files [supported by Vue CLI](https://cli.vuejs.org/guide/mode-and-env.html).
 

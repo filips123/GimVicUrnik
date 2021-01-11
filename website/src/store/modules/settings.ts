@@ -31,6 +31,10 @@ export interface SelectedMenu {
   lunch: LunchType;
 }
 
+interface NavigatorGPC extends Navigator {
+  globalPrivacyControl: boolean | undefined
+}
+
 @Module({ name: 'settings', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
 class Settings extends VuexModule {
   selectedEntity: SelectedEntity | null = null
@@ -40,6 +44,7 @@ class Settings extends VuexModule {
   showLinksInTimetable = true
   enablePullToRefresh = true
   enableUpdateOnLoad = false
+  doNotTrack: boolean = navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl
   darkTheme: boolean | null = null
 
   @Mutation
@@ -70,6 +75,11 @@ class Settings extends VuexModule {
   @Mutation
   setEnableUpdateOnLoad (enableUpdateOnLoad: boolean): void {
     this.enableUpdateOnLoad = enableUpdateOnLoad
+  }
+
+  @Mutation
+  setDoNotTrack (doNotTrack: boolean): void {
+    this.doNotTrack = doNotTrack
   }
 
   @Mutation

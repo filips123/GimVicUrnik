@@ -10,7 +10,12 @@
       </p>
       <p>
         Aplikacija je neuradna in lahko vsebuje nepopolne ali napačne podatke. Za ogled uradnih podatkov uporabite
-        <a class="text-decoration-none" href="https://ucilnica.gimvic.org/">Spletno učilnico Gimnazije Vič</a>. </p>
+        <a class="text-decoration-none" href="https://ucilnica.gimvic.org/">Spletno učilnico Gimnazije Vič</a>.
+      </p>
+      <p>
+        Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in izboljšanja učinkovitosti.
+        Podatki se ne uporabljajo za identfikacijo uporabnikov, oglaševanje ali druge namene.
+      </p>
     </v-card-text>
 
     <v-card-actions class="justify-end">

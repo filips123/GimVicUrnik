@@ -21,6 +21,7 @@
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
     <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
+    <settings-switch v-model="enableDataCollection" label="Zbiranje tehničnih podatkov" />
 
     <!-- TODO: Use three values: Default (system), light, dark -->
     <settings-switch v-model="darkTheme" label="Temni način" />
@@ -170,6 +171,14 @@ export default class Settings extends Vue {
 
   set enableUpdateOnLoad (enableUpdateOnLoad: boolean) {
     SettingsModule.setEnableUpdateOnLoad(enableUpdateOnLoad)
+  }
+
+  get enableDataCollection (): boolean {
+    return !SettingsModule.doNotTrack
+  }
+
+  set enableDataCollection (enableDataCollection: boolean) {
+    SettingsModule.setDoNotTrack(!enableDataCollection)
   }
 
   get darkTheme (): boolean {

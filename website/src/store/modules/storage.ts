@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { captureException } from '@sentry/browser'
 import { getModule, Module, MutationAction, VuexModule } from 'vuex-module-decorators'
 
@@ -126,7 +128,7 @@ class Storage extends VuexModule {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)
 
-      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
     }
   }
 
@@ -153,7 +155,7 @@ class Storage extends VuexModule {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)
 
-      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
     }
   }
 
@@ -183,7 +185,7 @@ class Storage extends VuexModule {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)
 
-      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
     }
   }
 
@@ -210,7 +212,7 @@ class Storage extends VuexModule {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)
 
-      if (process.env.VUE_APP_SENTRY_ENABLED) captureException(error)
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
     }
   }
 }

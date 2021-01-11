@@ -16,6 +16,7 @@
 </style>
 
 <script lang="ts">
+import { configureScope } from '@sentry/vue'
 import { Component, Vue } from 'vue-property-decorator'
 
 @Component
@@ -23,6 +24,12 @@ export default class NotFound extends Vue {
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Stran ni najdena'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Stran ni najdena')
+
+    if (process.env.VUE_APP_SENTRY_ENABLED === 'true') {
+      configureScope(scope => {
+        scope.getSpan()?.setHttpStatus(404)
+      })
+    }
   }
 }
 </script>
