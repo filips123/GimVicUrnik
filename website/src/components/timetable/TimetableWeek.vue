@@ -61,8 +61,7 @@
 
 // Move time cell a bit more to the left
 .timetable-week .timetable-time {
-  max-width: 60px;
-  min-width: 40px;
+  width: 60px;
   padding-left: 8px !important;
   padding-right: 0 !important;
 }
