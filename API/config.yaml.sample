@@ -1,0 +1,42 @@
+sources:
+  timetable:
+    url: http://old.gimvic.org/urnik/data.js
+  eclassroom:
+    url: https://ucilnica.gimvic.org/webservice/rest/server.php
+    token: YOUR-TOKEN-HERE
+    course: 118
+    restricted:
+      - https://ucilnica.gimvic.org/webservice/pluginfile.php
+  menu:
+    url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
+
+database: sqlite:///app.db
+
+cors:
+  - https://gimvicurnik.filips.si
+
+sentry:
+  dsn: YOUR-DSN-HERE
+  enabled: true
+  collectIPs: false
+  maxBreadcrumbs: 100
+  sampleRate:
+    commands: 0.5
+    requests: 0.25
+    other: 0.25
+
+logging:
+  version: 1
+  formatters:
+    default:
+      format: '[%(asctime)s] %(levelname)s: %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      stream: ext://sys.stdout
+      formatter: default
+  loggers:
+    gimvicurnik:
+      level: INFO
+      handlers:
+        - console

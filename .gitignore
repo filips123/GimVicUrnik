@@ -34,8 +34,10 @@ pids/
 
 # Environments
 .python-version
-.env
-.venv
+.env*
+.venv*
+!.env*.sample
+!.venv*.sample
 ENV/
 env/
 env.bak/
@@ -104,8 +106,8 @@ node_modules/
 web_modules/
 
 # GimVicUrnik Configuration & Database
-/API/nadconfig.yaml
-/API/app.db
+config.yaml
+app.db
 
 # Do not ignore .gitkeep files
 !.gitkeep

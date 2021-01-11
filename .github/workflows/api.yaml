@@ -1,0 +1,55 @@
+name: API Checks
+
+on:
+  push:
+    paths:
+      - API/**
+  pull_request:
+    paths:
+      - API/**
+
+defaults:
+  run:
+    working-directory: API
+    shell: bash
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Configure Poetry cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pypoetry
+            ~/.poetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+          ~/.poetry/bin/poetry config virtualenvs.create false
+          echo "~/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Install tools
+        run: python -m pip install --upgrade pip wheel poetry-dynamic-versioning
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Lint the project
+        run: flakehell lint

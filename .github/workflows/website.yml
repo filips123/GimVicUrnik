@@ -1,0 +1,77 @@
+name: Website Checks
+
+on:
+  push:
+    paths:
+      - website/**
+  pull_request:
+    paths:
+      - website/**
+
+defaults:
+  run:
+    working-directory: website
+    shell: bash
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Configure Yarn cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.config/yarn
+            ./node_modules/.cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Copy configuration
+        run: cp .env.sample .env
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint the project
+        run: yarn lint --mode production
+
+  build:
+    name: Building
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Configure Yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.config/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Copy configuration
+        run: cp .env.sample .env
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build the project
+        run: yarn build --mode production
