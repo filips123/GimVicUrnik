@@ -92,7 +92,8 @@ class MenuUpdater:
         }
 
         # Example: KOSILO-4jan-8jan-2021.pdf
-        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+).pdf", url)
+        # Another example: KOSILO-25jan-29jan-2021-PDF.pdf
+        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?.pdf", url)
 
         if date:
             return datetime.date(
