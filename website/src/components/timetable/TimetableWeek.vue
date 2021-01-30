@@ -6,7 +6,8 @@
       <template v-slot:default>
         <thead>
           <tr>
-            <th class="timetable-time">Ura</th>
+            <th v-if="Hoursenable" class="timetable-time">Ura</th>
+            <th class="hours"></th>
             <th v-for="(name, index) in daysInWeek"
               :key="index"
               v-bind:class="{ 'highlight-light': index === currentDay }">{{ name }}
@@ -19,6 +20,7 @@
             <template v-if="lesson.days">
               <td v-if="lesson.time === 0" class="timetable-time">PU</td>
               <td v-else class="timetable-time">{{ lesson.time }}.</td>
+              <td v-if="Hoursenable" class="hours">{{hourtimes[lesson.time]}}</td>
             </template>
             <td v-for="(data, day) in lesson.days"
               :key="day"
@@ -88,11 +90,11 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 
-import { EntityType, SelectedEntity } from '@/store/modules/settings'
+import { EntityType, SelectedEntity, SettingsModule } from '@/store/modules/settings'
 import { StateModule } from '@/store/modules/state'
 import { daysInWeek, getCurrentDay } from '@/utils/days'
 import { getTimetableData } from '@/utils/timetable'
-
+import { hourtimes } from '@/utils/hours'
 import TimetableLink from './TimetableLink.vue'
 
 @Component({
@@ -100,6 +102,7 @@ import TimetableLink from './TimetableLink.vue'
 })
 export default class TimetableWeek extends Vue {
   daysInWeek = daysInWeek
+  hourtimes = hourtimes
   currentDay = getCurrentDay()
 
   detailSeparator = ' - '
@@ -107,6 +110,10 @@ export default class TimetableWeek extends Vue {
 
   get currentEntity (): SelectedEntity | null {
     return StateModule.currentEntity
+  }
+
+  get Hoursenable (): boolean {
+    return !SettingsModule.showHours
   }
 
   get lessons (): {
