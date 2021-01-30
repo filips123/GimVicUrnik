@@ -33,6 +33,13 @@ export interface DisplayedLesson {
   substitution: boolean;
 }
 
+export interface Document {
+  data: string;
+  type: string;
+  url: string;
+  description: string;
+}
+
 export function getLessonId (substitution: Lesson): string {
   return `${substitution.day}-${substitution.time}-${substitution.class}-${substitution.teacher}`
 }
@@ -46,7 +53,8 @@ export async function updateAllData (): Promise<void> {
     StorageModule.updateLists(true),
     StorageModule.updateTimetable(true),
     StorageModule.updateEmptyClassrooms(true),
-    StorageModule.updateSubstitutions(true)
+    StorageModule.updateSubstitutions(true),
+    StorageModule.updateDocuments(true)
   ])
 
   displaySnackbar('Podatki posodobljeni')
@@ -85,6 +93,7 @@ class Storage extends VuexModule {
   _substitutions: Substitution[][] | null = null
 
   emptyClassrooms: Lesson[] | null = null
+  documents: Document[] | null = null
 
   get substitutions (): Map<string, Substitution> {
     const substitutionMap = new Map()
@@ -208,6 +217,33 @@ class Storage extends VuexModule {
     try {
       const response = await fetchHandle(process.env.VUE_APP_API + '/timetable/classrooms/empty')
       return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
+    }
+  }
+
+  @MutationAction
+  async updateDocuments (forceUpdate = false) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const isStoredLocally = 'storage' in localStorage && this.state.documents
+    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
+
+    if (!navigator.onLine) {
+      displaySnackbar('Internetna povezava ni na voljo')
+      return
+    }
+
+    if (!forceUpdate && !shouldUpdateStorage) {
+      return
+    }
+
+    try {
+      const response = await fetchHandle(process.env.VUE_APP_API + '/documents')
+      return { documents: await response.json(), lastUpdated: new Date() }
     } catch (error) {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)

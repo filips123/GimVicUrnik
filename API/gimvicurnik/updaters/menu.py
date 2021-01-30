@@ -36,25 +36,26 @@ class MenuUpdater:
         except (IOError, ParserRejectedMarkup) as error:
             raise MenuApiError("Error while downloading or parsing menu index") from error
 
-        menus = soup.find("li", {"class": "jedilnik"})
+        menus = soup.find_all("li", {"class": "jedilnik"})
         if not menus:
             self.logger.info("No menus found")
             return iter(())
 
-        for menu in menus.find_all("a", href=True):
-            contents = str(menu.contents[0]).lower()
+        for menu in menus:
+            for link in menu.find_all("a", href=True):
+                contents = str(link.contents[0]).lower()
 
-            if "malica" in contents:
-                menu_type = "snack"
-            elif "kosilo" in contents:
-                menu_type = "lunch"
-            else:
-                continue
+                if "malica" in contents:
+                    menu_type = "snack"
+                elif "kosilo" in contents:
+                    menu_type = "lunch"
+                else:
+                    continue
 
-            menu_url = self.url + menu["href"]
-            menu_date = self._get_date(menu_url)
+                menu_url = self.url + link["href"]
+                menu_date = self._get_date(menu_url)
 
-            yield menu_type, menu_url, menu_date
+                yield menu_type, menu_url, menu_date
 
     @staticmethod
     def _get_date(url):
@@ -196,6 +197,7 @@ class MenuUpdater:
         document.date = date
         document.type = "snack-menu"
         document.url = url
+        document.description = "Jedilnik za malico"
         document.hash = hash
 
         self.session.add(document)
@@ -277,6 +279,7 @@ class MenuUpdater:
         document.date = date
         document.type = "lunch-menu"
         document.url = url
+        document.description = "Jedilnik za kosilo"
         document.hash = hash
 
         self.session.add(document)

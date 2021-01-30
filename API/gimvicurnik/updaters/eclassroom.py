@@ -29,7 +29,7 @@ class EClassroomUpdater:
                 self._store_substitutions(name, url.replace("dl=0", "dl=1"))
             elif "delitevKosila" in url:
                 self._store_lunch_schedule(name, url)
-            elif "okroznica" in url:
+            elif "okroznica" in url.lower() or "okrožnica" in url.lower():
                 self._store_generic(name, url, date, "circular")
             else:
                 self._store_generic(name, url, date, "other")
@@ -355,7 +355,7 @@ class EClassroomUpdater:
         document.date = date
         document.type = "substitutions"
         document.url = url
-        document.description = name
+        document.description = name.split(",")[0]
         document.hash = hash
 
         self.session.add(document)
@@ -456,7 +456,7 @@ class EClassroomUpdater:
         document.date = date
         document.type = "lunch-schedule"
         document.url = url
-        document.description = name
+        document.description = name.split(",")[0]
         document.hash = hash
 
         self.session.add(document)
