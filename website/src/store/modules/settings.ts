@@ -42,8 +42,8 @@ class Settings extends VuexModule {
 
   showSubstitutions = true
   showLinksInTimetable = true
+  showHoursInTimetable = true
   enablePullToRefresh = true
-  showHours = false
   enableUpdateOnLoad = false
   doNotTrack: boolean = navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl
   darkTheme: boolean | null = null
@@ -69,8 +69,8 @@ class Settings extends VuexModule {
   }
 
   @Mutation
-  setShowHours (showHours: boolean): void {
-    this.showHours = showHours
+  setShowHoursInTimetable (showHoursInTimetable: boolean): void {
+    this.showHoursInTimetable = showHoursInTimetable
   }
 
   @Mutation
