@@ -19,10 +19,10 @@
 
     <settings-switch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
+    <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
     <settings-switch v-model="enableDataCollection" label="Zbiranje tehničnih podatkov" />
-
     <!-- TODO: Use three values: Default (system), light, dark -->
     <settings-switch v-model="darkTheme" label="Temni način" />
 
@@ -155,6 +155,14 @@ export default class Settings extends Vue {
 
   set showLinksInTimetable (showLinksInTimetable: boolean) {
     SettingsModule.setShowLinksInTimetable(showLinksInTimetable)
+  }
+
+  get showHoursInTimetable (): boolean {
+    return SettingsModule.showHoursInTimetable
+  }
+
+  set showHoursInTimetable (showHoursInTimetable: boolean) {
+    SettingsModule.setShowHoursInTimetable(showHoursInTimetable)
   }
 
   get enablePullToRefresh (): boolean {

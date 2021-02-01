@@ -6,7 +6,7 @@
       <template v-slot:default>
         <thead>
           <tr>
-            <th class="timetable-time">Ura</th>
+            <th class="timetable-time" :colspan="showHours ? 2 : 1">Ura</th>
             <th v-for="(name, index) in daysInWeek"
               :key="index"
               v-bind:class="{ 'highlight-light': index === currentDay }">{{ name }}
@@ -19,6 +19,7 @@
             <template v-if="lesson.days">
               <td v-if="lesson.time === 0" class="timetable-time">PU</td>
               <td v-else class="timetable-time">{{ lesson.time }}.</td>
+              <td v-if="showHours" class="timetable-hour">{{ hourTimes[lesson.time] }}</td>
             </template>
             <td v-for="(data, day) in lesson.days"
               :key="day"
@@ -44,7 +45,8 @@
 .timetable-week > .v-data-table__wrapper > table > thead > tr > th,
 .timetable-week > .v-data-table__wrapper > table > tbody > tr > td {
   overflow-wrap: anywhere;
-  padding: 20px 16px !important;
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
   text-align: center !important;
 }
 
@@ -63,7 +65,14 @@
 .timetable-week .timetable-time {
   width: 60px;
   padding-left: 8px !important;
-  padding-right: 0 !important;
+  padding-right: 8px !important;
+}
+
+// Move hour cell a bit more to the left
+.timetable-week .timetable-hour {
+  width: 125px;
+  padding-left: 0 !important;
+  padding-right: 20px !important;
 }
 
 // Set substitution highlights
@@ -88,9 +97,10 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 
-import { EntityType, SelectedEntity } from '@/store/modules/settings'
+import { EntityType, SelectedEntity, SettingsModule } from '@/store/modules/settings'
 import { StateModule } from '@/store/modules/state'
 import { daysInWeek, getCurrentDay } from '@/utils/days'
+import { hourTimes } from '@/utils/hours'
 import { getTimetableData } from '@/utils/timetable'
 
 import TimetableLink from './TimetableLink.vue'
@@ -100,6 +110,8 @@ import TimetableLink from './TimetableLink.vue'
 })
 export default class TimetableWeek extends Vue {
   daysInWeek = daysInWeek
+  hourTimes = hourTimes
+
   currentDay = getCurrentDay()
 
   detailSeparator = ' - '
@@ -107,6 +119,10 @@ export default class TimetableWeek extends Vue {
 
   get currentEntity (): SelectedEntity | null {
     return StateModule.currentEntity
+  }
+
+  get showHours (): boolean {
+    return SettingsModule.showHoursInTimetable
   }
 
   get lessons (): {

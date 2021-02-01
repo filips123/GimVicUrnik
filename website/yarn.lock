@@ -9177,7 +9177,7 @@ vuex-persist@^3.1.3:
 
 "vuex@https://github.com/filips123/vuex#preservestate-options-dist":
   version "3.7.0-dev"
-  resolved "https://github.com/filips123/vuex#226839ffded4b52c2ee188b8238e6206862d9440"
+  resolved "https://github.com/filips123/vuex#cc495a848119e2ddfb96d5812e9c71f00bc3b5fb"
   dependencies:
     deepmerge "^4.2.2"
 
