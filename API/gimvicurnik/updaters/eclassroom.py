@@ -12,6 +12,7 @@ from ..database import Class, Classroom, Document, LunchSchedule, Substitution, 
 from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
+from ..utils.url import normalize_url, tokenize_url
 
 
 class EClassroomUpdater:
@@ -19,7 +20,8 @@ class EClassroomUpdater:
         self.url = config["url"]
         self.token = config["token"]
         self.course = config["course"]
-        self.restricted = config["restricted"]
+        self.pluginfile = config["pluginfile"]
+
         self.session = session
         self.logger = logging.getLogger(__name__)
 
@@ -69,19 +71,9 @@ class EClassroomUpdater:
 
                 yield (
                     module["name"],
-                    self._tokenize_url(module["contents"][0]["fileurl"]),
+                    normalize_url(module["contents"][0]["fileurl"], self.pluginfile),
                     datetime.datetime.fromtimestamp(module["contents"][0]["timecreated"]).date(),
                 )
-
-    def _tokenize_url(self, url):
-        # Add token to all restricted URLs
-        if any(map(url.__contains__, self.restricted)):
-            request = requests.PreparedRequest()
-            request.prepare_url(url, {"token": self.token})
-            return request.url
-
-        # Otherwise return original URL
-        return url
 
     @with_span(op="document", pass_span=True)
     def _store_generic(self, name, url, date, urltype, span):
@@ -371,7 +363,7 @@ class EClassroomUpdater:
 
     @with_span(op="document", pass_span=True)
     def _store_lunch_schedule(self, name, url, span):
-        response = requests.get(url)
+        response = requests.get(tokenize_url(url, self.pluginfile, self.token))
 
         content = response.content
         hash = str(hashlib.sha256(content).hexdigest())

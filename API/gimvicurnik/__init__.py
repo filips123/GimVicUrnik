@@ -17,6 +17,7 @@ from .commands import (
 from .database import Class, Classroom, Document, Entity, LunchMenu, LunchSchedule, Session, SnackMenu, Teacher
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
+from .utils.url import tokenize_url
 
 
 class GimVicUrnik:
@@ -36,7 +37,11 @@ class GimVicUrnik:
                     "url": str,
                     "token": str,
                     "course": int,
-                    Optional("restricted"): [str],
+                    "pluginfile": {
+                        "webservice": str,
+                        "normal": str,
+                        Optional("shareToken", default=False): bool,
+                    },
                 },
                 "menu": {
                     "url": str,
@@ -356,12 +361,15 @@ class GimVicUrnik:
                 Document.date
             )
 
+            config = self.config["sources"]["eclassroom"]["pluginfile"]
+            token = self.config["sources"]["eclassroom"]["token"]
+
             return jsonify(
                 [
                     {
                         "date": model.date.strftime("%Y-%m-%d"),
                         "type": model.type,
-                        "url": model.url,
+                        "url": model.url if not config["shareToken"] else tokenize_url(model.url, config, token),
                         "description": model.description,
                     }
                     for model in query
