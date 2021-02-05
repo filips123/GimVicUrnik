@@ -5,8 +5,10 @@ sources:
     url: https://ucilnica.gimvic.org/webservice/rest/server.php
     token: YOUR-TOKEN-HERE
     course: 118
-    restricted:
-      - https://ucilnica.gimvic.org/webservice/pluginfile.php
+    pluginfile:
+      webservice: https://ucilnica.gimvic.org/webservice/pluginfile.php
+      normal: https://ucilnica.gimvic.org/pluginfile.php
+      shareToken: false
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
 
