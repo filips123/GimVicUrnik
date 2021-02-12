@@ -27,9 +27,12 @@ import { displaySnackbar } from '@/utils/snackbar'
 export default class SelectTeacher extends Vue {
   @Prop() isDialog!: boolean
 
-  availableTeachers = StorageModule.teacherList
   selectedTeacher: string | null = null
   saveSelection = true
+
+  get availableTeachers (): ({value: string, text: string} | string)[] {
+    return StorageModule.teacherList || []
+  }
 
   closeDialog (): void {
     this.$emit('closeDialog')
