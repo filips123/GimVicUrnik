@@ -94,7 +94,7 @@ class MenuUpdater:
 
         # Example: KOSILO-4jan-8jan-2021.pdf
         # Another example: KOSILO-25jan-29jan-2021-PDF.pdf
-        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?.pdf", url)
+        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.pdf", url)
 
         if date:
             return datetime.date(
@@ -102,7 +102,8 @@ class MenuUpdater:
             )
 
         # Example: 09-splet-oktober-1-teden-09-M.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-\d+-[MK]-?\d?.pdf", url)
+        # Another example: 05-splet-februar-3-teden-M-PDF.pdf
+        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?\.pdf", url)
 
         if date:
             year = datetime.datetime.now().year
@@ -121,6 +122,7 @@ class MenuUpdater:
             # Get start of nth week of month
             first = datetime.date(year, month, 1)
             diff = -first.weekday() if month == 9 else 7 - first.weekday()
+            diff = diff if diff < 7 else 0
             new = first + datetime.timedelta(weeks=week - 1, days=diff)
 
             return new
