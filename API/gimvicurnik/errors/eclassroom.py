@@ -1,7 +1,11 @@
 from .base import GimVicUrnikError
 
 
-class ClassroomApiError(GimVicUrnikError):
+class ClassroomError(GimVicUrnikError):
+    pass
+
+
+class ClassroomApiError(ClassroomError):
     pass
 
 
@@ -10,4 +14,8 @@ class InvalidTokenError(ClassroomApiError):
 
 
 class InvalidRecordError(ClassroomApiError):
+    pass
+
+
+class LunchScheduleError(ClassroomError):
     pass

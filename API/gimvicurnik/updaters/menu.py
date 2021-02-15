@@ -154,8 +154,8 @@ class MenuUpdater:
 
             return
 
+        # Save content to temporary file
         filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()
@@ -238,8 +238,8 @@ class MenuUpdater:
 
             return
 
+        # Save content to temporary file
         filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()

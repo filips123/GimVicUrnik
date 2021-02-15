@@ -9,7 +9,7 @@ import requests
 from pdf2docx import extract_tables
 
 from ..database import Class, Classroom, Document, LunchSchedule, Substitution, Teacher
-from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
+from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError, LunchScheduleError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
 from ..utils.url import normalize_url, tokenize_url
@@ -126,8 +126,8 @@ class EClassroomUpdater:
         ).date()
         day = date.isoweekday()
 
+        # Save content to temporary file
         filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()
@@ -386,12 +386,8 @@ class EClassroomUpdater:
 
             return
 
-        date = datetime.datetime.strptime(
-            re.search(r"Razpored delitve kosila, (.+)", name, re.IGNORECASE).group(1), "%d. %m. %Y"
-        ).date()
-
+        # Save content to temporary file
         filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()
@@ -400,6 +396,73 @@ class EClassroomUpdater:
         tables = with_span(op="extract")(extract_tables)(filename)
         os.remove(filename)
 
+        # Daily lunch schedule format, used until October 2020
+        # Example: delitevKosila-0-15-okt2020-CET-objava.pdf
+        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-objava.pdf$", url):
+            date = self._get_daily_lunch_schedule_date(name, url)
+            self._parse_daily_lunch_schedule(date, tables)
+
+        # Weekly lunch schedule format, used starting with February 2021
+        # Example: delitevKosila-15-19-feb2021.pdf
+        elif re.search(r"\/delitevKosila-[1-9][0-9]+-[1-9][0-9]+-[a-z0-9]+.pdf$", url):
+            date = self._get_weekly_lunch_schedule_date(name, url)
+            self._parse_weekly_lunch_schedule(date, tables)
+
+        # Unknown lunch schedule format
+        else:
+            raise LunchScheduleError("Unknown lunch schedule format: " + url.rsplit("/", 1)[-1])
+
+        # Update or create a document
+        if not document:
+            document = Document()
+            created = True
+        else:
+            created = False
+
+        document.date = date
+        document.type = "lunch-schedule"
+        document.url = url
+        document.description = name.split(",")[0].capitalize()
+        document.hash = hash
+
+        self.session.add(document)
+
+        span.set_tag("document.date", document.date)
+        span.set_tag("document.hash", document.hash)
+        span.set_tag("document.action", "created" if created else "updated")
+
+        if created:
+            self.logger.info("Created a new lunch schedule document for %s", document.date)
+        else:
+            self.logger.info("Updated the lunch schedule document for %s", document.date)
+
+    @staticmethod
+    def _get_daily_lunch_schedule_date(name, url):
+        return datetime.datetime.strptime(
+            re.search(r"Razpored delitve kosila, (.+)", name, re.IGNORECASE).group(1), "%d. %m. %Y"
+        ).date()
+
+    @staticmethod
+    def _get_weekly_lunch_schedule_date(name, url):
+        month_to_number = {
+            "jan": 1,
+            "feb": 2,
+            "mar": 3,
+            "apr": 4,
+            "maj": 5,
+            "jun": 6,
+            "jul": 7,
+            "avg": 8,
+            "sep": 9,
+            "okt": 10,
+            "nov": 11,
+            "dec": 12,
+        }
+
+        date = re.search(r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+).pdf$", url)
+        return datetime.date(year=int(date.group(3)), month=month_to_number[date.group(2)], day=int(date.group(1)))
+
+    def _parse_daily_lunch_schedule(self, date, tables):
         schedule = []
 
         last_hour = None
@@ -438,26 +501,34 @@ class EClassroomUpdater:
         self.session.query(LunchSchedule).filter(LunchSchedule.date == date).delete()
         self.session.bulk_insert_mappings(LunchSchedule, schedule)
 
-        # Update or create a document
-        if not document:
-            document = Document()
-            created = True
-        else:
-            created = False
+    def _parse_weekly_lunch_schedule(self, date, tables):
+        schedule = []
 
-        document.date = date
-        document.type = "lunch-schedule"
-        document.url = url
-        document.description = name.split(",")[0]
-        document.hash = hash
+        for table in tables:
+            # Skip instructions
+            if "V jedilnico prihajate z maskami ob uri" in table[0][0]:
+                continue
 
-        self.session.add(document)
+            for row in table:
+                # Skip header
+                if row[0] and "ura" in row[0]:
+                    continue
 
-        span.set_tag("document.date", document.date)
-        span.set_tag("document.hash", document.hash)
-        span.set_tag("document.action", "created" if created else "updated")
+                time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time()
+                class_ = row[1].strip()
+                location = row[2].strip()
 
-        if created:
-            self.logger.info("Created a new lunch schedule document for %s", document.date)
-        else:
-            self.logger.info("Updated the lunch schedule document for %s", document.date)
+                schedule.append(
+                    {
+                        "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
+                        "date": date,
+                        "time": time,
+                        "location": location,
+                    }
+                )
+
+            date += datetime.timedelta(days=1)
+
+        # Store schedule in database
+        self.session.query(LunchSchedule).filter(LunchSchedule.date == date).delete()
+        self.session.bulk_insert_mappings(LunchSchedule, schedule)
