@@ -398,19 +398,25 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used until October 2020
         # Example: delitevKosila-0-15-okt2020-CET-objava.pdf
-        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-objava.pdf$", url):
+        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-objava\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
         # Weekly lunch schedule format, used starting with February 2021
         # Example: delitevKosila-15-19-feb2021.pdf
-        elif re.search(r"\/delitevKosila-[1-9][0-9]+-[1-9][0-9]+-[a-z0-9]+.pdf$", url):
+        elif re.search(r"\/delitevKosila-[1-9][0-9]+-[1-9][0-9]+-[a-z0-9]+(?:-popravek-[a-z0-9]+)?\.pdf$", url):
             date = self._get_weekly_lunch_schedule_date(name, url)
             self._parse_weekly_lunch_schedule(date, tables)
 
         # Unknown lunch schedule format
         else:
             raise LunchScheduleError("Unknown lunch schedule format: " + url.rsplit("/", 1)[-1])
+
+        # Get lunch schedule for the same date if schedule was updated and URL has changed
+        if not document:
+            document = (
+                self.session.query(Document).filter(Document.type == "lunch-schedule", Document.date == date).first()
+            )
 
         # Update or create a document
         if not document:
@@ -422,7 +428,7 @@ class EClassroomUpdater:
         document.date = date
         document.type = "lunch-schedule"
         document.url = url
-        document.description = name.split(",")[0].capitalize()
+        document.description = name.split(",")[0].split("-")[0].capitalize()
         document.hash = hash
 
         self.session.add(document)
@@ -459,7 +465,9 @@ class EClassroomUpdater:
             "dec": 12,
         }
 
-        date = re.search(r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+).pdf$", url)
+        date = re.search(
+            r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$", url
+        )
         return datetime.date(year=int(date.group(3)), month=month_to_number[date.group(2)], day=int(date.group(1)))
 
     def _parse_daily_lunch_schedule(self, date, tables):
@@ -506,13 +514,17 @@ class EClassroomUpdater:
 
         for table in tables:
             # Skip instructions
-            if "V jedilnico prihajate z maskami ob uri" in table[0][0]:
+            if "V jedilnico prihajate z maskami" in table[0][0] or "JEDILNICA 1" in table[0][0]:
                 continue
 
             for row in table:
                 # Skip header
                 if row[0] and "ura" in row[0]:
                     continue
+
+                # Split if multiple cells are merged with newline
+                if len(row) != 3:
+                    row = [a for b in row for a in b.split("\n")]
 
                 time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time()
                 class_ = row[1].strip()
