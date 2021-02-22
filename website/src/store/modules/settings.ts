@@ -37,6 +37,11 @@ export interface SelectedMenu {
   lunch: LunchType;
 }
 
+export interface DataCollectionConfig {
+  performance: boolean;
+  crashes: boolean;
+}
+
 interface NavigatorGPC extends Navigator {
   globalPrivacyControl: boolean | undefined
 }
@@ -51,7 +56,11 @@ class Settings extends VuexModule {
   showHoursInTimetable = true
   enablePullToRefresh = true
   enableUpdateOnLoad = false
-  doNotTrack: boolean = navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl
+
+  dataCollection: DataCollectionConfig = {
+    performance: !(navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl),
+    crashes: true
+  }
 
   theme: ThemeType = ThemeType.System
 
@@ -91,8 +100,18 @@ class Settings extends VuexModule {
   }
 
   @Mutation
-  setDoNotTrack (doNotTrack: boolean): void {
-    this.doNotTrack = doNotTrack
+  setDataCollection (dataCollection: DataCollectionConfig): void {
+    this.dataCollection = dataCollection
+  }
+
+  @Mutation
+  setDataCollectionPerformance (performance: boolean): void {
+    this.dataCollection.performance = performance
+  }
+
+  @Mutation
+  setDataCollectionCrashes (crashes: boolean): void {
+    this.dataCollection.crashes = crashes
   }
 
   @Mutation

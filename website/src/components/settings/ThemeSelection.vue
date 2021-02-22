@@ -1,25 +1,14 @@
 <template>
   <v-card width="35rem">
     <v-toolbar class="text-uppercase" color="#009300" dark>
-      Izberite barvno temo
+      Nastavite barvno temo
     </v-toolbar>
 
     <v-card-text class="text--primary mb-n12">
       <v-radio-group v-model="themeSelection">
-        <v-radio class="pb-2"
-          :key="0"
-          :value="0"
-          label="Sistemska" />
-
-        <v-radio class="pb-2"
-          :key="1"
-          :value="1"
-          label="Svetla" />
-
-        <v-radio
-          :key="2"
-          :value="2"
-          label="Temna" />
+        <v-radio :key="0" :value="0" class="pb-2" color="green" label="Sistemska" />
+        <v-radio :key="1" :value="1" class="pb-2" color="green" label="Svetla" />
+        <v-radio :key="2" :value="2" color="green" label="Temna" />
       </v-radio-group>
     </v-card-text>
 

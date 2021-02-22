@@ -22,9 +22,13 @@
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
-    <settings-switch v-model="enableDataCollection" label="Zbiranje tehničnih podatkov" />
 
     <v-divider class="my-6" />
+
+    <settings-action v-model="dataCollectionDialog"
+      :icon="mdiDatabaseImportOutline"
+      :message="dataCollectionStatus"
+      label="Zbiranje tehničnih podatkov" />
 
     <settings-action v-model="themeSelectionDialog"
       :icon="mdiWeatherNight"
@@ -52,6 +56,10 @@
         @closeDialog=closeEntityDialog />
     </v-dialog>
 
+    <v-dialog v-model="dataCollectionDialog" width="35rem">
+      <data-collection-selection v-if="dataCollectionDialog" @closeDialog=closeDataCollectionDialog />
+    </v-dialog>
+
     <v-dialog v-model="themeSelectionDialog" width="35rem">
       <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
     </v-dialog>
@@ -72,9 +80,10 @@
 </style>
 
 <script lang="ts">
-import { mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
+import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
@@ -83,10 +92,11 @@ import { EntityType, LunchType, SettingsModule, SnackType, ThemeType } from '@/s
 import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
-  components: { ThemeSelection, SettingsAction, SettingsSwitch, EntitySelection }
+  components: { DataCollectionSelection, ThemeSelection, SettingsAction, SettingsSwitch, EntitySelection }
 })
 export default class Settings extends Vue {
   mdiTuneVariant = mdiTuneVariant
+  mdiDatabaseImportOutline = mdiDatabaseImportOutline
   mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
 
@@ -146,6 +156,19 @@ export default class Settings extends Vue {
     }
   })()
 
+  // Get data collection status as string from storage
+  get dataCollectionStatus (): string {
+    if (SettingsModule.dataCollection.performance && SettingsModule.dataCollection.crashes) {
+      return 'Merjenje učinkovitosti & Zbiranje napak'
+    } else if (SettingsModule.dataCollection.performance) {
+      return 'Merjenje učinkovitosti'
+    } else if (SettingsModule.dataCollection.crashes) {
+      return 'Zbiranje napak'
+    } else {
+      return 'Izklopljeno'
+    }
+  }
+
   // Get theme type as string from enum
   get themeStatus (): string {
     switch (SettingsModule.theme) {
@@ -162,6 +185,7 @@ export default class Settings extends Vue {
   entitySelectionDialog = false
   snackSelectionDialog = false
   lunchSelectionDialog = false
+  dataCollectionDialog = false
   themeSelectionDialog = false
 
   // Sync toggles with Vuex state
@@ -205,14 +229,6 @@ export default class Settings extends Vue {
     SettingsModule.setEnableUpdateOnLoad(enableUpdateOnLoad)
   }
 
-  get enableDataCollection (): boolean {
-    return !SettingsModule.doNotTrack
-  }
-
-  set enableDataCollection (enableDataCollection: boolean) {
-    SettingsModule.setDoNotTrack(!enableDataCollection)
-  }
-
   // Prepare view
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
@@ -252,6 +268,10 @@ export default class Settings extends Vue {
 
   closeLunchDialog (): void {
     this.lunchSelectionDialog = false
+  }
+
+  closeDataCollectionDialog (): void {
+    this.dataCollectionDialog = false
   }
 
   closeThemeDialog (): void {
