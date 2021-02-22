@@ -22,9 +22,18 @@
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
-    <settings-switch v-model="enableDataCollection" label="Zbiranje tehničnih podatkov" />
-    <!-- TODO: Use three values: Default (system), light, dark -->
-    <settings-switch v-model="darkTheme" label="Temni način" />
+
+    <v-divider class="my-6" />
+
+    <settings-action v-model="dataCollectionDialog"
+      :icon="mdiDatabaseImportOutline"
+      :message="dataCollectionStatus"
+      label="Zbiranje tehničnih podatkov" />
+
+    <settings-action v-model="themeSelectionDialog"
+      :icon="mdiWeatherNight"
+      :message="themeStatus"
+      label="Barvna tema" />
 
     <v-divider class="my-6" />
 
@@ -46,6 +55,14 @@
         is-dialog="1"
         @closeDialog=closeEntityDialog />
     </v-dialog>
+
+    <v-dialog v-model="dataCollectionDialog" width="35rem">
+      <data-collection-selection v-if="dataCollectionDialog" @closeDialog=closeDataCollectionDialog />
+    </v-dialog>
+
+    <v-dialog v-model="themeSelectionDialog" width="35rem">
+      <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
+    </v-dialog>
   </div>
 </template>
 
@@ -63,20 +80,24 @@
 </style>
 
 <script lang="ts">
-import { mdiTuneVariant, mdiUpdate } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
+import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
-import { EntityType, LunchType, SettingsModule, SnackType } from '@/store/modules/settings'
+import ThemeSelection from '@/components/settings/ThemeSelection.vue'
+import { EntityType, LunchType, SettingsModule, SnackType, ThemeType } from '@/store/modules/settings'
 import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
-  components: { SettingsAction, SettingsSwitch, EntitySelection }
+  components: { DataCollectionSelection, ThemeSelection, SettingsAction, SettingsSwitch, EntitySelection }
 })
 export default class Settings extends Vue {
   mdiTuneVariant = mdiTuneVariant
+  mdiDatabaseImportOutline = mdiDatabaseImportOutline
+  mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
 
   // Get app version
@@ -135,10 +156,37 @@ export default class Settings extends Vue {
     }
   })()
 
+  // Get data collection status as string from storage
+  get dataCollectionStatus (): string {
+    if (SettingsModule.dataCollection.performance && SettingsModule.dataCollection.crashes) {
+      return 'Merjenje učinkovitosti & Zbiranje napak'
+    } else if (SettingsModule.dataCollection.performance) {
+      return 'Merjenje učinkovitosti'
+    } else if (SettingsModule.dataCollection.crashes) {
+      return 'Zbiranje napak'
+    } else {
+      return 'Izklopljeno'
+    }
+  }
+
+  // Get theme type as string from enum
+  get themeStatus (): string {
+    switch (SettingsModule.theme) {
+      case ThemeType.System:
+        return 'Sistemska'
+      case ThemeType.Light:
+        return 'Svetla'
+      case ThemeType.Dark:
+        return 'Temna'
+    }
+  }
+
   // Dialog states
   entitySelectionDialog = false
   snackSelectionDialog = false
   lunchSelectionDialog = false
+  dataCollectionDialog = false
+  themeSelectionDialog = false
 
   // Sync toggles with Vuex state
   get showSubstitutions (): boolean {
@@ -181,22 +229,7 @@ export default class Settings extends Vue {
     SettingsModule.setEnableUpdateOnLoad(enableUpdateOnLoad)
   }
 
-  get enableDataCollection (): boolean {
-    return !SettingsModule.doNotTrack
-  }
-
-  set enableDataCollection (enableDataCollection: boolean) {
-    SettingsModule.setDoNotTrack(!enableDataCollection)
-  }
-
-  get darkTheme (): boolean {
-    return SettingsModule.darkTheme || false
-  }
-
-  set darkTheme (darkTheme: boolean) {
-    SettingsModule.setDarkTheme(darkTheme)
-  }
-
+  // Prepare view
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Nastavitve')
@@ -208,6 +241,7 @@ export default class Settings extends Vue {
     this.$emit('setPullToRefreshAllowed', true)
   }
 
+  // Handle update requests
   async updateApp (): Promise<void> {
     if (process.env.NODE_ENV === 'production' && navigator.serviceWorker.controller) {
       // Skip service worker waiting
@@ -223,6 +257,7 @@ export default class Settings extends Vue {
     await updateAllData()
   }
 
+  // Handle dialogs
   closeEntityDialog (): void {
     this.entitySelectionDialog = false
   }
@@ -233,6 +268,14 @@ export default class Settings extends Vue {
 
   closeLunchDialog (): void {
     this.lunchSelectionDialog = false
+  }
+
+  closeDataCollectionDialog (): void {
+    this.dataCollectionDialog = false
+  }
+
+  closeThemeDialog (): void {
+    this.themeSelectionDialog = false
   }
 }
 </script>

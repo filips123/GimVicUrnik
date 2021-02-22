@@ -103,7 +103,7 @@ import { mdiCog } from '@mdi/js'
 import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
-import { SettingsModule } from '@/store/modules/settings'
+import { SettingsModule, ThemeType } from '@/store/modules/settings'
 import { updateAllData } from '@/store/modules/storage'
 import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 
@@ -144,6 +144,20 @@ export default class App extends Vue {
     this.isSnackbarDisplayed = true
   }
 
+  themeHandler (event: MediaQueryListEvent): void {
+    // Change Vuetify theme to match system theme
+    if (SettingsModule.theme === ThemeType.System) {
+      this.$vuetify.theme.dark = event.matches
+    }
+
+    // Also set body color to make it possible for browser to style scrollbars
+    setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      document.getElementsByTagName('body')[0].style.background = getComputedStyle(document.getElementById('app'))['background-color']
+    }, 0)
+  }
+
   swUpdatedHandler (event: Event): void {
     const registration: ServiceWorkerRegistration = (event as CustomEvent).detail
 
@@ -165,6 +179,9 @@ export default class App extends Vue {
     // Event listeners for displaying and hiding snackbars
     document.addEventListener('displaySnackbar', this.snackbarHandler)
     document.addEventListener('hideSnackbar', this.snackbarHandler)
+
+    // Event listener for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.themeHandler)
 
     // Event listener for detecting service worker updates
     document.addEventListener('serviceWorkerUpdated', this.swUpdatedHandler, { once: true })
@@ -188,12 +205,20 @@ export default class App extends Vue {
         updateAllData()
       }
     })
+
+    // Also set body color to make it possible for browser to style scrollbars
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    document.getElementsByTagName('body')[0].style.background = getComputedStyle(document.getElementById('app'))['background-color']
   }
 
   destroyed (): void {
     // Remove event listeners for displaying and hiding snackbars
     document.removeEventListener('displaySnackbar', this.snackbarHandler)
     document.removeEventListener('hideSnackbar', this.snackbarHandler)
+
+    // Remove event listener for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', this.themeHandler)
 
     // Remove event listener for detecting service worker updates
     document.removeEventListener('serviceWorkerUpdated', this.swUpdatedHandler)

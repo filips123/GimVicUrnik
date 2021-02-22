@@ -21,6 +21,12 @@ export enum LunchType {
   Vegetarian
 }
 
+export enum ThemeType {
+  System,
+  Light,
+  Dark
+}
+
 export interface SelectedEntity {
   type: EntityType;
   data: string[];
@@ -29,6 +35,11 @@ export interface SelectedEntity {
 export interface SelectedMenu {
   snack: SnackType;
   lunch: LunchType;
+}
+
+export interface DataCollectionConfig {
+  performance: boolean;
+  crashes: boolean;
 }
 
 interface NavigatorGPC extends Navigator {
@@ -45,8 +56,13 @@ class Settings extends VuexModule {
   showHoursInTimetable = true
   enablePullToRefresh = true
   enableUpdateOnLoad = false
-  doNotTrack: boolean = navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl
-  darkTheme: boolean | null = null
+
+  dataCollection: DataCollectionConfig = {
+    performance: !(navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl),
+    crashes: true
+  }
+
+  theme: ThemeType = ThemeType.System
 
   @Mutation
   setSelectedEntity (selectedEntity: SelectedEntity): void {
@@ -84,13 +100,23 @@ class Settings extends VuexModule {
   }
 
   @Mutation
-  setDoNotTrack (doNotTrack: boolean): void {
-    this.doNotTrack = doNotTrack
+  setDataCollection (dataCollection: DataCollectionConfig): void {
+    this.dataCollection = dataCollection
   }
 
   @Mutation
-  setDarkTheme (darkTheme: boolean | null): void {
-    this.darkTheme = darkTheme
+  setDataCollectionPerformance (performance: boolean): void {
+    this.dataCollection.performance = performance
+  }
+
+  @Mutation
+  setDataCollectionCrashes (crashes: boolean): void {
+    this.dataCollection.crashes = crashes
+  }
+
+  @Mutation
+  setTheme (theme: ThemeType): void {
+    this.theme = theme
   }
 }
 

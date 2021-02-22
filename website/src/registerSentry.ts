@@ -12,7 +12,8 @@ import { Integrations } from '@sentry/tracing'
 import router from '@/router'
 import { SettingsModule } from '@/store/modules/settings'
 
-if (process.env.VUE_APP_SENTRY_ENABLED === 'true') {
+// Only load Sentry if it is enabled by build config and user settings
+if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollection.performance || SettingsModule.dataCollection.crashes)) {
   let firstLoad = true
 
   // Custom Vue Router instrumentation for Sentry
@@ -77,7 +78,7 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true') {
 
   // Don't add performance monitoring to users who don't want it
   const integrations = []
-  if (!SettingsModule.doNotTrack) {
+  if (SettingsModule.dataCollection.performance) {
     integrations.push(
       new Integrations.BrowserTracing({
         tracingOrigins: process.env.VUE_APP_SENTRY_TRACING_ORIGINS.split(','),
@@ -98,7 +99,7 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true') {
     release: releasePrefix + process.env.VUE_APP_VERSION + releaseSuffix,
 
     logErrors: !(process.env.NODE_ENV === 'production'),
-    autoSessionTracking: true,
+    autoSessionTracking: SettingsModule.dataCollection.performance,
     tracingOptions: { trackComponents: true },
 
     integrations: integrations
