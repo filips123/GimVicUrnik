@@ -21,6 +21,12 @@ export enum LunchType {
   Vegetarian
 }
 
+export enum ThemeType {
+  System,
+  Light,
+  Dark
+}
+
 export interface SelectedEntity {
   type: EntityType;
   data: string[];
@@ -46,7 +52,8 @@ class Settings extends VuexModule {
   enablePullToRefresh = true
   enableUpdateOnLoad = false
   doNotTrack: boolean = navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl
-  darkTheme: boolean | null = null
+
+  theme: ThemeType = ThemeType.System
 
   @Mutation
   setSelectedEntity (selectedEntity: SelectedEntity): void {
@@ -89,8 +96,8 @@ class Settings extends VuexModule {
   }
 
   @Mutation
-  setDarkTheme (darkTheme: boolean | null): void {
-    this.darkTheme = darkTheme
+  setTheme (theme: ThemeType): void {
+    this.theme = theme
   }
 }
 

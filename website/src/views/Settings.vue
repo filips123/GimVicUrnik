@@ -23,8 +23,13 @@
     <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
     <settings-switch v-model="enableDataCollection" label="Zbiranje tehničnih podatkov" />
-    <!-- TODO: Use three values: Default (system), light, dark -->
-    <settings-switch v-model="darkTheme" label="Temni način" />
+
+    <v-divider class="my-6" />
+
+    <settings-action v-model="themeSelectionDialog"
+      :icon="mdiWeatherNight"
+      :message="themeStatus"
+      label="Barvna tema" />
 
     <v-divider class="my-6" />
 
@@ -46,6 +51,10 @@
         is-dialog="1"
         @closeDialog=closeEntityDialog />
     </v-dialog>
+
+    <v-dialog v-model="themeSelectionDialog" width="35rem">
+      <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
+    </v-dialog>
   </div>
 </template>
 
@@ -63,20 +72,22 @@
 </style>
 
 <script lang="ts">
-import { mdiTuneVariant, mdiUpdate } from '@mdi/js'
+import { mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
-import { EntityType, LunchType, SettingsModule, SnackType } from '@/store/modules/settings'
+import ThemeSelection from '@/components/settings/ThemeSelection.vue'
+import { EntityType, LunchType, SettingsModule, SnackType, ThemeType } from '@/store/modules/settings'
 import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
-  components: { SettingsAction, SettingsSwitch, EntitySelection }
+  components: { ThemeSelection, SettingsAction, SettingsSwitch, EntitySelection }
 })
 export default class Settings extends Vue {
   mdiTuneVariant = mdiTuneVariant
+  mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
 
   // Get app version
@@ -135,10 +146,23 @@ export default class Settings extends Vue {
     }
   })()
 
+  // Get theme type as string from enum
+  get themeStatus (): string {
+    switch (SettingsModule.theme) {
+      case ThemeType.System:
+        return 'Sistemska'
+      case ThemeType.Light:
+        return 'Svetla'
+      case ThemeType.Dark:
+        return 'Temna'
+    }
+  }
+
   // Dialog states
   entitySelectionDialog = false
   snackSelectionDialog = false
   lunchSelectionDialog = false
+  themeSelectionDialog = false
 
   // Sync toggles with Vuex state
   get showSubstitutions (): boolean {
@@ -189,14 +213,7 @@ export default class Settings extends Vue {
     SettingsModule.setDoNotTrack(!enableDataCollection)
   }
 
-  get darkTheme (): boolean {
-    return SettingsModule.darkTheme || false
-  }
-
-  set darkTheme (darkTheme: boolean) {
-    SettingsModule.setDarkTheme(darkTheme)
-  }
-
+  // Prepare view
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Nastavitve')
@@ -208,6 +225,7 @@ export default class Settings extends Vue {
     this.$emit('setPullToRefreshAllowed', true)
   }
 
+  // Handle update requests
   async updateApp (): Promise<void> {
     if (process.env.NODE_ENV === 'production' && navigator.serviceWorker.controller) {
       // Skip service worker waiting
@@ -223,6 +241,7 @@ export default class Settings extends Vue {
     await updateAllData()
   }
 
+  // Handle dialogs
   closeEntityDialog (): void {
     this.entitySelectionDialog = false
   }
@@ -233,6 +252,10 @@ export default class Settings extends Vue {
 
   closeLunchDialog (): void {
     this.lunchSelectionDialog = false
+  }
+
+  closeThemeDialog (): void {
+    this.themeSelectionDialog = false
   }
 }
 </script>
