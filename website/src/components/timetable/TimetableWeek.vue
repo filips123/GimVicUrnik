@@ -188,9 +188,9 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'classroom',
-                contents: lesson.classrooms
+                contents: lesson.classrooms.filter(x => x)
               }
-            ]
+            ].filter(x => x.contents.length)
           })
         }
 
@@ -209,9 +209,9 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'classroom',
-                contents: lesson.classrooms
+                contents: lesson.classrooms.filter(x => x)
               }
-            ]
+            ].filter(x => x.contents.length)
           })
         }
 
