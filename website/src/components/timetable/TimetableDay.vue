@@ -109,7 +109,7 @@ export default class TimetableDay extends Vue {
             },
             {
               type: 'classroom',
-              contents: displayedLesson.classrooms
+              contents: displayedLesson.classrooms.filter(x => x)
             }
           ]
         })
@@ -133,7 +133,7 @@ export default class TimetableDay extends Vue {
             },
             {
               type: 'classroom',
-              contents: displayedLesson.classrooms
+              contents: displayedLesson.classrooms.filter(x => x)
             }
           ]
         })
