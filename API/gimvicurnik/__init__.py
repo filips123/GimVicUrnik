@@ -338,8 +338,8 @@ class GimVicUrnik:
                 snack = {
                     "normal": snack.normal,
                     "poultry": snack.poultry,
-                    "vegetarian": lunch.vegetarian,
-                    "fruitvegetable": lunch.fruitvegetable,
+                    "vegetarian": snack.vegetarian,
+                    "fruitvegetable": snack.fruitvegetable,
                 }
 
             if lunch:
