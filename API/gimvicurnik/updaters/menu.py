@@ -103,7 +103,8 @@ class MenuUpdater:
 
         # Example: 09-splet-oktober-1-teden-09-M.pdf
         # Another example: 05-splet-februar-3-teden-M-PDF.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?\.pdf", url)
+        # Another example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
+        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-\d)?\.pdf", url)
 
         if date:
             year = datetime.datetime.now().year
