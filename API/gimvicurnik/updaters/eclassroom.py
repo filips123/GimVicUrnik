@@ -402,11 +402,17 @@ class EClassroomUpdater:
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
-        # Weekly lunch schedule format, used starting with February 2021
+        # Weekly lunch schedule format, used in February 2021
         # Example: delitevKosila-15-19-feb2021.pdf
         elif re.search(r"\/delitevKosila-[1-9][0-9]+-[1-9][0-9]+-[a-z0-9]+(?:-popravek-[a-z0-9]+)?\.pdf$", url):
             date = self._get_weekly_lunch_schedule_date(name, url)
             self._parse_weekly_lunch_schedule(date, tables)
+
+        # Daily lunch schedule format, used starting with March 2021
+        # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
+        elif re.search(r"\/delitevKosila-[a-z0-9]+-[0-9]+-[A-Z]{3}-objava(?i:-PDF-[0-9])?\.pdf$", url):
+            date = self._get_daily_lunch_schedule_date(name, url)
+            self._parse_daily_lunch_schedule(date, tables)
 
         # Unknown lunch schedule format
         else:
@@ -444,9 +450,8 @@ class EClassroomUpdater:
 
     @staticmethod
     def _get_daily_lunch_schedule_date(name, url):
-        return datetime.datetime.strptime(
-            re.search(r"Razpored delitve kosila, (.+)", name, re.IGNORECASE).group(1), "%d. %m. %Y"
-        ).date()
+        search = re.search(r"Razpored delitve kosila(?:-[a-z]+)?, ([0-9]+). ?([0-9]+). ?([0-9]+)", name, re.IGNORECASE)
+        return datetime.date(year=int(search.group(3)), month=int(search.group(2)), day=int(search.group(1)))
 
     @staticmethod
     def _get_weekly_lunch_schedule_date(name, url):
@@ -465,10 +470,13 @@ class EClassroomUpdater:
             "dec": 12,
         }
 
-        date = re.search(
+        search = re.search(
             r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$", url
         )
-        return datetime.date(year=int(date.group(3)), month=month_to_number[date.group(2)], day=int(date.group(1)))
+
+        return datetime.date(
+            year=int(search.group(3)), month=month_to_number[search.group(2)], day=int(search.group(1))
+        )
 
     def _parse_daily_lunch_schedule(self, date, tables):
         schedule = []
