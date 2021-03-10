@@ -410,7 +410,7 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used starting with March 2021
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+-[0-9]+-[A-Z]{3}-objava(?i:-PDF-[0-9])?\.pdf$", url):
+        elif re.search(r"\/delitevKosila-[a-z0-9]+-[0-9]+-[A-Z]{3}-objava(?:-PDF(?:-[0-9])?)?\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -450,7 +450,7 @@ class EClassroomUpdater:
 
     @staticmethod
     def _get_daily_lunch_schedule_date(name, url):
-        search = re.search(r"Razpored delitve kosila(?:-[a-z]+)?, ([0-9]+). ?([0-9]+). ?([0-9]+)", name, re.IGNORECASE)
+        search = re.search(r"([0-9]+). ?([0-9]+). ?([0-9]+)", name.split(",")[-1].split("-")[-1].strip())
         return datetime.date(year=int(search.group(3)), month=int(search.group(2)), day=int(search.group(1)))
 
     @staticmethod
@@ -492,6 +492,10 @@ class EClassroomUpdater:
             for row in table:
                 # Skip header
                 if row[0] and "ura" in row[0]:
+                    continue
+
+                # Skip empty rows
+                if len(row) != 5 or not row[0]:
                     continue
 
                 time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time() if row[0] else last_hour
