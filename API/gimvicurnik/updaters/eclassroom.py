@@ -36,6 +36,37 @@ class EClassroomUpdater:
             else:
                 self._store_generic(name, url, date, "other")
 
+    def _get_external_urls(self):
+        params = {
+            "moodlewsrestformat": "json",
+        }
+        data = {
+            "wstoken": self.token,
+            "wsfunction": "mod_url_get_urls_by_courses",
+        }
+
+        try:
+            response = requests.post(self.url, params=params, data=data)
+            objects = response.json()
+
+            response.raise_for_status()
+        except (IOError, ValueError) as error:
+            raise ClassroomApiError("Error while accessing e-classroom API") from error
+
+        # Handle API errors
+        if "errorcode" in objects:
+            if objects["errorcode"] == "invalidtoken":
+                raise InvalidTokenError(objects["message"])
+            else:
+                raise ClassroomApiError(objects["message"])
+
+        # Yield every external URL name, URL and date
+        for object in objects["urls"]:
+            if object["course"] != self.course:
+                continue
+
+            yield (object["name"], object["externalurl"], datetime.datetime.fromtimestamp(object["timemodified"]))
+
     def _get_documents(self):
         params = {
             "moodlewsrestformat": "json",
@@ -66,7 +97,7 @@ class EClassroomUpdater:
         # Yield every document name, URL and date
         for object in objects:
             for module in object["modules"]:
-                if "contents" not in module:
+                if "contents" not in module or len(module["contents"]) == 0:
                     continue
 
                 yield (
@@ -74,6 +105,9 @@ class EClassroomUpdater:
                     normalize_url(module["contents"][0]["fileurl"], self.pluginfile),
                     datetime.datetime.fromtimestamp(module["contents"][0]["timecreated"]).date(),
                 )
+
+        # Yield external URLs
+        yield from self._get_external_urls()
 
     @with_span(op="document", pass_span=True)
     def _store_generic(self, name, url, date, urltype, span):
@@ -260,16 +294,24 @@ class EClassroomUpdater:
                                 "date": date,
                                 "day": day,
                                 "time": time,
-                                "subject": subject,
+                                "subject": subject if subject != "X" else None,
                                 "original_teacher_id": get_or_create(
                                     self.session, model=Teacher, name=original_teacher
-                                )[0].id,
+                                )[0].id
+                                if original_teacher != "X"
+                                else None,
                                 "original_classroom_id": get_or_create(
                                     self.session, model=Classroom, name=original_classroom
-                                )[0].id,
+                                )[0].id
+                                if original_classroom != "/"
+                                else None,
                                 "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id,
-                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id
+                                if teacher != "X"
+                                else None,
+                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id
+                                if classroom != "/"
+                                else None,
                             }
                         )
 
