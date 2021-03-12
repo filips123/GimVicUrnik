@@ -11,3 +11,7 @@ class MenuApiError(MenuError):
 
 class MenuDateError(MenuError):
     pass
+
+
+class MenuFormatError(MenuError):
+    pass

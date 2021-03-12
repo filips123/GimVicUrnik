@@ -7,10 +7,11 @@ import tempfile
 
 import requests
 from bs4 import BeautifulSoup, ParserRejectedMarkup
+from openpyxl import load_workbook
 from pdf2docx import extract_tables
 
 from ..database import Document, LunchMenu, SnackMenu
-from ..errors import MenuApiError, MenuDateError
+from ..errors import MenuApiError, MenuDateError, MenuFormatError
 from ..utils.sentry import with_span
 
 
@@ -94,7 +95,7 @@ class MenuUpdater:
 
         # Example: KOSILO-4jan-8jan-2021.pdf
         # Another example: KOSILO-25jan-29jan-2021-PDF.pdf
-        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.pdf", url)
+        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)
 
         if date:
             return datetime.date(
@@ -104,7 +105,7 @@ class MenuUpdater:
         # Example: 09-splet-oktober-1-teden-09-M.pdf
         # Another example: 05-splet-februar-3-teden-M-PDF.pdf
         # Another example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-\d)?\.pdf", url)
+        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-\d)?\.[a-z]+", url)
 
         if date:
             year = datetime.datetime.now().year
@@ -133,6 +134,7 @@ class MenuUpdater:
     @with_span(op="document", pass_span=True)
     def _store_snack_menu(self, url, date, span):
         response = requests.get(url)
+        format = url.rsplit(".", 1)[-1]
 
         content = response.content
         hash = str(hashlib.sha256(content).hexdigest())
@@ -140,6 +142,7 @@ class MenuUpdater:
         span.description = url
         span.set_tag("document.url", url)
         span.set_tag("document.type", "snack-menu")
+        span.set_tag("document.format", format)
 
         # Skip unchanged lunch menu documents
         document = self.session.query(Document).filter(Document.type == "snack-menu", Document.url == url).first()
@@ -161,34 +164,92 @@ class MenuUpdater:
         file.write(content)
         file.close()
 
-        # Extract all tables from PDF file
-        tables = with_span(op="extract")(extract_tables)(filename)
-        os.remove(filename)
+        if format == "pdf":
+            # Extract all tables from PDF file
+            tables = with_span(op="extract")(extract_tables)(filename)
+            os.remove(filename)
 
-        days = 0
+            days = 0
 
-        # Parse tables into menus and store them
-        for table in tables:
-            for row in table[1::2]:
-                current = date + datetime.timedelta(days=days)
-                days += 1
+            # Parse tables into menus and store them
+            for table in tables:
+                for row in table[1::2]:
+                    current = date + datetime.timedelta(days=days)
+                    days += 1
 
-                menu = {
-                    "date": current,
-                    "normal": row[1],
-                    "poultry": row[2],
-                    "vegetarian": row[3],
-                    "fruitvegetable": row[4],
-                }
+                    menu = {
+                        "date": current,
+                        "normal": row[1],
+                        "poultry": row[2],
+                        "vegetarian": row[3],
+                        "fruitvegetable": row[4],
+                    }
 
-                model = self.session.query(SnackMenu).filter(SnackMenu.date == current).first()
-                if not model:
-                    model = SnackMenu()
+                    model = self.session.query(SnackMenu).filter(SnackMenu.date == current).first()
+                    if not model:
+                        model = SnackMenu()
 
-                for key in menu:
-                    setattr(model, key, menu[key])
+                    for key in menu:
+                        setattr(model, key, menu[key])
 
-                self.session.add(model)
+                    self.session.add(model)
+
+        elif format == "xlsx":
+            # Extract workbook from XLSX file
+            wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
+
+            menu = None
+            days = 0
+
+            # Parse tables into menus and store them
+            for ws in wb:
+                for wr in ws.iter_rows(min_row=1, max_col=3):
+                    if not hasattr(wr[0].border, "bottom"):
+                        continue
+
+                    if wr[0].border.bottom.color:
+                        if menu and menu["date"]:
+                            model = self.session.query(LunchMenu).filter(LunchMenu.date == menu["date"]).first()
+                            if not model:
+                                model = LunchMenu()
+
+                            model.date = menu["date"]
+                            model.normal = "\n".join(menu["normal"][1:])
+                            model.poultry = "\n".join(menu["poultry"][1:])
+                            model.vegetarian = "\n".join(menu["vegetarian"][1:])
+                            model.fruitvegetable = "\n".join(menu["fruitvegetable"][1:])
+
+                            self.session.add(model)
+                            days += 1
+
+                        menu = {
+                            "date": None,
+                            "normal": [],
+                            "poultry": [],
+                            "vegetarian": [],
+                            "fruitvegetable": [],
+                        }
+
+                    if wr[0].value and isinstance(wr[0].value, datetime.datetime):
+                        menu["date"] = date + datetime.timedelta(days=days)
+
+                    if wr[1].value:
+                        menu["normal"].append(wr[1].value.strip())
+
+                    if wr[2].value:
+                        menu["poultry"].append(wr[2].value.strip())
+
+                    if wr[3].value:
+                        menu["vegetarian"].append(wr[3].value.strip())
+
+                    if wr[4].value:
+                        menu["fruitvegetable"].append(wr[4].value.strip())
+
+            wb.close()
+            os.remove(filename)
+
+        else:
+            raise MenuFormatError("Unknown menu document format: " + format)
 
         # Update or create a document
         if not document:
@@ -217,6 +278,7 @@ class MenuUpdater:
     @with_span(op="document", pass_span=True)
     def _store_lunch_menu(self, url, date, span):
         response = requests.get(url)
+        format = url.rsplit(".", 1)[-1]
 
         content = response.content
         hash = str(hashlib.sha256(content).hexdigest())
@@ -224,6 +286,7 @@ class MenuUpdater:
         span.description = url
         span.set_tag("document.url", url)
         span.set_tag("document.type", "lunch-menu")
+        span.set_tag("document.format", format)
 
         # Skip unchanged lunch menu documents
         document = self.session.query(Document).filter(Document.type == "lunch-menu", Document.url == url).first()
@@ -240,37 +303,85 @@ class MenuUpdater:
             return
 
         # Save content to temporary file
-        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
+        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + "." + format)
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()
 
-        # Extract all tables from PDF file
-        tables = with_span(op="extract")(extract_tables)(filename)
-        os.remove(filename)
+        if format == "pdf":
+            # Extract all tables from PDF file
+            tables = with_span(op="extract")(extract_tables)(filename)
+            os.remove(filename)
 
-        days = 0
+            days = 0
 
-        # Parse tables into menus and store them
-        for table in tables:
-            for row in table[1::2]:
-                current = date + datetime.timedelta(days=days)
-                days += 1
+            # Parse tables into menus and store them
+            for table in tables:
+                for row in table[1::2]:
+                    current = date + datetime.timedelta(days=days)
+                    days += 1
 
-                menu = {
-                    "date": current,
-                    "normal": row[1],
-                    "vegetarian": row[2],
-                }
+                    menu = {
+                        "date": current,
+                        "normal": row[1],
+                        "vegetarian": row[2],
+                    }
 
-                model = self.session.query(LunchMenu).filter(LunchMenu.date == current).first()
-                if not model:
-                    model = LunchMenu()
+                    model = self.session.query(LunchMenu).filter(LunchMenu.date == current).first()
+                    if not model:
+                        model = LunchMenu()
 
-                for key in menu:
-                    setattr(model, key, menu[key])
+                    for key in menu:
+                        setattr(model, key, menu[key])
 
-                self.session.add(model)
+                    self.session.add(model)
+
+        elif format == "xlsx":
+            # Extract workbook from XLSX file
+            wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
+
+            menu = None
+            days = 0
+
+            # Parse tables into menus and store them
+            for ws in wb:
+                for wr in ws.iter_rows(min_row=1, max_col=3):
+                    if not hasattr(wr[0].border, "bottom"):
+                        continue
+
+                    if wr[0].border.bottom.color:
+                        if menu and menu["date"]:
+                            model = self.session.query(LunchMenu).filter(LunchMenu.date == menu["date"]).first()
+                            if not model:
+                                model = LunchMenu()
+
+                            model.date = menu["date"]
+                            model.normal = "\n".join(menu["normal"][1:])
+                            model.vegetarian = "\n".join(menu["vegetarian"][1:])
+
+                            self.session.add(model)
+                            days += 1
+
+                        menu = {
+                            "date": None,
+                            "normal": [],
+                            "vegetarian": [],
+                        }
+
+                    if wr[0].value and isinstance(wr[0].value, datetime.datetime):
+                        menu["date"] = date + datetime.timedelta(days=days)
+
+                    if wr[1].value:
+                        menu["normal"].append(wr[1].value.strip())
+
+                    if wr[2].value:
+                        menu["vegetarian"].append(wr[2].value.strip())
+
+            wb.close()
+            os.remove(filename)
+
+        else:
+            raise MenuFormatError("Unknown menu document format: " + format)
 
         # Update or create a document
         if not document:
