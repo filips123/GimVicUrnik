@@ -202,32 +202,51 @@ class EClassroomUpdater:
                 # Parse substitutions
                 if parser_type == "substitutions":
                     time = row[1][:-1]
-                    subject = row[5] if row[5] != "/" else None
+                    subject = self._normalize_other_names(row[5])
 
-                    # Get original teacher
-                    # Special cases: Replace ć with č, multiple Krapež teachers
-                    original_teacher = row[0].split()[0].replace("ć", "č") if row[0] else last_original_teacher
-                    if original_teacher == "Krapež":
-                        if "Alenka" in row[0]:
-                            original_teacher = "KrapežA"
-                        elif "Marjetka" in row[0]:
-                            original_teacher = "KrapežM"
+                    # Get original teacher if it is specified
+                    original_teacher = self._normalize_teacher_name(row[0]) if row[0] else last_original_teacher
                     last_original_teacher = original_teacher
 
-                    original_classroom = row[3]
+                    original_classroom = self._normalize_other_names(row[3])
+                    classroom = original_classroom
 
                     # Handle multiple classes
                     classes = row[2].replace(". ", "").split(" - ")
                     classes = classes[:-1] if len(classes) > 1 else classes
 
                     # Get new teacher
-                    # Special cases: Replace ć with č, multiple Krapež teachers
-                    teacher = row[4].split()[0].replace("ć", "č")
-                    if teacher == "Krapež":
-                        if "Alenka" in row[4]:
-                            teacher = "KrapežA"
-                        elif "Marjetka" in row[4]:
-                            teacher = "KrapežM"
+                    teacher = self._normalize_teacher_name(row[4])
+
+                    # fmt: off
+                    for class_ in classes:
+                        substitutions.append(
+                            {
+                                "date": date,
+                                "day": day,
+                                "time": time,
+                                "subject": subject,
+                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
+                                "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
+                                "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
+                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
+                            }
+                        )
+                    # fmt: on
+
+                elif parser_type == "lesson-change":
+                    time = row[1][:-1]
+                    subject = self._normalize_other_names(row[3].split(" → ")[1])
+
+                    original_teacher = self._normalize_teacher_name(row[2].split(" → ")[0])
+                    original_classroom = self._normalize_other_names(row[4])
+
+                    # Handle multiple classes
+                    classes = row[0].replace(". ", "").split(" - ")
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    teacher = self._normalize_teacher_name(row[2].split(" → ")[1])
                     classroom = original_classroom
 
                     # fmt: off
@@ -238,82 +257,28 @@ class EClassroomUpdater:
                                 "day": day,
                                 "time": time,
                                 "subject": subject,
-                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
                                 "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
                                 "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher != "/" else None,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
                                 "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
-                            }
-                        )
-                    # fmt: on
-
-                elif parser_type == "lesson-change":
-                    time = row[1][:-1]
-                    subject = row[3].split(" → ")[1]
-
-                    # Get original teacher
-                    # Special cases: Replace ć with č, multiple Krapež teachers
-                    original_teacher = row[2].split(" → ")[0].split()[0].replace("ć", "č")
-                    if original_teacher == "Krapež":
-                        if "Alenka" in row[2].split(" → ")[0]:
-                            original_teacher = "KrapežA"
-                        elif "Marjetka" in row[2].split(" → ")[0]:
-                            original_teacher = "KrapežM"
-
-                    original_classroom = row[4]
-
-                    # Handle multiple classes
-                    classes = row[0].replace(". ", "").split(" - ")
-                    classes = classes[:-1] if len(classes) > 1 else classes
-
-                    # Get new teacher
-                    # Special cases: Replace ć with č, multiple Krapež teachers
-                    teacher = row[2].split(" → ")[1].split()[0].replace("ć", "č")
-                    if teacher == "Krapež":
-                        if "Alenka" in row[2].split(" → ")[1]:
-                            teacher = "KrapežA"
-                        elif "Marjetka" in row[2].split(" → ")[1]:
-                            teacher = "KrapežM"
-                    classroom = original_classroom
-
-                    # fmt: off
-                    for class_ in classes:
-                        substitutions.append(
-                            {
-                                "date": date,
-                                "day": day,
-                                "time": time,
-                                "subject": subject if subject != "X" else None,
-                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher != "X" else None,
-                                "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom != "/" else None,
-                                "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher != "X" else None,
-                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom != "/" else None,
                             }
                         )
                     # fmt: on
 
                 elif parser_type == "classroom-change":
                     time = row[1][:-1]
-                    subject = row[3]
+                    subject = self._normalize_other_names(row[3])
 
-                    # Get teacher
-                    # Special cases: Replace ć with č, multiple Krapež teachers
-                    original_teacher = row[2].split()[0].replace("ć", "č")
-                    if original_teacher == "Krapež":
-                        if "Alenka" in row[2]:
-                            original_teacher = "KrapežA"
-                        elif "Marjetka" in row[2]:
-                            original_teacher = "KrapežM"
-
-                    original_classrooms = row[4].split(", ")
+                    original_teacher = self._normalize_teacher_name(row[2])
+                    original_classrooms = [self._normalize_other_names(name) for name in row[4].split(", ")]
 
                     # Handle multiple classes
                     classes = row[0].replace(". ", "").split(" - ")
                     classes = classes[:-1] if len(classes) > 1 else classes
 
                     teacher = original_teacher
-                    classroom = row[5]
+                    classroom = self._normalize_other_names(row[5])
 
                     # fmt: off
                     for class_ in classes:
@@ -324,11 +289,11 @@ class EClassroomUpdater:
                                     "day": day,
                                     "time": time,
                                     "subject": subject,
-                                    "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
-                                    "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id,
+                                    "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
+                                    "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
                                     "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                    "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id,
-                                    "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id,
+                                    "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
+                                    "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
                                 }
                             )
                     # fmt: on
@@ -463,6 +428,34 @@ class EClassroomUpdater:
             self.logger.info("Created a new lunch schedule document for %s", document.date)
         else:
             self.logger.info("Updated the lunch schedule document for %s", document.date)
+
+    @staticmethod
+    def _normalize_teacher_name(name):
+        # Special case: Additional lesson
+        if name == "Po urniku ni pouka":
+            return None
+
+        # Special case: Unknown teacher
+        if name == "X" or name == "x" or name == "/":
+            return None
+
+        # Special case: Multiple Krapež teachers
+        if "Krapež" in name:
+            if "Alenka" in name:
+                return "KrapežA"
+            elif "Marjetka" in name:
+                return "KrapežM"
+
+        # Use only surname and replace ć with č
+        return name.split()[0].replace("ć", "č")
+
+    @staticmethod
+    def _normalize_other_names(name):
+        # Special case: Unknown entity
+        if name == "X" or name == "x" or name == "/":
+            return None
+
+        return name
 
     @staticmethod
     def _get_daily_lunch_schedule_date(name, url):
