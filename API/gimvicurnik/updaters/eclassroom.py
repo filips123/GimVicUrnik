@@ -299,26 +299,10 @@ class EClassroomUpdater:
                     # fmt: on
 
         # Store substitutions in database
-        for substitution in substitutions:
-            model = (
-                self.session.query(Substitution)
-                .filter(
-                    Substitution.date == substitution["date"],
-                    Substitution.time == substitution["time"],
-                    Substitution.original_teacher_id == substitution["original_teacher_id"],
-                    Substitution.class_id == substitution["class_id"],
-                )
-                .first()
-            )
+        substitutions = [dict(element) for element in {tuple(substitution.items()) for substitution in substitutions}]
 
-            # Update or create a substitution
-            if not model:
-                model = Substitution()
-
-            for key in substitution:
-                setattr(model, key, substitution[key])
-
-            self.session.add(model)
+        self.session.query(Substitution).filter(Substitution.date == date).delete()
+        self.session.bulk_insert_mappings(Substitution, substitutions)
 
         # Update or create a document
         if not document:
