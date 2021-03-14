@@ -357,9 +357,7 @@ class GimVicUrnik:
 
         @self.app.route("/documents")
         def _get_documents():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).order_by(
-                Document.date
-            )
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).order_by(Document.date)
 
             config = self.config["sources"]["eclassroom"]["pluginfile"]
             token = self.config["sources"]["eclassroom"]["token"]

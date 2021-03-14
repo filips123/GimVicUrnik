@@ -59,7 +59,7 @@ flake8-bugbear = "^20.11.1"
 sentry = ["sentry-sdk"]
 
 [tool.flakehell]
-max_line_length = 120
+max_line_length = 130
 format = "grouped"
 
 [tool.flakehell.plugins]
@@ -70,7 +70,7 @@ format = "grouped"
 "pyflakes" = ["+*", "-F401"]
 
 [tool.black]
-line-length = 120
+line-length = 130
 
 [tool.poetry-dynamic-versioning]
 enable = true

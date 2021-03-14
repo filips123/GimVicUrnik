@@ -98,9 +98,7 @@ class MenuUpdater:
         date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)
 
         if date:
-            return datetime.date(
-                year=int(date.group(3)), month=short_month_to_number[date.group(2)], day=int(date.group(1))
-            )
+            return datetime.date(year=int(date.group(3)), month=short_month_to_number[date.group(2)], day=int(date.group(1)))
 
         # Example: 09-splet-oktober-1-teden-09-M.pdf
         # Another example: 05-splet-februar-3-teden-M-PDF.pdf

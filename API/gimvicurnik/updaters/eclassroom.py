@@ -65,7 +65,7 @@ class EClassroomUpdater:
             if object["course"] != self.course:
                 continue
 
-            yield (object["name"], object["externalurl"], datetime.datetime.fromtimestamp(object["timemodified"]))
+            yield object["name"], object["externalurl"], datetime.datetime.fromtimestamp(object["timemodified"])
 
     def _get_documents(self):
         params = {
@@ -112,9 +112,7 @@ class EClassroomUpdater:
     @with_span(op="document", pass_span=True)
     def _store_generic(self, name, url, date, urltype, span):
         # Add or skip new generic document
-        model, created = get_or_create(
-            session=self.session, model=Document, date=date, type=urltype, url=url, description=name
-        )
+        model, created = get_or_create(session=self.session, model=Document, date=date, type=urltype, url=url, description=name)
 
         span.description = model.url
         span.set_tag("document.url", model.url)
@@ -155,9 +153,7 @@ class EClassroomUpdater:
 
             return
 
-        date = datetime.datetime.strptime(
-            re.search(r"_obvestila_(.+).pdf", url, re.IGNORECASE).group(1), "%d._%m._%Y"
-        ).date()
+        date = datetime.datetime.strptime(re.search(r"_obvestila_(.+).pdf", url, re.IGNORECASE).group(1), "%d._%m._%Y").date()
         day = date.isoweekday()
 
         # Save content to temporary file
@@ -234,6 +230,7 @@ class EClassroomUpdater:
                             teacher = "KrapežM"
                     classroom = original_classroom
 
+                    # fmt: off
                     for class_ in classes:
                         substitutions.append(
                             {
@@ -241,23 +238,14 @@ class EClassroomUpdater:
                                 "day": day,
                                 "time": time,
                                 "subject": subject,
-                                "original_teacher_id": get_or_create(
-                                    self.session, model=Teacher, name=original_teacher
-                                )[0].id,
-                                "original_classroom_id": get_or_create(
-                                    self.session, model=Classroom, name=original_classroom
-                                )[0].id
-                                if original_classroom
-                                else None,
+                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                                "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
                                 "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id
-                                if teacher != "/"
-                                else None,
-                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id
-                                if classroom
-                                else None,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher != "/" else None,
+                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
                             }
                         )
+                    # fmt: on
 
                 elif parser_type == "lesson-change":
                     time = row[1][:-1]
@@ -288,6 +276,7 @@ class EClassroomUpdater:
                             teacher = "KrapežM"
                     classroom = original_classroom
 
+                    # fmt: off
                     for class_ in classes:
                         substitutions.append(
                             {
@@ -295,25 +284,14 @@ class EClassroomUpdater:
                                 "day": day,
                                 "time": time,
                                 "subject": subject if subject != "X" else None,
-                                "original_teacher_id": get_or_create(
-                                    self.session, model=Teacher, name=original_teacher
-                                )[0].id
-                                if original_teacher != "X"
-                                else None,
-                                "original_classroom_id": get_or_create(
-                                    self.session, model=Classroom, name=original_classroom
-                                )[0].id
-                                if original_classroom != "/"
-                                else None,
+                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher != "X" else None,
+                                "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom != "/" else None,
                                 "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id
-                                if teacher != "X"
-                                else None,
-                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id
-                                if classroom != "/"
-                                else None,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher != "X" else None,
+                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom != "/" else None,
                             }
                         )
+                    # fmt: on
 
                 elif parser_type == "classroom-change":
                     time = row[1][:-1]
@@ -337,6 +315,7 @@ class EClassroomUpdater:
                     teacher = original_teacher
                     classroom = row[5]
 
+                    # fmt: off
                     for class_ in classes:
                         for original_classroom in original_classrooms:
                             substitutions.append(
@@ -345,17 +324,14 @@ class EClassroomUpdater:
                                     "day": day,
                                     "time": time,
                                     "subject": subject,
-                                    "original_teacher_id": get_or_create(
-                                        self.session, model=Teacher, name=original_teacher
-                                    )[0].id,
-                                    "original_classroom_id": get_or_create(
-                                        self.session, model=Classroom, name=original_classroom
-                                    )[0].id,
+                                    "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id,
+                                    "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id,
                                     "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
                                     "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id,
                                     "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id,
                                 }
                             )
+                    # fmt: on
 
         # Store substitutions in database
         for substitution in substitutions:
@@ -462,9 +438,7 @@ class EClassroomUpdater:
 
         # Get lunch schedule for the same date if schedule was updated and URL has changed
         if not document:
-            document = (
-                self.session.query(Document).filter(Document.type == "lunch-schedule", Document.date == date).first()
-            )
+            document = self.session.query(Document).filter(Document.type == "lunch-schedule", Document.date == date).first()
 
         # Update or create a document
         if not document:
@@ -512,13 +486,8 @@ class EClassroomUpdater:
             "dec": 12,
         }
 
-        search = re.search(
-            r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$", url
-        )
-
-        return datetime.date(
-            year=int(search.group(3)), month=month_to_number[search.group(2)], day=int(search.group(1))
-        )
+        search = re.search(r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$", url)
+        return datetime.date(year=int(search.group(3)), month=month_to_number[search.group(2)], day=int(search.group(1)))
 
     def _parse_daily_lunch_schedule(self, date, tables):
         schedule = []
