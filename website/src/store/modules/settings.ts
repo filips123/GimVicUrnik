@@ -55,7 +55,7 @@ class Settings extends VuexModule {
   showLinksInTimetable = true
   showHoursInTimetable = true
   enablePullToRefresh = true
-  enableUpdateOnLoad = false
+  enableUpdateOnLoad = true
 
   dataCollection: DataCollectionConfig = {
     performance: !(navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl),
