@@ -446,6 +446,23 @@ class EClassroomUpdater:
             elif "Marjetka" in name:
                 return "KrapežM"
 
+        # Special case: Teachers with multiple surnames
+        teachers = {
+            "Jereb": "Batagelj",
+            "Gresl": "Černe",
+            "Tehovnik": "Glaser",
+            "Merhar": "Kariž",
+            "Erbežnik": "Mihelič",
+            "Zelič": "Ocvirk",
+            "Osole": "Pikl",
+            "Vičar": "Potočnik",
+            "Završnik": "Ražen",
+            "Vahtar": "Rudolf",
+            "Stjepić": "Šajn",
+        }
+        if name.split()[0] in teachers:
+            return teachers[name.split()[0]]
+
         # Use only surname and replace ć with č
         return name.split()[0].replace("ć", "č")
 
