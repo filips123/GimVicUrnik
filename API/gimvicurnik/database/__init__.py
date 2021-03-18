@@ -56,9 +56,7 @@ class Entity:
         classroom = aliased(Classroom)
 
         query = (
-            session.query(
-                Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name
-            )
+            session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
             .join(Class)
             .join(original_teacher, Substitution.original_teacher_id == original_teacher.id, isouter=True)
             .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)

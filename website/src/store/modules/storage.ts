@@ -95,13 +95,15 @@ class Storage extends VuexModule {
   emptyClassrooms: Lesson[] | null = null
   documents: Document[] | null = null
 
-  get substitutions (): Map<string, Substitution> {
+  get substitutions (): Map<string, Substitution[]> {
     const substitutionMap = new Map()
 
     // Add keys to substitutions so they can be found more quickly
     for (const substitution of (this._substitutions?.flat() || [])) {
       if (!substitution) continue
-      substitutionMap.set(getSubstitutionId(substitution), substitution)
+
+      const substitutionId = getSubstitutionId(substitution)
+      substitutionMap.set(substitutionId, (substitutionMap.get(substitutionId) || []).concat(substitution))
     }
 
     return substitutionMap

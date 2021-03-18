@@ -73,16 +73,12 @@ def cleanup_database_command():
         for entity in (Substitution, LunchSchedule, SnackMenu, LunchMenu):
             for model in session.query(entity):
                 if (datetime.datetime.now().date() - model.date).days > 14:
-                    logging.getLogger(__name__).info(
-                        "Removing the %s from %s", model.__class__.__name__.lower(), model.date
-                    )
+                    logging.getLogger(__name__).info("Removing the %s from %s", model.__class__.__name__.lower(), model.date)
                     session.delete(model)
 
         # Remove classes/teachers/classrooms without lessons/substitutions
         for entity in (Class, Teacher, Classroom):
             for model in session.query(entity):
                 if len(model.lessons) == 0 and len(model.substitutions) == 0:
-                    logging.getLogger(__name__).info(
-                        "Removing the unused %s %s", model.__class__.__name__.lower(), model.name
-                    )
+                    logging.getLogger(__name__).info("Removing the unused %s %s", model.__class__.__name__.lower(), model.name)
                     session.delete(model)

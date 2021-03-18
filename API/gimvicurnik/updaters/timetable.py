@@ -62,9 +62,7 @@ class TimetableUpdater:
                 "subject": lesson[3] if lesson[3] else None,
                 "class_id": get_or_create(self.session, model=Class, name=lesson[1])[0].id if lesson[1] else None,
                 "teacher_id": get_or_create(self.session, model=Teacher, name=lesson[2])[0].id if lesson[2] else None,
-                "classroom_id": get_or_create(self.session, model=Classroom, name=lesson[4])[0].id
-                if lesson[4]
-                else None,
+                "classroom_id": get_or_create(self.session, model=Classroom, name=lesson[4])[0].id if lesson[4] else None,
             }
             for _, lesson in lessons.items()
         ]

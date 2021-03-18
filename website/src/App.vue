@@ -137,6 +137,8 @@ export default class App extends Vue {
       return
     }
 
+    if (this.isSnackbarDisplayed) return
+
     this.snackbarMessage = (event as CustomEvent).detail.message
     this.snackbarButton = (event as CustomEvent).detail?.button
     this.snackbarAction = (event as CustomEvent).detail?.action
