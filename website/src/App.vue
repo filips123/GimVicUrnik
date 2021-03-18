@@ -17,6 +17,7 @@
         :to="{ name: 'settings' }"
         alt="Nastavitve"
         aria-label="Nastavitve"
+        class="mr-n2"
         icon
         large>
         <v-icon>{{ mdiCog }}</v-icon>
