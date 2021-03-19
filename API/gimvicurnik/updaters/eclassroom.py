@@ -432,17 +432,19 @@ class EClassroomUpdater:
 
         # Special case: Teachers with multiple surnames
         teachers = {
-            "Jereb": "Batagelj",
-            "Gresl": "Černe",
-            "Tehovnik": "Glaser",
-            "Merhar": "Kariž",
+            "Crnoja": "Legan",
             "Erbežnik": "Mihelič",
-            "Zelič": "Ocvirk",
+            "Gresl": "Černe",
+            "Jereb": "Batagelj",
+            "Merhar": "Kariž",
             "Osole": "Pikl",
+            "Stjepić": "Šajn",
+            "Tehovnik": "Glaser",
+            "Vahtar": "Rudolf",
             "Vičar": "Potočnik",
             "Završnik": "Ražen",
-            "Vahtar": "Rudolf",
-            "Stjepić": "Šajn",
+            "Zelič": "Ocvirk",
+            "Žemva": "Strmčnik",
         }
         if name.split()[0] in teachers:
             return teachers[name.split()[0]]
@@ -506,8 +508,9 @@ class EClassroomUpdater:
                 time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time() if row[0] else last_hour
                 last_hour = time
 
-                notes = row[1] if row[1] else last_notes
-                last_notes = notes.strip()
+                notes = row[1].strip() if row[0] else last_notes
+                notes = notes if notes else None
+                last_notes = notes
 
                 class_ = row[2].strip()
                 location = row[4].strip()
