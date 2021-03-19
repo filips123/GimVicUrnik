@@ -1,7 +1,7 @@
 <!-- Component that displays document list -->
 
 <template>
-  <v-expansion-panels v-if="documents.length > 0">
+  <v-expansion-panels v-if="documents.length > 0" tile>
     <v-expansion-panel>
       <v-expansion-panel-header class="text-h6 list-title">{{ title }}</v-expansion-panel-header>
       <v-expansion-panel-content>
@@ -48,16 +48,14 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
+import { Document } from '@/store/modules/storage'
 import { getWeekDays } from '@/utils/days'
 
 @Component
-export default class SettingsAction extends Vue {
+export default class DocumentList extends Vue {
   @Prop() displayWeekDate!: boolean
   @Prop() title!: string
-  @Prop() documents!: {
-    description: string,
-    url: string
-  }[]
+  @Prop() documents!: Document[]
 
   formatDate (date: string): string {
     return new Date(date).toLocaleDateString('sl')

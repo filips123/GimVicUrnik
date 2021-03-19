@@ -33,6 +33,28 @@ export interface DisplayedLesson {
   substitution: boolean;
 }
 
+export interface LunchSchedule {
+  class: string;
+  date: string;
+  time: string;
+  location: string;
+  notes: string | null;
+}
+
+export interface Menu {
+  date: string;
+  snack: {
+    normal: string,
+    vegetarian: string,
+    poultry: string,
+    fruitvegetable: string
+  };
+  lunch: {
+    normal: string,
+    vegetarian: string
+  }
+}
+
 export interface Document {
   data: string;
   type: string;
@@ -54,6 +76,8 @@ export async function updateAllData (): Promise<void> {
     StorageModule.updateTimetable(true),
     StorageModule.updateEmptyClassrooms(true),
     StorageModule.updateSubstitutions(true),
+    StorageModule.updateLunchSchedule(true),
+    StorageModule.updateMenus(true),
     StorageModule.updateDocuments(true)
   ])
 
@@ -91,8 +115,11 @@ class Storage extends VuexModule {
 
   timetable: Lesson[] | null = null
   _substitutions: Substitution[][] | null = null
-
   emptyClassrooms: Lesson[] | null = null
+
+  lunchSchedule: [string, LunchSchedule[]][] | null = null
+  menus: [string, Menu][] | null = null
+
   documents: Document[] | null = null
 
   get substitutions (): Map<string, Substitution[]> {
@@ -219,6 +246,70 @@ class Storage extends VuexModule {
     try {
       const response = await fetchHandle(process.env.VUE_APP_API + '/timetable/classrooms/empty')
       return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
+    }
+  }
+
+  @MutationAction
+  async updateLunchSchedule (forceUpdate = false) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const isStoredLocally = 'storage' in localStorage && this.state._substitutions
+    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
+
+    if (!navigator.onLine) {
+      displaySnackbar('Internetna povezava ni na voljo')
+      return
+    }
+
+    if (!forceUpdate && !shouldUpdateStorage) {
+      return
+    }
+
+    try {
+      const lunchSchedule = await Promise.all(getWeekDays(getMonday(new Date())).map(async (date): Promise<[string, LunchSchedule[]]> => {
+        const response = await fetchHandle(process.env.VUE_APP_API + '/schedule/date/' + date.toISOString().split('T')[0])
+        return [date.toISOString().split('T')[0], await response.json()]
+      }))
+      const lastUpdated = new Date()
+
+      return { lunchSchedule, lastUpdated }
+    } catch (error) {
+      displaySnackbar('Napaka pri pridobivanju podatkov')
+      console.error(error)
+
+      if (process.env.VUE_APP_SENTRY_ENABLED === 'true') captureException(error)
+    }
+  }
+
+  @MutationAction
+  async updateMenus (forceUpdate = false) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const isStoredLocally = 'storage' in localStorage && this.state._substitutions
+    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
+
+    if (!navigator.onLine) {
+      displaySnackbar('Internetna povezava ni na voljo')
+      return
+    }
+
+    if (!forceUpdate && !shouldUpdateStorage) {
+      return
+    }
+
+    try {
+      const menus = await Promise.all(getWeekDays(getMonday(new Date())).map(async (date): Promise<[string, Menu]> => {
+        const response = await fetchHandle(process.env.VUE_APP_API + '/menus/date/' + date.toISOString().split('T')[0])
+        return [date.toISOString().split('T')[0], await response.json()]
+      }))
+      const lastUpdated = new Date()
+
+      return { menus, lastUpdated }
     } catch (error) {
       displaySnackbar('Napaka pri pridobivanju podatkov')
       console.error(error)

@@ -2,6 +2,8 @@
 
 import { register } from 'register-service-worker'
 
+// TODO: Fix service worker to also serve offline page for any request
+
 if (process.env.NODE_ENV === 'production') {
   register(`${process.env.BASE_URL}service-worker.js`, {
     ready () {

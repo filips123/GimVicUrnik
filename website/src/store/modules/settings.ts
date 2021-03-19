@@ -11,8 +11,8 @@ export enum EntityType {
 
 export enum SnackType {
   Normal,
-  Poultry,
   Vegetarian,
+  Poultry,
   Fruitvegetable
 }
 
