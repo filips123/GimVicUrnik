@@ -432,17 +432,19 @@ class EClassroomUpdater:
 
         # Special case: Teachers with multiple surnames
         teachers = {
-            "Jereb": "Batagelj",
-            "Gresl": "Černe",
-            "Tehovnik": "Glaser",
-            "Merhar": "Kariž",
+            "Crnoja": "Legan",
             "Erbežnik": "Mihelič",
-            "Zelič": "Ocvirk",
+            "Gresl": "Černe",
+            "Jereb": "Batagelj",
+            "Merhar": "Kariž",
             "Osole": "Pikl",
+            "Stjepić": "Šajn",
+            "Tehovnik": "Glaser",
+            "Vahtar": "Rudolf",
             "Vičar": "Potočnik",
             "Završnik": "Ražen",
-            "Vahtar": "Rudolf",
-            "Stjepić": "Šajn",
+            "Zelič": "Ocvirk",
+            "Žemva": "Strmčnik",
         }
         if name.split()[0] in teachers:
             return teachers[name.split()[0]]
