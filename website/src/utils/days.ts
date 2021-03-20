@@ -7,6 +7,8 @@ export function getCurrentDay (): number {
 }
 
 export function getMonday (date: Date): Date {
+  date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+
   const day = date.getDay()
   let diff = date.getDate() - day + 1
 

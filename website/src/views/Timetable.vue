@@ -83,10 +83,6 @@ export default class Timetable extends Vue {
     this.update()
   }
 
-  destroyed (): void {
-    this.$emit('setDayMenuDisplay', false)
-  }
-
   @Watch('$route')
   onRouteChanged (newRoute: Route, oldRoute: Route): void {
     if (!newRoute || !oldRoute) return

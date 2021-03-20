@@ -244,6 +244,7 @@ export default class Settings extends Vue {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Nastavitve')
 
+    this.$emit('setDayMenuDisplay', false)
     this.$emit('setPullToRefreshAllowed', false)
   }
 

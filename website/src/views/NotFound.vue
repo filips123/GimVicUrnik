@@ -25,6 +25,8 @@ export default class NotFound extends Vue {
     document.title = process.env.VUE_APP_TITLE + ' – Stran ni najdena'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Stran ni najdena')
 
+    this.$emit('setDayMenuDisplay', false)
+
     if (process.env.VUE_APP_SENTRY_ENABLED === 'true') {
       configureScope(scope => {
         scope.getSpan()?.setHttpStatus(404)

@@ -1,23 +1,29 @@
-<!-- Component that displays menu -->
+<!-- Component that displays menu and lunch schedule -->
 
 <template>
-  <v-card tile>
-    <div class="grey lighten-4">
+  <v-card class="menu-display" elevation="2" tile>
+    <div v-if="!mobile" :class="{ 'lighten-4': !$vuetify.theme.dark, 'darken-4': $vuetify.theme.dark }" class="grey">
       <v-card-title class="pt-1 text-capitalize">{{ formatDay(date) }}</v-card-title>
       <v-card-subtitle class="pb-1">{{ formatDate(date) }}</v-card-subtitle>
     </div>
 
-    <v-card-text class="grey--text text--darken-4 pb-0">
+    <v-card-text v-if="menu.snack"
+      :class="{ 'pb-0': menu.lunch, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+      class="grey--text">
       <h2 class="font-weight-regular pb-2">Malica</h2>
       <p v-html=convertNewlines(menu.snack[getSnackType()]) />
     </v-card-text>
 
-    <v-card-text class="grey--text text--darken-4" :class="{'pb-0': currentEntityValid }">
+    <v-card-text v-if="menu.lunch"
+      :class="{ 'pb-0': currentEntityValid && currentLunchSchedule, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+      class="grey--text">
       <h2 class="font-weight-regular pb-2">Kosilo</h2>
       <p v-html=convertNewlines(menu.lunch[getLunchType()]) />
     </v-card-text>
 
-    <v-card-text v-if="currentEntityValid" class="grey--text text--darken-4 pb-2">
+    <v-card-text v-if="currentEntityValid && currentLunchSchedule"
+      :class="{ 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+      class="grey--text pb-2">
       <h2 class="font-weight-regular pb-2">Razpored kosila</h2>
       <p>
         Ura: {{ currentLunchSchedule.time }}<br />
@@ -29,7 +35,10 @@
 </template>
 
 <style lang="scss">
-
+// Use the same height for all cards
+.menu-display {
+  height: 100%;
+}
 </style>
 
 <script lang="ts">
@@ -40,6 +49,7 @@ import { LunchSchedule, Menu } from '@/store/modules/storage'
 
 @Component
 export default class MenuDisplay extends Vue {
+  @Prop({ default: false }) mobile!: boolean
   @Prop() date!: Date
 
   @Prop() lunchSchedule!: LunchSchedule[]
