@@ -83,10 +83,6 @@ export default class Timetable extends Vue {
     this.update()
   }
 
-  destroyed (): void {
-    this.$emit('setDayMenuDisplay', false)
-  }
-
   @Watch('$route')
   onRouteChanged (newRoute: Route, oldRoute: Route): void {
     if (!newRoute || !oldRoute) return
@@ -178,6 +174,9 @@ export default class Timetable extends Vue {
     document.title = process.env.VUE_APP_TITLE + ' – ' + entityNice
     this.$emit('setPageTitle', 'Urnik – ' + entityNice)
 
+    // Set that timetable is ready
+    this.isReady = true
+
     // Update data
     if (currentEntity?.type === EntityType.EmptyClassrooms) {
       await StorageModule.updateEmptyClassrooms()
@@ -190,9 +189,6 @@ export default class Timetable extends Vue {
         await StorageModule.updateTimetable()
       }
     }
-
-    // Set that timetable is ready
-    this.isReady = true
   }
 }
 </script>

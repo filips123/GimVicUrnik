@@ -16,6 +16,11 @@ module.exports = {
 
     manifestPath: 'site.webmanifest',
 
+    workboxOptions: {
+      navigateFallback: '/index.html',
+      navigateFallbackBlacklist: [/\./]
+    },
+
     manifestOptions: {
       name: process.env.VUE_APP_TITLE,
       short_name: process.env.VUE_APP_SHORT,

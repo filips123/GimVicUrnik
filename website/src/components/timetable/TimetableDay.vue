@@ -1,7 +1,7 @@
 <!-- Display timetable table for the specified day -->
 
 <template>
-  <v-sheet class="ma-3" elevation="4">
+  <v-sheet class="ma-3" elevation="2">
     <v-simple-table class="timetable-day">
       <template v-slot:default>
         <tbody>

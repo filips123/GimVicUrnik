@@ -47,13 +47,19 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
-    <!-- TODO: Add dialogs for snack and lunch selection -->
-
     <v-dialog v-model="entitySelectionDialog" width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
         is-dialog="1"
         @closeDialog=closeEntityDialog />
+    </v-dialog>
+
+    <v-dialog v-model="snackSelectionDialog" width="35rem">
+      <snack-selection v-if="snackSelectionDialog" @closeDialog=closeSnackDialog />
+    </v-dialog>
+
+    <v-dialog v-model="lunchSelectionDialog" width="35rem">
+      <lunch-selection v-if="lunchSelectionDialog" @closeDialog=closeLunchDialog />
     </v-dialog>
 
     <v-dialog v-model="dataCollectionDialog" width="35rem">
@@ -85,14 +91,24 @@ import { Component, Vue } from 'vue-property-decorator'
 
 import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
+import LunchSelection from '@/components/settings/LunchSelection.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
+import SnackSelection from '@/components/settings/SnackSelection.vue'
 import ThemeSelection from '@/components/settings/ThemeSelection.vue'
 import { EntityType, LunchType, SettingsModule, SnackType, ThemeType } from '@/store/modules/settings'
 import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
-  components: { DataCollectionSelection, ThemeSelection, SettingsAction, SettingsSwitch, EntitySelection }
+  components: {
+    DataCollectionSelection,
+    ThemeSelection,
+    SnackSelection,
+    SettingsAction,
+    SettingsSwitch,
+    LunchSelection,
+    EntitySelection
+  }
 })
 export default class Settings extends Vue {
   mdiTuneVariant = mdiTuneVariant
@@ -114,8 +130,6 @@ export default class Settings extends Vue {
   // Get label for entity switch
   selectedEntityLabel = (() => {
     switch (SettingsModule.selectedEntity?.type) {
-      case EntityType.Class:
-        return 'Izbran razred'
       case EntityType.Teacher:
         return 'Izbran profesor'
       case EntityType.Classroom:
@@ -129,10 +143,8 @@ export default class Settings extends Vue {
   selectedEntity = SettingsModule.selectedEntity?.data.join(', ') || 'Razred ni izbran'
 
   // Get snack type as string from enum
-  selectedSnack = (() => {
+  get selectedSnack (): string {
     switch (SettingsModule.selectedMenu?.snack) {
-      case SnackType.Normal:
-        return 'Navadna'
       case SnackType.Vegetarian:
         return 'Vegetarijanska'
       case SnackType.Poultry:
@@ -142,19 +154,17 @@ export default class Settings extends Vue {
       default:
         return 'Navadna'
     }
-  })()
+  }
 
   // Get lunch type as string from enum
-  selectedLunch = (() => {
+  get selectedLunch (): string {
     switch (SettingsModule.selectedMenu?.lunch) {
-      case LunchType.Normal:
-        return 'Navadno'
       case LunchType.Vegetarian:
         return 'Vegetarijansko'
       default:
         return 'Navadno'
     }
-  })()
+  }
 
   // Get data collection status as string from storage
   get dataCollectionStatus (): string {
@@ -234,6 +244,7 @@ export default class Settings extends Vue {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
     this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Nastavitve')
 
+    this.$emit('setDayMenuDisplay', false)
     this.$emit('setPullToRefreshAllowed', false)
   }
 

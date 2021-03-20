@@ -1,7 +1,7 @@
 <!-- Display timetable table for the current week -->
 
 <template>
-  <v-sheet class="ma-6" elevation="4">
+  <v-sheet class="ma-6" elevation="2">
     <v-simple-table class="timetable-week">
       <template v-slot:default>
         <thead>

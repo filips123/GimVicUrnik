@@ -11,8 +11,8 @@ export enum EntityType {
 
 export enum SnackType {
   Normal,
-  Poultry,
   Vegetarian,
+  Poultry,
   Fruitvegetable
 }
 
@@ -49,7 +49,11 @@ interface NavigatorGPC extends Navigator {
 @Module({ name: 'settings', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
 class Settings extends VuexModule {
   selectedEntity: SelectedEntity | null = null
-  selectedMenu: SelectedMenu | null = null
+
+  selectedMenu: SelectedMenu = {
+    snack: SnackType.Normal,
+    lunch: LunchType.Normal
+  }
 
   showSubstitutions = true
   showLinksInTimetable = true
@@ -72,6 +76,18 @@ class Settings extends VuexModule {
   @Mutation
   setSelectedMenu (selectedMenu: SelectedMenu): void {
     this.selectedMenu = selectedMenu
+  }
+
+  @Mutation
+  setSelectedMenuSnack (snack: SnackType) {
+    if (this.selectedMenu === null) this.selectedMenu = { snack: snack, lunch: LunchType.Normal }
+    else this.selectedMenu.snack = snack
+  }
+
+  @Mutation
+  setSelectedMenuLunch (lunch: LunchType) {
+    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch: lunch }
+    else this.selectedMenu.lunch = lunch
   }
 
   @Mutation
