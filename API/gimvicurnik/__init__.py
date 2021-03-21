@@ -1,9 +1,9 @@
 import os
 
 import yaml
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from schema import Optional, Or, Schema, SchemaError
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import scoped_session
 from werkzeug.exceptions import HTTPException
 
@@ -361,7 +361,6 @@ class GimVicUrnik:
 
             config = self.config["sources"]["eclassroom"]["pluginfile"]
             token = self.config["sources"]["eclassroom"]["token"]
-
             return jsonify(
                 [
                     {
@@ -373,7 +372,22 @@ class GimVicUrnik:
                     for model in query
                 ]
             )
+        @self.app.route("/circular/atom")
+        def _get_atom():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "None")).order_by(Document.date)
 
+            config = self.config["sources"]["eclassroom"]["pluginfile"]
+            token = self.config["sources"]["eclassroom"]["token"]
+
+            return render_template("atom.xml", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+        @self.app.route("/circular/rss")
+        def _get_rss():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "None")).order_by(Document.date)
+
+            config = self.config["sources"]["eclassroom"]["pluginfile"]
+            token = self.config["sources"]["eclassroom"]["token"]
+
+            return render_template("rss.xml", entries = query)
 
 def create_app():
     """Application factory that accepts a configuration file from environment variable."""

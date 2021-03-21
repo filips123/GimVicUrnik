@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+
+<channel>
+  <title>Okroznice gimnazije vic<</title>
+  <link>https://gimvicurnik.filips.si</link>
+  {%for model in entries%}
+  <item>
+    <title>{{model.description}}</title>
+    <link href="{{model.url if not config["shareToken"] else tokenize_url(model.url, config, token)}}"/>
+  </item>
+  {%endfor%} 
+</channel>
+
+</rss> 

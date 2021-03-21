@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>Okroznice gimnazije vic</title>
+  <link href="https://gimvicurnik.filips.si"/>
+  <updated> {{ last_updated }} </updated>
+  <author>
+    <name>Filip Stamcar in Jakob Kralj</name>
+  </author>
+  <id>https://gimvicurnik.filips.si</id>
+  {%for model in entries%}
+  <entry>
+    <title>{{model.description}}</title>
+    <link href="{{model.url if not config["shareToken"] else tokenize_url(model.url, config, token)}}"/>
+    <id>{{model.url if not config["shareToken"] else tokenize_url(model.url, config, token)}} + model.date.strftime("%Y-%m-%d"))}}</id>
+    <updated>{{model.date.strftime("%Y-%m-%d")}}</updated>
+  </entry>
+  {%endfor%} 
+</feed>
