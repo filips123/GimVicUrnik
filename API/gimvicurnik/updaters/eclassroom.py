@@ -512,18 +512,19 @@ class EClassroomUpdater:
                 notes = notes if notes else None
                 last_notes = notes
 
-                class_ = row[2].strip()
+                classes = row[2].replace("(", "").replace(")", "").split(",")
                 location = row[4].strip()
 
-                schedule.append(
-                    {
-                        "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                        "date": date,
-                        "time": time,
-                        "location": location,
-                        "notes": notes,
-                    }
-                )
+                for class_ in classes:
+                    schedule.append(
+                        {
+                            "class_id": get_or_create(self.session, model=Class, name=class_.strip())[0].id,
+                            "date": date,
+                            "time": time,
+                            "location": location,
+                            "notes": notes,
+                        }
+                    )
 
         # Store schedule in database
         self.session.query(LunchSchedule).filter(LunchSchedule.date == date).delete()
@@ -547,17 +548,18 @@ class EClassroomUpdater:
                     row = [a for b in row for a in b.split("\n")]
 
                 time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time()
-                class_ = row[1].strip()
+                classes = row[1].replace("(", "").replace(")", "").split(",")
                 location = row[2].strip()
 
-                schedule.append(
-                    {
-                        "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
-                        "date": date,
-                        "time": time,
-                        "location": location,
-                    }
-                )
+                for class_ in classes:
+                    schedule.append(
+                        {
+                            "class_id": get_or_create(self.session, model=Class, name=class_.strip())[0].id,
+                            "date": date,
+                            "time": time,
+                            "location": location,
+                        }
+                    )
 
             date += datetime.timedelta(days=1)
 
