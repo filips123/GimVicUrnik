@@ -15,17 +15,17 @@
     </v-card-text>
 
     <v-card-text v-if="menu.lunch"
-      :class="{ 'pb-0': currentEntityValid && currentLunchSchedule, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+      :class="{ 'pb-0': currentEntityValid && currentLunchSchedules, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
       class="grey--text">
       <h2 class="font-weight-regular pb-2">Kosilo</h2>
       <p v-html=convertNewlines(menu.lunch[getLunchType()]) />
     </v-card-text>
 
-    <v-card-text v-if="currentEntityValid && currentLunchSchedule"
+    <v-card-text v-if="currentEntityValid && currentLunchSchedules"
       :class="{ 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
       class="grey--text pb-2">
       <h2 class="font-weight-regular pb-2">Razpored kosila</h2>
-      <p>
+      <p v-for="currentLunchSchedule in currentLunchSchedules" :key="currentLunchSchedule.time">
         Ura: {{ currentLunchSchedule.time }}<br />
         Prostor: {{ currentLunchSchedule.location }}<br />
         Opombe: {{ currentLunchSchedule.notes }}<br />
@@ -50,7 +50,7 @@ import { LunchSchedule, Menu } from '@/store/modules/storage'
 @Component
 export default class MenuDisplay extends Vue {
   @Prop({ default: false }) mobile!: boolean
-  @Prop() date!: Date
+  @Prop() date!: string
 
   @Prop() lunchSchedule!: LunchSchedule[]
   @Prop() menu!: Menu
@@ -63,8 +63,9 @@ export default class MenuDisplay extends Vue {
     return !!this.currentEntity && this.currentEntity.type === EntityType.Class
   }
 
-  get currentLunchSchedule (): LunchSchedule | undefined {
-    return this.lunchSchedule.find(schedule => this.currentEntity?.data.includes(schedule.class))
+  get currentLunchSchedules (): LunchSchedule[] | null {
+    const lunchSchedules = this.lunchSchedule.filter(schedule => this.currentEntity?.data.includes(schedule.class))
+    return lunchSchedules.length ? lunchSchedules : null
   }
 
   formatDay (date: string): string {

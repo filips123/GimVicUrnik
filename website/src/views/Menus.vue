@@ -2,7 +2,8 @@
   <v-row v-if="$root.$children[0].isMobile" class="menus" justify="center">
     <v-tabs-items ref="tabs" v-model="currentDay" :touch="tabsItemsTouch">
       <v-tab-item v-for="(dayName, dayIndex) in daysInWeek" :key="dayIndex">
-        <menu-display :date="documents[dayIndex].date"
+        <menu-display v-if="dayIndex in documents"
+          :date="documents[dayIndex].date"
           :lunch-schedule="documents[dayIndex].lunchSchedule"
           :menu="documents[dayIndex].menu"
           class="ma-3"
