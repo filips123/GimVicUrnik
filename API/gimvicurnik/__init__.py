@@ -388,7 +388,20 @@ class GimVicUrnik:
             token = self.config["sources"]["eclassroom"]["token"]
 
             return render_template("rss.xml", entries = query)
-
+        @self.app.route("/calendar/classes/<string:class_>")
+        def _get_calendar_for_classes(class_):
+            h = {
+                0 : ("071000", "075500"),
+                1 : ("080000", "084500"),
+                2 : ("085000", "093500"),
+                3 : ("094000", "102500"),
+                4 : ("105500", "114000"),
+                5 : ("114500", "123000"),
+                6 : ("123500", "132000"),
+                7 : ("132500", "141000"),
+                8 : ("141500", "150000")
+            }
+            return render_template("sample.ics", nadomescanja = Class.get_icsfeed(self.session, [class_]), h = h)
 def create_app():
     """Application factory that accepts a configuration file from environment variable."""
 

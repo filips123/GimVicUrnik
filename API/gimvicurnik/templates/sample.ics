@@ -1,0 +1,13 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:GIMVIC server
+CALSCALE:GREGORIAN
+METHOD:PUBLISH{%for event in nadomescanja%}
+BEGIN:VEVENT
+SUMMARY: Nadomeščanje {{event.subject}} + {{event.class}}
+DTSTAMP:{{event.date + "T" + h[event.time][0]}}
+DTSTART:{{event.date + "T" + h[event.time][0]}}
+DTEND:{{event.date + "T" + h[event.time][1]}}
+UID: {{event.date + "X" + event.class + "X" + h[event.time][0] }}
+END:VEVENT
+{%endfor%}END:VCALENDAR
