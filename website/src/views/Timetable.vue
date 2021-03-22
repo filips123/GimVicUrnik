@@ -97,6 +97,9 @@ export default class Timetable extends Vue {
       // Update lists if needed
       if (!this.$route.params.skipListUpdate) await StorageModule.updateLists()
 
+      // User is already on another page
+      if (!this.$route.params.type || !this.$route.params.value) return
+
       const type = this.$route.params.type
       const data = this.$route.params.value.split(',')
 
