@@ -201,7 +201,7 @@ class EClassroomUpdater:
 
                 # Parse substitutions
                 if parser_type == "substitutions":
-                    time = row[1][:-1]
+                    time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[5])
 
                     # Get original teacher if it is specified
@@ -236,7 +236,7 @@ class EClassroomUpdater:
                     # fmt: on
 
                 elif parser_type == "lesson-change":
-                    time = row[1][:-1]
+                    time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[3].split(" → ")[1])
 
                     original_teacher = self._normalize_teacher_name(row[2].split(" → ")[0])
@@ -267,7 +267,7 @@ class EClassroomUpdater:
                     # fmt: on
 
                 elif parser_type == "classroom-change":
-                    time = row[1][:-1]
+                    time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[3])
 
                     original_teacher = self._normalize_teacher_name(row[2])
