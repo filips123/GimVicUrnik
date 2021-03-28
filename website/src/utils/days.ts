@@ -15,7 +15,7 @@ export function getMonday (date: Date): Date {
   if (day === 6) diff = date.getDate() + 2
   if (day === 0) diff = date.getDate() + 1
 
-  return new Date(date.setDate(diff))
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), diff))
 }
 
 export function getWeekDays (monday: Date): Date[] {
