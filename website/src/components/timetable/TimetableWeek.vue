@@ -180,7 +180,7 @@ export default class TimetableWeek extends Vue {
             details: [
               {
                 type: 'subject',
-                contents: lesson.subjects
+                contents: lesson.subjects.filter(x => x)
               },
               {
                 type: 'teacher',
@@ -205,7 +205,7 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'subject',
-                contents: lesson.subjects
+                contents: lesson.subjects.filter(x => x)
               },
               {
                 type: 'classroom',
@@ -226,26 +226,26 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'subject',
-                contents: lesson.subjects
+                contents: lesson.subjects.filter(x => x)
               },
               {
                 type: 'teacher',
                 contents: lesson.teachers
               }
-            ]
+            ].filter(x => x.contents.length)
           })
         }
 
         // Convert lessons of empty classroom into displayed format
         if (this.currentEntity?.type === EntityType.EmptyClassrooms) {
           timeData.days.push({
-            substitution: false,
+            substitution: lesson.substitution,
             details: [
               {
                 type: 'classroom',
-                contents: lesson.classrooms
+                contents: lesson.classrooms.filter(x => x)
               }
-            ]
+            ].filter(x => x.contents.length)
           })
         }
       }
