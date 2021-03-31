@@ -101,7 +101,7 @@ export default class TimetableDay extends Vue {
           details: [
             {
               type: 'subject',
-              contents: displayedLesson.subjects
+              contents: displayedLesson.subjects.filter(x => x)
             },
             {
               type: 'teacher',
@@ -111,7 +111,7 @@ export default class TimetableDay extends Vue {
               type: 'classroom',
               contents: displayedLesson.classrooms.filter(x => x)
             }
-          ]
+          ].filter(x => x.contents.length)
         })
       }
     }
@@ -129,13 +129,13 @@ export default class TimetableDay extends Vue {
             },
             {
               type: 'subject',
-              contents: displayedLesson.subjects
+              contents: displayedLesson.subjects.filter(x => x)
             },
             {
               type: 'classroom',
               contents: displayedLesson.classrooms.filter(x => x)
             }
-          ]
+          ].filter(x => x.contents.length)
         })
       }
     }
@@ -159,7 +159,7 @@ export default class TimetableDay extends Vue {
               type: 'teacher',
               contents: displayedLesson.teachers
             }
-          ]
+          ].filter(x => x.contents.length)
         })
       }
     }
@@ -169,13 +169,13 @@ export default class TimetableDay extends Vue {
       for (const displayedLesson of displayedLessons.values()) {
         data.push({
           time: displayedLesson.time,
-          substitution: false,
+          substitution: displayedLesson.substitution,
           details: [
             {
               type: 'classroom',
-              contents: displayedLesson.classrooms
+              contents: displayedLesson.classrooms.filter(x => x)
             }
-          ]
+          ].filter(x => x.contents.length)
         })
       }
     }
