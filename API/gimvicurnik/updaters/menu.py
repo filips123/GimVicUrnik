@@ -167,6 +167,12 @@ class MenuUpdater:
             tables = with_span(op="extract")(extract_tables)(filename)
             os.remove(filename)
 
+            try:
+                date = datetime.datetime.strptime(tables[0][1][0].split("\n")[1].strip(), "%d.%m.%Y").date()
+            except (AttributeError, ValueError, IndexError) as error:
+                self.logger.warning("Failed to get snack menu date from file, falling back to date from URL")
+                self.logger.warning(error)
+
             days = 0
 
             # Parse tables into menus and store them
@@ -310,6 +316,12 @@ class MenuUpdater:
             # Extract all tables from PDF file
             tables = with_span(op="extract")(extract_tables)(filename)
             os.remove(filename)
+
+            try:
+                date = datetime.datetime.strptime(tables[0][1][0].split("\n")[1].strip(), "%d.%m.%Y").date()
+            except (AttributeError, ValueError, IndexError) as error:
+                self.logger.warning("Failed to get lunch menu date from file, falling back to date from URL")
+                self.logger.warning(error)
 
             days = 0
 
