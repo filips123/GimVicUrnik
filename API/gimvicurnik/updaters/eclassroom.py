@@ -505,7 +505,8 @@ class EClassroomUpdater:
                 if len(row) != 5 or not row[0]:
                     continue
 
-                time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time() if row[0] else last_hour
+                is_time_valid = row[0] and row[0].strip() != "do"
+                time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time() if is_time_valid else last_hour
                 last_hour = time
 
                 notes = row[1].strip() if row[0] else last_notes
