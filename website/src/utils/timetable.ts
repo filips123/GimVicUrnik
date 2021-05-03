@@ -3,7 +3,10 @@ import { DisplayedLesson, getLessonId, StorageModule } from '@/store/modules/sto
 
 export function getTimetableData (entity: SelectedEntity | null, days: number[]): Map<number, Map<number, DisplayedLesson>> {
   const dataSource = entity?.type !== EntityType.EmptyClassrooms ? StorageModule.timetable : StorageModule.emptyClassrooms
-  const substitutionsSource = entity?.type === EntityType.Class ? new Map(StorageModule.substitutions) : new Map()
+  const substitutionsSource = new Map(StorageModule.substitutions)
+
+  // Note: Substitutions may not work correctly for classroom because source data are not always complete
+  // This can't be fixed unless we get better source of substitutions (like official API)
 
   const displayedLessons: Map<number, Map<number, DisplayedLesson>> = new Map()
   for (const lesson of dataSource || []) {
@@ -36,13 +39,20 @@ export function getTimetableData (entity: SelectedEntity | null, days: number[])
       })
     }
 
-    // TODO: Add support for substitutions for teachers and classrooms
-
     // Add substitution if it exists
-    // Currently only works for classes
     if (SettingsModule.showSubstitutions && substitutionsSource.has(getLessonId(lesson))) {
-      for (const substitution of substitutionsSource.get(getLessonId(lesson))) {
-        if (substitution.subject) {
+      for (const substitution of (substitutionsSource.get(getLessonId(lesson)) || [])) {
+        // Check if teacher/classroom is correct for substitution
+        let isCorrectSubstitutionEntity = false
+        if (entity?.type === EntityType.Class || entity?.type === EntityType.EmptyClassrooms) {
+          isCorrectSubstitutionEntity = true
+        } else if (entity?.type === EntityType.Teacher) {
+          isCorrectSubstitutionEntity = entity.data.includes(substitution.teacher)
+        } else if (entity?.type === EntityType.Classroom) {
+          isCorrectSubstitutionEntity = entity.data.includes(substitution.classroom)
+        }
+
+        if (substitution.subject && isCorrectSubstitutionEntity) {
           /* eslint-disable no-unused-expressions */
           displayedLessons.get(lesson.day)?.get(lesson.time)?.subjects.push(substitution.subject)
           displayedLessons.get(lesson.day)?.get(lesson.time)?.classes.push(substitution.class)
@@ -97,6 +107,9 @@ export function getTimetableData (entity: SelectedEntity | null, days: number[])
           classrooms: [],
           substitution: true
         })
+      } else {
+        const displayedLesson = displayedLessons.get(substitutionList[0].day)?.get(substitutionList[0].time)
+        if (displayedLesson) displayedLesson.substitution = true
       }
 
       for (const substitution of substitutionList) {

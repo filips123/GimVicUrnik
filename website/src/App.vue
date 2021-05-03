@@ -184,7 +184,9 @@ export default class App extends Vue {
     document.addEventListener('hideSnackbar', this.snackbarHandler)
 
     // Event listener for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.themeHandler)
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    if (typeof mediaQuery.addEventListener === 'undefined') mediaQuery.addListener(this.themeHandler)
+    else mediaQuery.addEventListener('change', this.themeHandler)
 
     // Event listener for detecting service worker updates
     document.addEventListener('serviceWorkerUpdated', this.swUpdatedHandler, { once: true })
