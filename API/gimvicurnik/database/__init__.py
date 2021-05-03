@@ -13,6 +13,7 @@ class Document(Base):
 
     date = Column(Date)
     type = Column(Text)
+    #types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     url = Column(Text)
     hash = Column(Text, nullable=True)
     description = Column(Text, nullable=True)

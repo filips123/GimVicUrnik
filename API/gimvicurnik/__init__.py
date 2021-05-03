@@ -372,22 +372,44 @@ class GimVicUrnik:
                     for model in query
                 ]
             )
-        @self.app.route("/circular/atom")
-        def _get_atom():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "None")).order_by(Document.date)
-
-            config = self.config["sources"]["eclassroom"]["pluginfile"]
-            token = self.config["sources"]["eclassroom"]["token"]
-
-            return render_template("atom.xml", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
-        @self.app.route("/circular/rss")
-        def _get_rss():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "None")).order_by(Document.date)
-
-            config = self.config["sources"]["eclassroom"]["pluginfile"]
-            token = self.config["sources"]["eclassroom"]["token"]
-
-            return render_template("rss.xml", entries = query)
+        
+        #Circulars - tested
+        @self.app.route("/feeds/circulars.atom")
+        def _circulars_get_atom():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "other")).order_by(Document.date)
+            return render_template("atom.xml", name="Okrožnice", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+        @self.app.route("/feeeds/circulars.rss")
+        def _circulars_get_rss():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "other")).order_by(Document.date)
+            return render_template("rss.xml",name="Okrožnice", entries = query)
+        #Substitutions - tested
+        @self.app.route("/feeds/substitutions.atom")
+        def _substitutions_get_atom():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "substitutions").order_by(Document.date)
+            return render_template("atom.xml", name="Nadomeščanja", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+        @self.app.route("/feeeds/substitutions.rss")
+        def _substitutions_get_rss():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "substitutions").order_by(Document.date)
+            return render_template("rss.xml", name="Nadomeščanja", entries = query)
+        #Schedules - tested
+        @self.app.route("/feeds/schedules.atom")
+        def _schedules_get_atom():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "lunch-schedule").order_by(Document.date)
+            return render_template("atom.xml", name="Urniki za kosila", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+        @self.app.route("/feeeds/schedules.rss")
+        def _schedules_get_rss():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "lunch-schedule").order_by(Document.date)
+            return render_template("rss.xml", name="Urniki za kosila", entries = query)
+        #Menus - tested
+        @self.app.route("/feeds/menus.atom")
+        def _menu_get_atom():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu")).order_by(Document.date)
+            return render_template("atom.xml", name="Jedilnik", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+        @self.app.route("/feeds/menus.rss")
+        def _menu_get_rss():
+            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu")).order_by(Document.date)
+            return render_template("rss.xml", name="Jedilnik", entries = query)
+        
         @self.app.route("/calendar/classes/<string:class_>")
         def _get_calendar_for_classes(class_):
             h = {
