@@ -254,7 +254,7 @@ export default class Settings extends Vue {
 
   // Handle update requests
   async updateApp (): Promise<void> {
-    if (process.env.NODE_ENV === 'production' && navigator.serviceWorker.controller) {
+    if (process.env.NODE_ENV === 'production' && navigator.serviceWorker && navigator.serviceWorker.controller) {
       // Skip service worker waiting
       navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
       await new Promise(resolve => setTimeout(resolve, 200))

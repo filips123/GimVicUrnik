@@ -43,7 +43,7 @@ Flask = "^1.1.2"
 click = "^7.1.2"
 schema = "^0.7.4"
 requests = "^2.25.1"
-SQLAlchemy = "^1.4.7"
+SQLAlchemy = "^1.4.13"
 pdf2docx = "^0.4.6"
 openpyxl = "^3.0.7"
 beautifulsoup4 = { extras = ["lxml"], version = "^4.9.3" }
@@ -59,6 +59,7 @@ flake8-bugbear = "^21.4.3"
 sentry = ["sentry-sdk"]
 
 [tool.flakehell]
+extended_default_ignore = []
 max_line_length = 130
 format = "grouped"
 
