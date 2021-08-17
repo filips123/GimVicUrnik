@@ -1,23 +1,25 @@
 import os
 
 import yaml
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, make_response
 from schema import Optional, Or, Schema, SchemaError
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import scoped_session
 from werkzeug.exceptions import HTTPException
-
+from datetime import datetime, timedelta
 from .commands import (
     cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
     update_timetable_command,
+    create_substitutions_command,
 )
 from .database import Class, Classroom, Document, Entity, LunchMenu, LunchSchedule, Session, SnackMenu, Teacher
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
 from .utils.url import tokenize_url
+from .utils.ical import createCalendar
 
 
 class GimVicUrnik:
@@ -63,6 +65,16 @@ class GimVicUrnik:
             },
             Optional("logging"): Or(dict, str),
             Optional("cors"): [str],
+            "hourtimes": [
+                {
+                    "hour": {
+                        "name": str,
+                        "start": str,
+                        "end": str,
+                    }
+                },
+            ],
+            Optional("debug"): bool,
         }
     )
 
@@ -96,6 +108,7 @@ class GimVicUrnik:
         self.create_database_hooks()
         self.create_cors_hooks()
 
+        self.convert_date_objects()
         self.register_route_converters()
         self.register_commands()
         self.register_routes()
@@ -223,6 +236,13 @@ class GimVicUrnik:
 
             return response
 
+    def convert_date_objects(self):
+        for hour in self.config["hourtimes"]:
+            date_start = datetime.strptime(hour["hour"]["start"], "%H%M")
+            date_end = datetime.strptime(hour["hour"]["end"], "%H%M")
+            hour["hour"]["start"] = timedelta(hours=date_start.hour, minutes=date_start.minute)
+            hour["hour"]["end"] = timedelta(hours=date_end.hour, minutes=date_end.minute)
+
     def register_route_converters(self):
         """Register all custom route converters."""
 
@@ -237,6 +257,8 @@ class GimVicUrnik:
         self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(create_database_command)
         self.app.cli.add_command(cleanup_database_command)
+        if isinstance(self.config["debug"]) and self.config["debug"]:
+            self.app.cli.add_command(create_substitutions_command)
 
     def register_routes(self):
         """Register all application routes."""
@@ -372,58 +394,134 @@ class GimVicUrnik:
                     for model in query
                 ]
             )
-        
-        #Circulars - tested
+
+        # Circulars - tested
         @self.app.route("/feeds/circulars.atom")
         def _circulars_get_atom():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "other")).order_by(Document.date)
-            return render_template("atom.xml", name="Okrožnice", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(or_(Document.type == "circular", Document.type == "other"))
+                .order_by(Document.date)
+            )
+            return render_template(
+                "atom.xml", name="Okrožnice", entries=query, last_updated=max(model.date for model in query).strftime("%Y-%m-%d")
+            )
+
         @self.app.route("/feeeds/circulars.rss")
         def _circulars_get_rss():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "circular", Document.type == "other")).order_by(Document.date)
-            return render_template("rss.xml",name="Okrožnice", entries = query)
-        #Substitutions - tested
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(or_(Document.type == "circular", Document.type == "other"))
+                .order_by(Document.date)
+            )
+            return render_template("rss.xml", name="Okrožnice", entries=query)
+
+        # Substitutions - tested
         @self.app.route("/feeds/substitutions.atom")
         def _substitutions_get_atom():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "substitutions").order_by(Document.date)
-            return render_template("atom.xml", name="Nadomeščanja", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(Document.type == "substitutions")
+                .order_by(Document.date)
+            )
+            return render_template(
+                "atom.xml",
+                name="Nadomeščanja",
+                entries=query,
+                last_updated=max(model.date for model in query).strftime("%Y-%m-%d"),
+            )
+
         @self.app.route("/feeeds/substitutions.rss")
         def _substitutions_get_rss():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "substitutions").order_by(Document.date)
-            return render_template("rss.xml", name="Nadomeščanja", entries = query)
-        #Schedules - tested
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(Document.type == "substitutions")
+                .order_by(Document.date)
+            )
+            return render_template("rss.xml", name="Nadomeščanja", entries=query)
+
+        # Schedules - tested
         @self.app.route("/feeds/schedules.atom")
         def _schedules_get_atom():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "lunch-schedule").order_by(Document.date)
-            return render_template("atom.xml", name="Urniki za kosila", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(Document.type == "lunch-schedule")
+                .order_by(Document.date)
+            )
+            return render_template(
+                "atom.xml",
+                name="Urniki za kosila",
+                entries=query,
+                last_updated=max(model.date for model in query).strftime("%Y-%m-%d"),
+            )
+
         @self.app.route("/feeeds/schedules.rss")
         def _schedules_get_rss():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(Document.type == "lunch-schedule").order_by(Document.date)
-            return render_template("rss.xml", name="Urniki za kosila", entries = query)
-        #Menus - tested
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(Document.type == "lunch-schedule")
+                .order_by(Document.date)
+            )
+            return render_template("rss.xml", name="Urniki za kosila", entries=query)
+
+        # Menus - tested
         @self.app.route("/feeds/menus.atom")
         def _menu_get_atom():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu")).order_by(Document.date)
-            return render_template("atom.xml", name="Jedilnik", entries = query, last_updated = max(model.date for model in query).strftime("%Y-%m-%d"))
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu"))
+                .order_by(Document.date)
+            )
+            return render_template(
+                "atom.xml", name="Jedilnik", entries=query, last_updated=max(model.date for model in query).strftime("%Y-%m-%d")
+            )
+
         @self.app.route("/feeds/menus.rss")
         def _menu_get_rss():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu")).order_by(Document.date)
-            return render_template("rss.xml", name="Jedilnik", entries = query)
-        
-        @self.app.route("/calendar/classes/<string:class_>")
+            query = (
+                self.session.query(Document.date, Document.type, Document.url, Document.description)
+                .filter(or_(Document.type == "snack-menu", Document.type == "lunch-menu"))
+                .order_by(Document.date)
+            )
+            return render_template("rss.xml", name="Jedilnik", entries=query)
+
+        @self.app.route("/calendar/fulltimetable/<string:class_>")
         def _get_calendar_for_classes(class_):
-            h = {
-                0 : ("071000", "075500"),
-                1 : ("080000", "084500"),
-                2 : ("085000", "093500"),
-                3 : ("094000", "102500"),
-                4 : ("105500", "114000"),
-                5 : ("114500", "123000"),
-                6 : ("123500", "132000"),
-                7 : ("132500", "141000"),
-                8 : ("141500", "150000")
-            }
-            return render_template("sample.ics", nadomescanja = Class.get_icsfeed(self.session, [class_]), h = h)
+            response = make_response(
+                createCalendar(
+                    Class.get_icsfeed(self.session, [class_]), Class.get_lessons(self.session, [class_]), self.config["hourtimes"]
+                )
+            )
+            response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+            return response
+
+        @self.app.route("/calendar/timetable/<string:class_>")
+        def _get_calendartimetable_for_classes(class_):
+            response = make_response(
+                createCalendar(
+                    Class.get_icsfeed(self.session, [class_]),
+                    Class.get_lessons(self.session, [class_]),
+                    self.config["hourtimes"],
+                    substitutions=False,
+                )
+            )
+            response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+            return response
+
+        @self.app.route("/calendar/substitutions/<string:class_>")
+        def _get_calendarsubstitutions_for_classes(class_):
+            response = make_response(
+                createCalendar(
+                    Class.get_icsfeed(self.session, [class_]),
+                    Class.get_lessons(self.session, [class_]),
+                    self.config["hourtimes"],
+                    timetable=False,
+                )
+            )
+            response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+            return response
+
+
 def create_app():
     """Application factory that accepts a configuration file from environment variable."""
 

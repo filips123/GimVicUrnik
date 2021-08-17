@@ -42,3 +42,42 @@ logging:
       level: INFO
       handlers:
         - console
+hourtimes:
+  - hour:
+      name: "predura"
+      start: "0710"
+      end: "0755"
+  - hour:
+      name: "1. ura"
+      start: "0800"
+      end: "0845"
+  - hour:
+      name: "2. ura"
+      start: "0850"
+      end: "0935"
+  - hour:
+      name: "3. ura"
+      start: "0940"
+      end: "1025"
+  - hour: 
+      name: "4. ura"
+      start: "1055"
+      end: "1140"
+  - hour:
+      name: "5. ura"
+      start: "1145"
+      end: "1230"
+  - hour:
+      name: "6. ura"
+      start: "1235"
+      end: "1320"
+  - hour:
+      name: "7. ura"
+      start: "1325"
+      end: "1410"
+  - hour:
+      name: "8. ura"
+      start: "1415"
+      end: "1500"
+
+debug: false

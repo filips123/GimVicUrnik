@@ -56,6 +56,9 @@ You can also use any other WSGI-compatible server. See [Flask Documentation](htt
 
 You can retrieve all API routes using the `gimvicurnik routes` commands. The official client can be found in [in the `website` directory](../website).
 
+##
+If, at the end of the file `debug: true` flag is present, there is another command added
+`gimvicurnik create-substitutions n`: Creates n random substitutions in next 14 days
 ## Contributing
 
 The API uses FlakeHell and Blake for linting the code. They are included in project's development dependencies.

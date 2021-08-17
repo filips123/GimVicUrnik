@@ -13,7 +13,7 @@ class Document(Base):
 
     date = Column(Date)
     type = Column(Text)
-    #types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
+    # types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     url = Column(Text)
     hash = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
@@ -77,7 +77,7 @@ class Entity:
 
         for model in query:
             yield {
-                "date": model[0].date.strftime("%Y-%m-%d"),
+                "date": model[0].date,
                 "day": model[0].day,
                 "time": model[0].time,
                 "subject": model[0].subject,
@@ -87,6 +87,7 @@ class Entity:
                 "teacher": model[4],
                 "classroom": model[5],
             }
+
     @classmethod
     def get_icsfeed(cls, session, names=None):
         original_teacher = aliased(Teacher)
@@ -125,6 +126,7 @@ class Entity:
                 "teacher": model[4],
                 "classroom": model[5],
             }
+
 
 class Class(Entity, Base):
     __tablename__ = "classes"
