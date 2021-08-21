@@ -168,6 +168,7 @@ class EClassroomUpdater:
 
         header_substitutions = ["ODSOTNI UČITELJ/ICA", "URA", "RAZRED", "UČILNICA", "NADOMEŠČA", "PREDMET", "OPOMBA"]
         header_lesson_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMETA", "UČILNICA", "OPOMBA"]
+        header_subject_change = ["RAZRED", "URA", "UČITELJ", "PREDMET", "UČILNICA", "OPOMBA"]
         header_classroom_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMET", "IZ UČILNICE", "V UČILNICO", "OPOMBA"]
         header_more_teachers = ["URA", "UČITELJ", "RAZRED", "UČILNICA", "OPOMBA"]
         header_reservations = ["URA", "UČILNICA", "REZERVIRAL/A", "OPOMBA"]
@@ -188,6 +189,9 @@ class EClassroomUpdater:
                     continue
                 elif row == header_lesson_change:
                     parser_type = "lesson-change"
+                    continue
+                elif row == header_subject_change:
+                    parser_type = "subject-change"
                     continue
                 elif row == header_classroom_change:
                     parser_type = "classroom-change"
@@ -247,6 +251,37 @@ class EClassroomUpdater:
                     classes = classes[:-1] if len(classes) > 1 else classes
 
                     teacher = self._normalize_teacher_name(row[2].split(" → ")[1])
+                    classroom = original_classroom
+
+                    # fmt: off
+                    for class_ in classes:
+                        substitutions.append(
+                            {
+                                "date": date,
+                                "day": day,
+                                "time": time,
+                                "subject": subject,
+                                "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
+                                "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
+                                "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
+                                "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
+                                "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
+                            }
+                        )
+                    # fmt: on
+
+                elif parser_type == "subject-change":
+                    time = row[1][:-1] if row[1] != "PU" else 0
+                    subject = self._normalize_other_names(row[3].split(" → ")[1])
+
+                    original_teacher = self._normalize_teacher_name(row[2])
+                    original_classroom = self._normalize_other_names(row[4])
+
+                    # Handle multiple classes
+                    classes = row[0].replace(". ", "").split(" - ")
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    teacher = original_teacher
                     classroom = original_classroom
 
                     # fmt: off
@@ -420,7 +455,7 @@ class EClassroomUpdater:
             return None
 
         # Special case: Unknown teacher
-        if name == "X" or name == "x" or name == "/":
+        if name == "X" or name == "x" or name == "/" or name == "MANJKA":
             return None
 
         # Special case: Multiple Krapež teachers
@@ -455,7 +490,7 @@ class EClassroomUpdater:
     @staticmethod
     def _normalize_other_names(name):
         # Special case: Unknown entity
-        if name == "X" or name == "x" or name == "/":
+        if name == "X" or name == "x" or name == "/" or name == "MANJKA":
             return None
 
         return name
