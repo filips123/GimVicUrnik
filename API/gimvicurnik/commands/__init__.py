@@ -6,7 +6,7 @@ from flask import current_app
 from flask.cli import with_appcontext
 
 from ..database import Base, Class, Classroom, LunchMenu, LunchSchedule, SnackMenu, Substitution, Teacher
-from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater
+from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, SubstitutionsGenerator
 from ..utils.database import session_scope
 from ..utils.sentry import with_transaction
 
@@ -82,3 +82,15 @@ def cleanup_database_command():
                 if len(model.lessons) == 0 and len(model.substitutions) == 0:
                     logging.getLogger(__name__).info("Removing the unused %s %s", model.__class__.__name__.lower(), model.name)
                     session.delete(model)
+
+
+@click.command("create-substitutions", help="Create random substitutions")
+@click.argument("number")
+@with_transaction(name="create-substitutions", op="command")
+@with_appcontext
+def create_substitutions_command(number):
+    """Create random substitutions in next 14 days."""
+
+    with session_scope() as session:
+        generator = SubstitutionsGenerator(session, number)
+        generator.generate()

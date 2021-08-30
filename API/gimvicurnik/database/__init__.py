@@ -11,6 +11,7 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True)
 
+    # types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     date = Column(Date)
     type = Column(Text)
     url = Column(Text)
@@ -62,9 +63,11 @@ class Entity:
             .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)
             .join(teacher, Substitution.teacher_id == teacher.id, isouter=True)
             .join(classroom, Substitution.classroom_id == classroom.id, isouter=True)
-            .filter(Substitution.date == date)
             .order_by(Substitution.day, Substitution.time)
         )
+
+        if date:
+            query = query.filter(Substitution.date == date)
 
         if names:
             if cls.__tablename__ == "classes":

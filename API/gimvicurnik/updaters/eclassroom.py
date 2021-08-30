@@ -124,6 +124,7 @@ class EClassroomUpdater:
             self.logger.info("Created a new %s document", urltype)
         else:
             self.logger.info("Skipped because the %s document is already stored", urltype)
+
         self.logger.debug("URL: %s", model.url)
         self.logger.debug("Type: %s", model.type)
         self.logger.debug("Created: %s", model.date)

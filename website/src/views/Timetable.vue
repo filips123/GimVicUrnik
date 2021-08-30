@@ -44,8 +44,8 @@ import { daysInWeek } from '@/utils/days'
 
 @Component({
   components: {
-    TimetableDay: () => import(/* webpackChunkName: "mobile" */ '@/components/timetable/TimetableDay.vue'),
     TimetableWeek: () => import(/* webpackChunkName: "desktop" */ '@/components/timetable/TimetableWeek.vue'),
+    TimetableDay: () => import(/* webpackChunkName: "mobile" */ '@/components/timetable/TimetableDay.vue'),
     Loading
   }
 })

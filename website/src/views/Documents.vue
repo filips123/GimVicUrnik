@@ -43,7 +43,7 @@ export default class Documents extends Vue {
 
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Okrožnice'
-    this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Okrožnice')
+    this.$emit('setPageTitle', 'Okrožnice')
 
     this.$emit('setDayMenuDisplay', false)
     StorageModule.updateDocuments()

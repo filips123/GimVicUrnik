@@ -14,13 +14,9 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 # Web & Data
-[*.{html,css,sass,scss,js,jsx,ts,tsx,vue,json,yaml,yml}]
+[*.{html,css,sass,scss,xml,js,jsx,jsm,ts,tsx,vue,json,yaml,yml,webmanifest}]
 indent_size = 2
 
-# Windows
-[*.{bat,cmd,ps1}]
-end_of_line = crlf
-
-# Markdown & reStructuredText & AsciiDoc
-[*.{md,rst,adoc}]
-trim_trailing_whitespace = false
+# Configuration
+[.*rc]
+indent_size = 2

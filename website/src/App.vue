@@ -1,17 +1,25 @@
 <template>
   <v-app>
     <v-app-bar app clipped-left color="#009300" dark extension-height="35">
-      <div class="d-flex align-center">
+      <div class="d-flex align-center overflow-x-hidden pr-1">
         <v-img alt="GimVičUrnik Logo"
-          class="shrink mr-2"
-          contain
+          class="mr-2"
           src="./assets/logo.png"
-          transition="scale-transition"
           width="40" />
         <v-toolbar-title>{{ pageTitle }}</v-toolbar-title>
       </div>
 
       <v-spacer />
+
+      <v-btn v-if="isNavigationDisplayed"
+        :to="{ name: 'subscribe' }"
+        alt="Naročanje"
+        aria-label="Naročanje"
+        class="mr-1"
+        icon
+        large>
+        <v-icon>{{ mdiRss }}</v-icon>
+      </v-btn>
 
       <v-btn v-if="isNavigationDisplayed"
         :to="{ name: 'settings' }"
@@ -100,7 +108,7 @@ html, body {
 </style>
 
 <script lang="ts">
-import { mdiCog } from '@mdi/js'
+import { mdiCog, mdiRss } from '@mdi/js'
 import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
@@ -117,6 +125,7 @@ import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 })
 export default class App extends Vue {
   mdiCog = mdiCog
+  mdiRss = mdiRss
 
   pageTitle = process.env.VUE_APP_TITLE
   isPullToRefreshAllowed = true

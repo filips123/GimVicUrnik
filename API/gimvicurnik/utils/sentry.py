@@ -1,10 +1,24 @@
 from unittest.mock import Mock
 
+
+class WithMock(Mock):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 try:
-    from sentry_sdk import Hub, start_transaction
+    from sentry_sdk import Hub, start_transaction, start_span
 
     sentry_available = True
+
 except ImportError:
+    Hub = None
+    start_transaction = WithMock()
+    start_span = WithMock()
+
     sentry_available = False
 
 
@@ -45,7 +59,7 @@ def with_span(pass_span=False, **kwargs):
 
     def _span_decorator(function):
         def _span_wrapper(*fargs, **fkwargs):
-            if not sentry_available:
+            if not sentry_available or not Hub.current.scope.span:
                 if pass_span:
                     fkwargs["span"] = Mock()
                 return function(*fargs, **fkwargs)

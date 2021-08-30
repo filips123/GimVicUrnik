@@ -6,6 +6,7 @@ Vue.use(VueRouter)
 const Home = () => import(/* webpackChunkName: "home" */ '../views/Home.vue')
 const NotFound = () => import(/* webpackChunkName: "notfound" */ '../views/NotFound.vue')
 const Welcome = () => import(/* webpackChunkName: "welcome" */ '../views/Welcome.vue')
+const Subscribe = () => import(/* webpackChunkName: "subscribe" */ '../views/Subscribe.vue')
 const Settings = () => import(/* webpackChunkName: "settings" */ '../views/Settings.vue')
 const Timetable = () => import(/* webpackChunkName: "timetable" */ '../views/Timetable.vue')
 const Menus = () => import(/* webpackChunkName: "menus" */ '../views/Menus.vue')
@@ -15,6 +16,7 @@ const routes: Array<RouteConfig> = [
   { path: '/', name: 'home', component: Home },
   { path: '*', name: 'notfound', component: NotFound },
   { path: '/welcome', name: 'welcome', component: Welcome },
+  { path: '/subscribe', name: 'subscribe', component: Subscribe },
   { path: '/settings', name: 'settings', component: Settings },
   { path: '/timetable/:type?/:value?', name: 'timetable', component: Timetable },
   { path: '/menus', name: 'menus', component: Menus },

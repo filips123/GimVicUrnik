@@ -34,6 +34,12 @@ class GimVicUrnikGroup(FlaskGroup):
             requests_version = pkg_resources.get_distribution("requests").version
             flask_version = pkg_resources.get_distribution("flask").version
             pdf2docx_version = pkg_resources.get_distribution("pdf2docx").version
+            openpyxl_version = pkg_resources.get_distribution("openpyxl").version
+
+            try:
+                sentry_version = pkg_resources.get_distribution("sentry-sdk").version
+            except pkg_resources.DistributionNotFound:
+                sentry_version = "None"
 
             click.echo(
                 f"Python: {python_version}\n"
@@ -41,7 +47,9 @@ class GimVicUrnikGroup(FlaskGroup):
                 f"SQLAlchemy: {sqlalchemy_version}\n"
                 f"Requests: {requests_version}\n"
                 f"Flask: {flask_version}\n"
-                f"pdf2docx: {pdf2docx_version}"
+                f"pdf2docx: {pdf2docx_version}\n"
+                f"openpyxl: {openpyxl_version}\n"
+                f"Sentry SDK: {sentry_version}"
             )
             ctx.exit()
 
