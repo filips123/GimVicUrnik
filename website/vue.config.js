@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-
-const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 process.env.VUE_APP_VERSION = require('./package.json').version
 
 module.exports = {
@@ -12,14 +10,15 @@ module.exports = {
 
   pwa: {
     name: process.env.VUE_APP_TITLE,
-    manifestPath: 'site.webmanifest',
 
     themeColor: '#007300',
     msTileColor: '#007300',
 
+    manifestPath: 'site.webmanifest',
+
     workboxOptions: {
       navigateFallback: '/index.html',
-      navigateFallbackDenylist: [/\./]
+      navigateFallbackBlacklist: [/\./]
     },
 
     manifestOptions: {
@@ -64,15 +63,13 @@ module.exports = {
     }
   },
 
-  configureWebpack: {
-    plugins: [
-      new PreloadWebpackPlugin({
-        rel: 'preload',
-        include: {
-          type: 'allChunks',
-          chunks: ['app', 'chunk-vendors', 'home', 'timetable']
-        }
-      })
-    ]
+  chainWebpack: config => {
+    config.plugin('preload').tap(options => {
+      options[0].include = {
+        type: 'allChunks',
+        chunks: ['app', 'chunk-vendors', 'home', 'timetable']
+      }
+      return options
+    })
   }
 }
