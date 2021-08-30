@@ -4,7 +4,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import { init } from '@sentry/vue'
-import { VueRouterInstrumentation } from '@sentry/vue/dist/router'
+import { VueRouterInstrumentation } from '@sentry/vue/dist/vuerouter'
 import { captureException } from '@sentry/browser'
 import { Transaction, TransactionContext } from '@sentry/types'
 import { Integrations } from '@sentry/tracing'
