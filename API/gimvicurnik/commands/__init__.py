@@ -6,7 +6,7 @@ from flask import current_app
 from flask.cli import with_appcontext
 
 from ..database import Base, Class, Classroom, LunchMenu, LunchSchedule, SnackMenu, Substitution, Teacher
-from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, subgen
+from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, SubstitutionsGenerator
 from ..utils.database import session_scope
 from ..utils.sentry import with_transaction
 
@@ -89,8 +89,8 @@ def cleanup_database_command():
 @with_transaction(name="create-substitutions", op="command")
 @with_appcontext
 def create_substitutions_command(number):
-    """Create a random substitutions in next 14 days"""
+    """Create random substitutions in next 14 days."""
 
     with session_scope() as session:
-        updater = subgen(current_app.gimvicurnik.config["sources"]["eclassroom"], session, number)
-        updater.update()
+        generator = SubstitutionsGenerator(session, number)
+        generator.generate()

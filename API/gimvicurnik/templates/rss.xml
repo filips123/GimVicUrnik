@@ -1,15 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
 
-<channel>
-  <title>{{ name }} gimnazije vic<</title>
-  <link>https://gimvicurnik.filips.si</link>
-  {%for model in entries%}
-  <item>
-    <title>{{model.description}}</title>
-    <link href="{{model.url if not config["shareToken"] else tokenize_url(model.url, config, token)}}"/>
-  </item>
-  {%endfor%} 
-</channel>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:webfeeds="http://webfeeds.org/rss/1.0">
+  <channel>
+    <title>{{ name }} - Gimnazija Vič</title>
+    <description>{{ name }} - Gimnazija Vič</description>
+    <link>{{ urls["website"] }}/documents</link>
+    <lastBuildDate>{{ last_updated.strftime("%a, %d %b %Y %H:%M:%S %Z") }}</lastBuildDate>
 
-</rss> 
+    <atom:link href="{{ urls["api"] }}/feeds/{{ type }}.rss" rel="self" type="application/rss+xml" />
+    <atom:link href="{{ urls["api"] }}/feeds/{{ type }}.atom" rel="alternate" type="application/atom+xml" />
+    <atom:link href="{{ urls["website"] }}/documents" rel="alternate" type="text/html" />
+
+    <image>
+      <title>{{ name }} - Gimnazija Vič</title>
+      <link>{{ urls["website"] }}/documents</link>
+      <url>{{ urls["website"] }}/img/icons/android-chrome-192x192.png</url>
+    </image>
+    <webfeeds:icon>{{ urls["website"] }}/img/icons/android-chrome-192x192.png</webfeeds:icon>
+
+    {% for model in entries %}
+      <item>
+        <title>{{ model.description }}</title>
+        <link>{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}</link>
+        <guid>{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}</guid>
+        <pubDate>{{ model.date.strftime("%a, %d %b %Y %H:%M:%S %Z") }}</pubDate>
+      </item>
+    {% endfor %}
+  </channel>
+</rss>

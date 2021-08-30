@@ -12,6 +12,10 @@ sources:
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
 
+urls:
+  website: https://gimvicurnik.filips.si
+  api: https://api.gimvicurnik.filips.si
+
 database: sqlite:///app.db
 
 cors:
@@ -24,8 +28,8 @@ sentry:
   maxBreadcrumbs: 100
   sampleRate:
     commands: 0.5
-    requests: 0.25
-    other: 0.25
+    requests: 0.5
+    other: 0.5
 
 logging:
   version: 1
@@ -42,6 +46,7 @@ logging:
       level: INFO
       handlers:
         - console
+
 hourtimes:
   - hour:
       name: "predura"
@@ -59,7 +64,7 @@ hourtimes:
       name: "3. ura"
       start: "0940"
       end: "1025"
-  - hour: 
+  - hour:
       name: "4. ura"
       start: "1055"
       end: "1140"
@@ -79,5 +84,7 @@ hourtimes:
       name: "8. ura"
       start: "1415"
       end: "1500"
-
-debug: false
+  - hour:
+      name: "9. ura"
+      start: "1505"
+      end: "1550"

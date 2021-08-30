@@ -11,9 +11,9 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True)
 
+    # types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     date = Column(Date)
     type = Column(Text)
-    # types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     url = Column(Text)
     hash = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
@@ -63,9 +63,11 @@ class Entity:
             .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)
             .join(teacher, Substitution.teacher_id == teacher.id, isouter=True)
             .join(classroom, Substitution.classroom_id == classroom.id, isouter=True)
-            .filter(Substitution.date == date)
             .order_by(Substitution.day, Substitution.time)
         )
+
+        if date:
+            query = query.filter(Substitution.date == date)
 
         if names:
             if cls.__tablename__ == "classes":
@@ -77,46 +79,7 @@ class Entity:
 
         for model in query:
             yield {
-                "date": model[0].date,
-                "day": model[0].day,
-                "time": model[0].time,
-                "subject": model[0].subject,
-                "class": model[1],
-                "original-teacher": model[2],
-                "original-classroom": model[3],
-                "teacher": model[4],
-                "classroom": model[5],
-            }
-
-    @classmethod
-    def get_icsfeed(cls, session, names=None):
-        original_teacher = aliased(Teacher)
-        teacher = aliased(Teacher)
-
-        original_classroom = aliased(Classroom)
-        classroom = aliased(Classroom)
-
-        query = (
-            session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
-            .join(Class)
-            .join(original_teacher, Substitution.original_teacher_id == original_teacher.id, isouter=True)
-            .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)
-            .join(teacher, Substitution.teacher_id == teacher.id, isouter=True)
-            .join(classroom, Substitution.classroom_id == classroom.id, isouter=True)
-            .order_by(Substitution.day, Substitution.time)
-        )
-
-        if names:
-            if cls.__tablename__ == "classes":
-                query = query.filter(Class.name.in_(names))
-            elif cls.__tablename__ == "teachers":
-                query = query.filter(or_(original_teacher.name.in_(names), teacher.name.in_(names)))
-            elif cls.__tablename__ == "classrooms":
-                query = query.filter(or_(original_classroom.name.in_(names), classroom.name.in_(names)))
-
-        for model in query:
-            yield {
-                "date": model[0].date.strftime("%Y%m%d"),
+                "date": model[0].date.strftime("%Y-%m-%d"),
                 "day": model[0].day,
                 "time": model[0].time,
                 "subject": model[0].subject,
