@@ -1,5 +1,5 @@
 <template>
-  <div class="settings px-8 pt-8">
+  <div class="settings px-4 pt-4">
     <settings-action v-model="entitySelectionDialog"
       :icon="mdiTuneVariant"
       :label="selectedEntityLabel"
@@ -242,7 +242,7 @@ export default class Settings extends Vue {
   // Prepare view
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Nastavitve'
-    this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Nastavitve')
+    this.$emit('setPageTitle', 'Nastavitve')
 
     this.$emit('setDayMenuDisplay', false)
     this.$emit('setPullToRefreshAllowed', false)

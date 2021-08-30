@@ -93,7 +93,7 @@ export default class Menus extends Vue {
 
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Jedilnik'
-    this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Jedilnik')
+    this.$emit('setPageTitle', 'Jedilnik')
 
     this.$emit('setDayMenuDisplay', true)
 

@@ -23,7 +23,7 @@ import { Component, Vue } from 'vue-property-decorator'
 export default class NotFound extends Vue {
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Stran ni najdena'
-    this.$emit('setPageTitle', process.env.VUE_APP_SHORT + ' – Stran ni najdena')
+    this.$emit('setPageTitle', 'Stran ni najdena')
 
     this.$emit('setDayMenuDisplay', false)
 
