@@ -413,7 +413,8 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used starting with March 2021
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+-[0-9]+-[A-Z]{3}-objava.*\.pdf$", url):
+        # Example: delitevKosila-1sept2021-SRE-objava-PDF.pdf
+        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-objava.*\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
