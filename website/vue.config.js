@@ -10,11 +10,10 @@ module.exports = {
 
   pwa: {
     name: process.env.VUE_APP_TITLE,
+    manifestPath: 'site.webmanifest',
 
     themeColor: '#007300',
     msTileColor: '#007300',
-
-    manifestPath: 'site.webmanifest',
 
     workboxOptions: {
       navigateFallback: '/index.html',
@@ -27,6 +26,12 @@ module.exports = {
       description: process.env.VUE_APP_DESCRIPTION,
       categories: process.env.VUE_APP_CATEGORIES.split(','),
       keywords: process.env.VUE_APP_KEYWORDS.split(','),
+
+      theme_color: '#007300',
+      background_color: '#ffffff',
+
+      scope: '/',
+      start_url: '/',
 
       shortcuts: [
         {
@@ -56,10 +61,7 @@ module.exports = {
             sizes: '192x192'
           }]
         }
-      ],
-
-      theme_color: '#007300',
-      background_color: '#ffffff'
+      ]
     }
   },
 
