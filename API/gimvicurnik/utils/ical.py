@@ -23,7 +23,7 @@ def createCalendar(details, timetables, hours, timetable=True, substitutions=Tru
         for subject in timetables:
             event = Event()
             event.add("dtstamp", datetime.now())
-            year = datetime.now().year if datetime.now().date() > date(datetime.now().year, 9, 1) else datetime.now().year - 1
+            year = datetime.now().year if datetime.now().date() >= date(datetime.now().year, 9, 1) else datetime.now().year - 1
             event.add("dtstart", datetime(year, 9, 1) + hours[subject["time"]]["hour"]["start"])
             event.add(
                 "UID",

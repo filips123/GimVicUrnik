@@ -36,9 +36,13 @@
   font-size: unset !important;
 }
 
-// Disable background change on hover
-.timetable-day > .v-data-table__wrapper > table > tbody > tr:hover {
-  background: transparent !important;
+// Change background change on hover
+.theme--light .timetable-day > .v-data-table__wrapper > table > tbody > tr:hover {
+  background: #d9d9d9 !important;
+}
+
+.theme--dark .timetable-day > .v-data-table__wrapper > table > tbody > tr:hover {
+  background: #444 !important;
 }
 
 // Move time cell a bit more to the left
@@ -111,7 +115,7 @@ export default class TimetableDay extends Vue {
               type: 'classroom',
               contents: displayedLesson.classrooms.filter(x => x)
             }
-          ].filter(x => x.contents.length)
+          ]
         })
       }
     }
@@ -135,7 +139,7 @@ export default class TimetableDay extends Vue {
               type: 'classroom',
               contents: displayedLesson.classrooms.filter(x => x)
             }
-          ].filter(x => x.contents.length)
+          ]
         })
       }
     }
@@ -159,7 +163,7 @@ export default class TimetableDay extends Vue {
               type: 'teacher',
               contents: displayedLesson.teachers
             }
-          ].filter(x => x.contents.length)
+          ]
         })
       }
     }
@@ -175,7 +179,7 @@ export default class TimetableDay extends Vue {
               type: 'classroom',
               contents: displayedLesson.classrooms.filter(x => x)
             }
-          ].filter(x => x.contents.length)
+          ]
         })
       }
     }
