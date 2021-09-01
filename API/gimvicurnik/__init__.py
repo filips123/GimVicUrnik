@@ -19,7 +19,7 @@ from .commands import (
 from .database import Class, Classroom, Document, Entity, LunchMenu, LunchSchedule, Session, SnackMenu, Teacher
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
-from .utils.ical import create_calendar
+from .utils.ical import create_schedule_calendar, create_school_calendar
 from .utils.url import tokenize_url
 
 
@@ -485,7 +485,7 @@ class GimVicUrnik:
         def _schedules_get_atom():
             return create_feed(
                 filter=Document.type == "lunch-schedule",
-                name="Razporedi kosil",
+                name="Razporedi delitve kosila",
                 type="schedules",
                 format="atom",
                 display_date=True,
@@ -496,7 +496,7 @@ class GimVicUrnik:
         def _schedules_get_rss():
             return create_feed(
                 filter=Document.type == "lunch-schedule",
-                name="Razporedi kosil",
+                name="Razporedi delitve kosila",
                 type="schedules",
                 format="rss",
                 display_date=True,
@@ -527,7 +527,7 @@ class GimVicUrnik:
 
         @self.app.route("/calendar/combined/<list:classes>")
         def _get_calendar_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
@@ -536,7 +536,7 @@ class GimVicUrnik:
 
         @self.app.route("/calendar/timetable/<list:classes>")
         def _get_calendar_timetable_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
@@ -546,12 +546,22 @@ class GimVicUrnik:
 
         @self.app.route("/calendar/substitutions/<list:classes>")
         def _get_calendar_substitutions_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
                 f"Nadomeščanja - {', '.join(classes)} - Gimnazija Vič",
                 timetable=False,
+            )
+
+        @self.app.route("/calendar/schedules/<list:classes>")
+        def _get_calendar_schedules_for_classes(classes):
+            return create_schedule_calendar(
+                self.session.query(LunchSchedule)
+                .join(Class)
+                .filter(Class.name.in_(classes))
+                .order_by(LunchSchedule.time, LunchSchedule.class_),
+                f"Razporedi delitve kosila - {', '.join(classes)} - Gimnazija Vič",
             )
 
 
