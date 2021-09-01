@@ -19,7 +19,10 @@
 
   {% for model in entries %}
     <entry>
-      <title>{{ model.description }}</title>
+      {% if display_date and display_date_type == "daily" %}<title>{{ model.description }}, {{ model.date | date_format_daily }}</title>
+      {% elif display_date and display_date_type == "weekly" %}<title>{{ model.description }}, {{ model.date | date_format_weekly }}</title>
+      {% else %}<title>{{ model.description }}</title>
+      {% endif %}
       <link href="{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}" />
       <id>{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}</id>
       <updated>{{ model.date.strftime("%Y-%m-%dT%H:%M:%S%z") }}</updated>

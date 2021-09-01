@@ -19,7 +19,7 @@ def datecount(start_date, i):
 
 
 @with_span(op="generate")
-def create_calendar(details, timetables, hours, name, timetable=True, substitutions=True):
+def create_school_calendar(details, timetables, hours, name, timetable=True, substitutions=True):
     logger = logging.getLogger(__name__)
 
     calendar = Calendar()
@@ -93,7 +93,6 @@ def create_calendar(details, timetables, hours, name, timetable=True, substituti
                 logger.info("Preparing iCalendar event", extra={"type": "substitution", "source": subject})
 
                 event = Event()
-
                 event.add("dtstamp", datetime.now())
                 event.add("CATEGORIES", vText("SUBSTITUTION"))
                 event.add("COLOR", vText("darkred"))
@@ -132,5 +131,51 @@ def create_calendar(details, timetables, hours, name, timetable=True, substituti
 
     response = make_response(calendar.to_ical().decode("utf-8").replace("\\", ""))
     response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
-    response.headers["Content-Type"] = "text/calendar"
+    response.headers["Content-Type"] = "text/calendar; charset=utf-8"
+    return response
+
+
+@with_span(op="generate")
+def create_schedule_calendar(query, name):
+    logger = logging.getLogger(__name__)
+
+    calendar = Calendar()
+    calendar.add("prodid", "gimvicurnik")
+    calendar.add("version", "2.0")
+    calendar.add("X-WR-TIMEZONE", "Europe/Ljubljana")
+    calendar.add("X-WR-CALNAME", name)
+    calendar.add("X-WR-CALDESC", name)
+    calendar.add("NAME", name)
+    calendar.add("X-PUBLISHED-TTL", vDuration(timedelta(hours=12)))
+    calendar.add("REFRESH-INTERVAL", vDuration(timedelta(hours=12)))
+
+    for model in query:
+        with start_span(op="event") as span:
+            span.set_tag("event.type", "lunch-schedule")
+            span.set_tag("event.date", model.date)
+            span.set_tag("event.time", model.time)
+            span.set_data("event.source", model)
+
+            logger.info("Preparing iCalendar event", extra={"type": "lunch-schedule", "source": model})
+
+            event = Event()
+            event.add("dtstamp", datetime.now())
+            event.add("CATEGORIES", vText("LUNCH"))
+            event.add("COLOR", vText("darkblue"))
+            event.add(
+                "UID",
+                sha256((str(model.date) + str(model.time) + str(model.class_.name) + str(model.location)).encode()).hexdigest(),
+            )
+
+            event.add("summary", "Kosilo")
+            event.add("description", model.notes or "")
+            event.add("location", vText(model.location))
+            event.add("dtstart", datetime.combine(model.date, model.time))
+            event.add("dtend", datetime.combine(model.date, model.time) + timedelta(minutes=15))
+
+            calendar.add_component(event)
+
+    response = make_response(calendar.to_ical().decode("utf-8").replace("\\", ""))
+    response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+    response.headers["Content-Type"] = "text/calendar; charset=utf-8"
     return response

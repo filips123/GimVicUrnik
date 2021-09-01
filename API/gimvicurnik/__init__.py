@@ -19,7 +19,7 @@ from .commands import (
 from .database import Class, Classroom, Document, Entity, LunchMenu, LunchSchedule, Session, SnackMenu, Teacher
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
 from .utils.flask import DateConverter, ListConverter
-from .utils.ical import create_calendar
+from .utils.ical import create_schedule_calendar, create_school_calendar
 from .utils.url import tokenize_url
 
 
@@ -115,6 +115,7 @@ class GimVicUrnik:
         self.convert_date_objects()
 
         self.register_route_converters()
+        self.register_jinja_filters()
         self.register_commands()
         self.register_routes()
 
@@ -256,6 +257,16 @@ class GimVicUrnik:
         self.app.url_map.converters["date"] = DateConverter
         self.app.url_map.converters["list"] = ListConverter
 
+    def register_jinja_filters(self):
+        """Register all custom Jinja filters."""
+
+        def format_date(date):
+            return date.strftime("%d. %m. %Y")
+
+        filters = self.app.jinja_env.filters
+        filters["date_format_daily"] = format_date
+        filters["date_format_weekly"] = lambda date: f"{format_date(date)} — {format_date((date + timedelta(days=4)))}"
+
     def register_commands(self):
         """Register all application commands."""
 
@@ -271,7 +282,7 @@ class GimVicUrnik:
     def register_routes(self):
         """Register all application routes."""
 
-        def create_feed(filter, name, type, format):
+        def create_feed(filter, name, type, format, display_date=None, display_date_type="daily"):
             query = (
                 self.session.query(Document.date, Document.type, Document.url, Document.description)
                 .filter(filter)
@@ -285,6 +296,8 @@ class GimVicUrnik:
                 type=type,
                 entries=query,
                 last_updated=max(model.date for model in query),
+                display_date=display_date,
+                display_date_type=display_date_type,
             )
 
             return (
@@ -433,6 +446,7 @@ class GimVicUrnik:
                 name="Okrožnice",
                 type="circulars",
                 format="atom",
+                display_date=False,
             )
 
         @self.app.route("/feeds/circulars.rss")
@@ -442,23 +456,52 @@ class GimVicUrnik:
                 name="Okrožnice",
                 type="circulars",
                 format="rss",
+                display_date=False,
             )
 
         @self.app.route("/feeds/substitutions.atom")
         def _substitutions_get_atom():
-            return create_feed(filter=Document.type == "substitutions", name="Nadomeščanja", type="substitutions", format="atom")
+            return create_feed(
+                filter=Document.type == "substitutions",
+                name="Nadomeščanja",
+                type="substitutions",
+                format="atom",
+                display_date=True,
+                display_date_type="daily",
+            )
 
         @self.app.route("/feeds/substitutions.rss")
         def _substitutions_get_rss():
-            return create_feed(filter=Document.type == "substitutions", name="Nadomeščanja", type="substitutions", format="rss")
+            return create_feed(
+                filter=Document.type == "substitutions",
+                name="Nadomeščanja",
+                type="substitutions",
+                format="rss",
+                display_date=True,
+                display_date_type="daily",
+            )
 
         @self.app.route("/feeds/schedules.atom")
         def _schedules_get_atom():
-            return create_feed(filter=Document.type == "lunch-schedule", name="Razporedi kosil", type="schedules", format="atom")
+            return create_feed(
+                filter=Document.type == "lunch-schedule",
+                name="Razporedi delitve kosila",
+                type="schedules",
+                format="atom",
+                display_date=True,
+                display_date_type="daily",
+            )
 
         @self.app.route("/feeds/schedules.rss")
         def _schedules_get_rss():
-            return create_feed(filter=Document.type == "lunch-schedule", name="Razporedi kosil", type="schedules", format="rss")
+            return create_feed(
+                filter=Document.type == "lunch-schedule",
+                name="Razporedi delitve kosila",
+                type="schedules",
+                format="rss",
+                display_date=True,
+                display_date_type="daily",
+            )
 
         @self.app.route("/feeds/menus.atom")
         def _menu_get_atom():
@@ -467,6 +510,8 @@ class GimVicUrnik:
                 name="Jedilniki",
                 type="menus",
                 format="atom",
+                display_date=True,
+                display_date_type="weekly",
             )
 
         @self.app.route("/feeds/menus.rss")
@@ -476,11 +521,13 @@ class GimVicUrnik:
                 name="Jedilniki",
                 type="menus",
                 format="rss",
+                display_date=True,
+                display_date_type="weekly",
             )
 
         @self.app.route("/calendar/combined/<list:classes>")
         def _get_calendar_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
@@ -489,7 +536,7 @@ class GimVicUrnik:
 
         @self.app.route("/calendar/timetable/<list:classes>")
         def _get_calendar_timetable_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
@@ -499,12 +546,22 @@ class GimVicUrnik:
 
         @self.app.route("/calendar/substitutions/<list:classes>")
         def _get_calendar_substitutions_for_classes(classes):
-            return create_calendar(
+            return create_school_calendar(
                 Class.get_substitutions(self.session, None, classes),
                 Class.get_lessons(self.session, classes),
                 self.config["hourtimes"],
                 f"Nadomeščanja - {', '.join(classes)} - Gimnazija Vič",
                 timetable=False,
+            )
+
+        @self.app.route("/calendar/schedules/<list:classes>")
+        def _get_calendar_schedules_for_classes(classes):
+            return create_schedule_calendar(
+                self.session.query(LunchSchedule)
+                .join(Class)
+                .filter(Class.name.in_(classes))
+                .order_by(LunchSchedule.time, LunchSchedule.class_),
+                f"Razporedi delitve kosila - {', '.join(classes)} - Gimnazija Vič",
             )
 
 
