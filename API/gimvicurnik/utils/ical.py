@@ -32,7 +32,7 @@ def create_school_calendar(details, timetables, hours, name, timetable=True, sub
     calendar.add("X-PUBLISHED-TTL", vDuration(timedelta(hours=1)))
     calendar.add("REFRESH-INTERVAL", vDuration(timedelta(hours=1)))
 
-    year = datetime.now().year if datetime.now().date() > date(datetime.now().year, 9, 1) else datetime.now().year - 1
+    year = datetime.now().year if datetime.now().date() >= date(datetime.now().year, 9, 1) else datetime.now().year - 1
 
     weekdays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
     weektable = [[None for i in range(10)] for j in range(6)]
@@ -146,8 +146,8 @@ def create_schedule_calendar(query, name):
     calendar.add("X-WR-CALNAME", name)
     calendar.add("X-WR-CALDESC", name)
     calendar.add("NAME", name)
-    calendar.add("X-PUBLISHED-TTL", vDuration(timedelta(hours=12)))
-    calendar.add("REFRESH-INTERVAL", vDuration(timedelta(hours=12)))
+    calendar.add("X-PUBLISHED-TTL", vDuration(timedelta(hours=1)))
+    calendar.add("REFRESH-INTERVAL", vDuration(timedelta(hours=1)))
 
     for model in query:
         with start_span(op="event") as span:
