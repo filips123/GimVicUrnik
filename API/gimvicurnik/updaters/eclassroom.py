@@ -533,7 +533,13 @@ class EClassroomUpdater:
             if "Dijaki prihajate v jedilnico" in table[0][0]:
                 continue
 
-            for row in table:
+            for index, row in enumerate(table):
+                # Handle multiple times in the same cell
+                times = row[0].split("\n", 1)
+                if len(times) == 2:
+                    row[0] = times[0]
+                    table[index + 1][0] = times[1]
+
                 # Skip header
                 if row[0] and "ura" in row[0]:
                     continue
