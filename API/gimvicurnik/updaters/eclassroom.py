@@ -540,6 +540,9 @@ class EClassroomUpdater:
                     row[0] = times[0]
                     table[index + 1][0] = times[1]
 
+                # Handle different time formats
+                row[0] = row[0].strip().replace(".", ":")
+
                 # Skip header
                 if row[0] and "ura" in row[0]:
                     continue
@@ -549,7 +552,7 @@ class EClassroomUpdater:
                     continue
 
                 is_time_valid = row[0] and row[0].strip() != "do"
-                time = datetime.datetime.strptime(row[0].strip(), "%H:%M").time() if is_time_valid else last_hour
+                time = datetime.datetime.strptime(row[0], "%H:%M").time() if is_time_valid else last_hour
                 last_hour = time
 
                 notes = row[1].strip() if row[0] else last_notes
