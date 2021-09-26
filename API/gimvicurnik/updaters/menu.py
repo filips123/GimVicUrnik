@@ -178,7 +178,10 @@ class MenuUpdater:
 
             # Parse tables into menus and store them
             for table in tables:
-                for row in table[1::2]:
+                for row in table:
+                    if "NV in N" in row[1]:
+                        continue
+
                     current = date + datetime.timedelta(days=days)
                     days += 1
 
@@ -328,7 +331,10 @@ class MenuUpdater:
 
             # Parse tables into menus and store them
             for table in tables:
-                for row in table[1::2]:
+                for row in table:
+                    if "N KOSILO" in row[1]:
+                        continue
+
                     current = date + datetime.timedelta(days=days)
                     days += 1
 
