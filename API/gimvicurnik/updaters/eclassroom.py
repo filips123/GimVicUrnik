@@ -206,6 +206,13 @@ class EClassroomUpdater:
 
                 # Parse substitutions
                 if parser_type == "substitutions":
+                    if not any(row):
+                        self.logger.error(
+                            "Something is wrong with the substitutions file; the row should have at least one non-empty value",
+                            extra={"row": row},
+                        )
+                        continue
+
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[5])
 
