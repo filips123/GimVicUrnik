@@ -104,7 +104,7 @@ class MenuUpdater:
         # Another example: 05-splet-februar-3-teden-M-PDF.pdf
         # Another example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
         # Another example: 01-splet-september-4-teden-02-M-popravek.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-popravek)?(?:-\d)?\.[a-z]+", url)
+        date = re.search(r"\d+-splet-([a-z]+)-(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)
 
         if date:
             year = datetime.datetime.now().year

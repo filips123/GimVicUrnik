@@ -206,6 +206,13 @@ class EClassroomUpdater:
 
                 # Parse substitutions
                 if parser_type == "substitutions":
+                    if not any(row):
+                        self.logger.error(
+                            "Something is wrong with the substitutions file; the row should have at least one non-empty value",
+                            extra={"row": row},
+                        )
+                        continue
+
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[5])
 
@@ -401,7 +408,7 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used until October 2020
         # Example: delitevKosila-0-15-okt2020-CET-objava.pdf
-        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-objava\.pdf$", url):
+        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-(?i:objava)\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -414,7 +421,7 @@ class EClassroomUpdater:
         # Daily lunch schedule format, used starting with March 2021
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
         # Example: delitevKosila-1sept2021-SRE-objava-PDF.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-objava.*\.pdf$", url):
+        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-(?i:objava).*\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -534,15 +541,6 @@ class EClassroomUpdater:
                 continue
 
             for index, row in enumerate(table):
-                # Handle multiple times in the same cell
-                times = row[0].split("\n", 1)
-                if len(times) == 2:
-                    row[0] = times[0]
-                    table[index + 1][0] = times[1]
-
-                # Handle different time formats
-                row[0] = row[0].strip().replace(".", ":")
-
                 # Skip header
                 if row[0] and "ura" in row[0]:
                     continue
@@ -550,6 +548,19 @@ class EClassroomUpdater:
                 # Skip empty rows
                 if len(row) != 5 or not row[0]:
                     continue
+
+                # Handle multiple times in the same cell
+                times = row[0].split("\n", 1)
+                if len(times) == 2:
+                    row[0] = times[0]
+                    table[index + 1][0] = times[1]
+
+                # Handle incorrectly connected cells
+                if row[1] is None and len(row[0].split(" ", 1)) == 2:
+                    row[0], row[1] = row[0].split(" ", 1)
+
+                # Handle different time formats
+                row[0] = row[0].strip().replace(".", ":")
 
                 is_time_valid = row[0] and row[0].strip() != "do"
                 time = datetime.datetime.strptime(row[0], "%H:%M").time() if is_time_valid else last_hour
