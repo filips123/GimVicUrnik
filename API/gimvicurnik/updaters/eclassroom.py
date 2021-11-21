@@ -534,15 +534,6 @@ class EClassroomUpdater:
                 continue
 
             for index, row in enumerate(table):
-                # Handle multiple times in the same cell
-                times = row[0].split("\n", 1)
-                if len(times) == 2:
-                    row[0] = times[0]
-                    table[index + 1][0] = times[1]
-
-                # Handle different time formats
-                row[0] = row[0].strip().replace(".", ":")
-
                 # Skip header
                 if row[0] and "ura" in row[0]:
                     continue
@@ -550,6 +541,19 @@ class EClassroomUpdater:
                 # Skip empty rows
                 if len(row) != 5 or not row[0]:
                     continue
+
+                # Handle multiple times in the same cell
+                times = row[0].split("\n", 1)
+                if len(times) == 2:
+                    row[0] = times[0]
+                    table[index + 1][0] = times[1]
+
+                # Handle incorrectly connected cells
+                if row[1] is None and len(row[0].split(" ", 1)) == 2:
+                    row[0], row[1] = row[0].split(" ", 1)
+
+                # Handle different time formats
+                row[0] = row[0].strip().replace(".", ":")
 
                 is_time_valid = row[0] and row[0].strip() != "do"
                 time = datetime.datetime.strptime(row[0], "%H:%M").time() if is_time_valid else last_hour
