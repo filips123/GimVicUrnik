@@ -401,7 +401,7 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used until October 2020
         # Example: delitevKosila-0-15-okt2020-CET-objava.pdf
-        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-objava\.pdf$", url):
+        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-(?i:objava)\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -414,7 +414,7 @@ class EClassroomUpdater:
         # Daily lunch schedule format, used starting with March 2021
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
         # Example: delitevKosila-1sept2021-SRE-objava-PDF.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-objava.*\.pdf$", url):
+        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-(?i:objava).*\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
