@@ -485,7 +485,7 @@ class EClassroomUpdater:
             "Stjepić": "Šajn",
             "Tehovnik": "Glaser",
             "Vahtar": "Rudolf",
-            "Vičar": "Potočnik",
+            "Potočnik": "Vičar",
             "Završnik": "Ražen",
             "Zelič": "Ocvirk",
             "Žemva": "Strmčnik",
