@@ -537,7 +537,7 @@ class EClassroomUpdater:
 
         for table in tables:
             # Skip instructions
-            if "Dijaki prihajate v jedilnico" in table[0][0]:
+            if not table[0][0] or "Dijaki prihajate v jedilnico" in table[0][0]:
                 continue
 
             for index, row in enumerate(table):
@@ -593,7 +593,7 @@ class EClassroomUpdater:
 
         for table in tables:
             # Skip instructions
-            if "V jedilnico prihajate z maskami" in table[0][0] or "JEDILNICA 1" in table[0][0]:
+            if not table[0][0] or "V jedilnico prihajate z maskami" in table[0][0] or "JEDILNICA 1" in table[0][0]:
                 continue
 
             for row in table:
