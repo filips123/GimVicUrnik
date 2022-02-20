@@ -62,9 +62,9 @@ If you enable `debug` in the config file, another command `gimvicurnik create-su
 
 ## Contributing
 
-The API uses FlakeHell and Blake for linting the code. They are included in project's development dependencies.
+The API uses FlakeHeaven and Blake for linting the code. They are included in project's development dependencies.
 
 Please make sure that your changes are formatted correctly according to the code style:
 
-* Linting: `flakehell lint`
+* Linting: `flakeheaven lint`
 * Formatting: `black gimvicurnik`
