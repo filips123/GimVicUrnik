@@ -209,7 +209,8 @@ class EClassroomUpdater:
                     if not any(row):
                         self.logger.error(
                             "Something is wrong with the substitutions file; the row should have at least one non-empty value",
-                            extra={"row": row},
+                            extra={"row": row, "url": url},
+                            stack_info=True,
                         )
                         continue
 
