@@ -15,6 +15,12 @@ export default new Vuetify({
     iconfont: 'mdiSvg'
   },
   theme: {
-    dark: (SettingsModule.theme === ThemeType.System && window.matchMedia('(prefers-color-scheme: dark)').matches) || SettingsModule.theme === ThemeType.Dark
+    dark: (SettingsModule.theme === ThemeType.System && window.matchMedia('(prefers-color-scheme: dark)').matches) || SettingsModule.theme === ThemeType.Dark,
+    options: {
+      themeCache: {
+        get: key => localStorage.getItem(`vuetify-theme-${JSON.stringify(key)}`),
+        set: (key, value) => localStorage.setItem(`vuetify-theme-${JSON.stringify(key)}`, value)
+      }
+    }
   }
 })

@@ -39,6 +39,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import { TouchHandlers } from 'vuetify'
 
 import MenuDisplay from '@/components/menus/MenuDisplay.vue'
 import { StateModule } from '@/store/modules/state'
@@ -53,19 +54,19 @@ export default class Menus extends Vue {
 
   // Custom touch function which does not stop propagation
   // This is needed for pull to refresh to work
-  tabsItemsTouch = {
-    left: (): void => {
+  tabsItemsTouch: TouchHandlers = {
+    left: () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.prev() : this.$refs.tabs.next()
     },
-    right: (): void => {
+    right: () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.next() : this.$refs.tabs.prev()
     },
-    end: (): void => undefined,
-    start: (): void => undefined
+    end: () => undefined,
+    start: () => undefined
   }
 
   get currentDay (): number {

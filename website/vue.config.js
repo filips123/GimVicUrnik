@@ -1,13 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 process.env.VUE_APP_VERSION = require('./package.json').version
 
-module.exports = {
-  transpileDependencies: [
-    'vuex-module-decorators',
-    'vuex-persist',
-    'vuetify'
-  ],
+const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin')
+const { defineConfig } = require('@vue/cli-service')
 
+module.exports = defineConfig({
   pwa: {
     name: process.env.VUE_APP_TITLE,
     manifestPath: 'site.webmanifest',
@@ -17,7 +13,7 @@ module.exports = {
 
     workboxOptions: {
       navigateFallback: '/index.html',
-      navigateFallbackBlacklist: [/\./]
+      navigateFallbackDenylist: [/\./]
     },
 
     manifestOptions: {
@@ -66,12 +62,12 @@ module.exports = {
   },
 
   chainWebpack: config => {
-    config.plugin('preload').tap(options => {
-      options[0].include = {
+    config.plugin('preload').use(PreloadWebpackPlugin, [{
+      rel: 'preload',
+      include: {
         type: 'allChunks',
         chunks: ['app', 'chunk-vendors', 'home', 'timetable']
       }
-      return options
-    })
+    }])
   }
-}
+})

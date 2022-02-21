@@ -117,18 +117,21 @@ export default class Settings extends Vue {
   mdiUpdate = mdiUpdate
 
   // Get app version
-  appVersion = process.env.VUE_APP_VERSION || 'Ni podatkov'
+  get appVersion (): string {
+    return process.env.VUE_APP_VERSION || 'Ni podatkov'
+  }
 
   // Get data version
   get dataVersion (): string {
     if (!StorageModule.lastUpdated) return 'Ni podatkov'
 
+    // Date is converted to string when stored to local storage, so we need to convert it back
     const lastUpdated = typeof StorageModule.lastUpdated === 'string' ? new Date(StorageModule.lastUpdated) : StorageModule.lastUpdated
     return lastUpdated.toLocaleDateString('sl', { hour: 'numeric', minute: 'numeric' })
   }
 
   // Get label for entity switch
-  selectedEntityLabel = (() => {
+  get selectedEntityLabel (): string {
     switch (SettingsModule.selectedEntity?.type) {
       case EntityType.Teacher:
         return 'Izbran profesor'
@@ -137,10 +140,12 @@ export default class Settings extends Vue {
       default:
         return 'Izbran razred'
     }
-  })()
+  }
 
   // Get currently selected entity
-  selectedEntity = SettingsModule.selectedEntity?.data.join(', ') || 'Razred ni izbran'
+  get selectedEntity (): string {
+    return SettingsModule.selectedEntity?.data.join(', ') || 'Razred ni izbran'
+  }
 
   // Get snack type as string from enum
   get selectedSnack (): string {

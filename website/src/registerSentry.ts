@@ -3,8 +3,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import { init } from '@sentry/vue'
-import { VueRouterInstrumentation } from '@sentry/vue/dist/vuerouter'
+import { init as sentryInit } from '@sentry/vue'
+import { VueRouterInstrumentation } from '@sentry/vue/dist/router'
 import { captureException } from '@sentry/browser'
 import { Transaction, TransactionContext } from '@sentry/types'
 import { Integrations } from '@sentry/tracing'
@@ -14,8 +14,6 @@ import { SettingsModule } from '@/store/modules/settings'
 
 // Only load Sentry if it is enabled by build config and user settings
 if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollection.performance || SettingsModule.dataCollection.crashes)) {
-  let firstLoad = true
-
   // Custom Vue Router instrumentation for Sentry
   function vueRouterInstrumentation (router: VueRouter): VueRouterInstrumentation {
     return (
@@ -46,9 +44,10 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
           opName = 'generic 404 request'
         }
 
-        const isNotFoundRedirection = from.path === to.path && to.name === 'notfound'
+        const isPageLoadNavigation = from.name == null && from.matched.length === 0
+        const isNotFoundNavigation = from.path === to.path && to.name === 'notfound'
 
-        if (startTransactionOnPageLoad && firstLoad) {
+        if (startTransactionOnPageLoad && isPageLoadNavigation) {
           startTransaction({
             name: opName,
             op: 'pageload',
@@ -57,7 +56,7 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
           })
         }
 
-        if (startTransactionOnLocationChange && !firstLoad && !isNotFoundRedirection) {
+        if (startTransactionOnLocationChange && !isPageLoadNavigation && !isNotFoundNavigation) {
           startTransaction({
             name: opName,
             op: 'navigation',
@@ -66,15 +65,14 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
           })
         }
 
-        firstLoad = false
         next()
       })
     }
   }
 
   // Release prefixes and suffixes from config
-  const releasePrefix = process.env.VUE_APP_SENTRY_RELEASE_PREFIX ? process.env.VUE_APP_SENTRY_RELEASE_PREFIX : ''
-  const releaseSuffix = process.env.VUE_APP_SENTRY_RELEASE_SUFFIX ? process.env.VUE_APP_SENTRY_RELEASE_SUFFIX : ''
+  const releasePrefix = process.env.VUE_APP_SENTRY_RELEASE_PREFIX || ''
+  const releaseSuffix = process.env.VUE_APP_SENTRY_RELEASE_SUFFIX || ''
 
   // Don't add performance monitoring to users who don't want it
   const integrations = []
@@ -88,7 +86,7 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
   }
 
   // Init the Sentry SDK
-  init({
+  sentryInit({
     Vue,
 
     dsn: process.env.VUE_APP_SENTRY_DSN,

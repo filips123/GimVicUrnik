@@ -4,7 +4,7 @@
       <div class="d-flex align-center overflow-x-hidden pr-1">
         <v-img alt="GimVičUrnik Logo"
           class="mr-2"
-          src="./assets/logo.png"
+          src="./assets/logo.svg"
           width="40" />
         <v-toolbar-title>{{ pageTitle }}</v-toolbar-title>
       </div>
@@ -36,7 +36,7 @@
       </template>
     </v-app-bar>
 
-    <view-navigation-desktop v-if="!isMobile" />
+    <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" />
 
     <v-main id="main" v-bind:class="{ 'pb-16': isNavigationDisplayed && isMobile }">
       <span id="ptr--target"></span>
@@ -174,7 +174,6 @@ export default class App extends Vue {
     const registration: ServiceWorkerRegistration = (event as CustomEvent).detail
 
     displaySnackbar('Na voljo je posodobitev', 'Posodobi', () => {
-      // Hide snackbar
       hideSnackbar()
 
       if (!registration || !registration.waiting) return
