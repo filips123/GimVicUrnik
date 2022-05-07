@@ -551,6 +551,10 @@ class EClassroomUpdater:
                 if len(row) != 5 or not row[0]:
                     continue
 
+                # Skip rows with incomplete data
+                if not row[2] or not row[4]:
+                    continue
+
                 # Handle multiple times in the same cell
                 times = row[0].split("\n", 1)
                 if len(times) == 2:
