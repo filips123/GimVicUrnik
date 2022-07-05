@@ -466,7 +466,7 @@ class EClassroomUpdater:
             return None
 
         # Special case: Unknown teacher
-        if name == "X" or name == "x" or name == "/" or name == "MANJKA":
+        if not name or name == "X" or name == "x" or name == "/" or name == "MANJKA":
             return None
 
         # Special case: Multiple Krapež teachers
