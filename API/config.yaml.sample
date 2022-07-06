@@ -1,6 +1,6 @@
 sources:
   timetable:
-    url: http://projekti.gimvic.org/urnik/data.js
+    url: https://projekti.gimvic.org/urnik/data.js
   eclassroom:
     url: https://ucilnica.gimvic.org/webservice/rest/server.php
     token: YOUR-TOKEN-HERE
@@ -23,7 +23,7 @@ cors:
 
 sentry:
   dsn: YOUR-DSN-HERE
-  enabled: true
+  enabled: false
   collectIPs: false
   maxBreadcrumbs: 100
   sampleRate:
