@@ -33,6 +33,7 @@ class GimVicUrnikGroup(FlaskGroup):
             sqlalchemy_version = pkg_resources.get_distribution("sqlalchemy").version
             requests_version = pkg_resources.get_distribution("requests").version
             flask_version = pkg_resources.get_distribution("flask").version
+            pymupdf_version = pkg_resources.get_distribution("pymupdf").version
             pdf2docx_version = pkg_resources.get_distribution("pdf2docx").version
             openpyxl_version = pkg_resources.get_distribution("openpyxl").version
 
@@ -47,6 +48,7 @@ class GimVicUrnikGroup(FlaskGroup):
                 f"SQLAlchemy: {sqlalchemy_version}\n"
                 f"Requests: {requests_version}\n"
                 f"Flask: {flask_version}\n"
+                f"PyMuPDF: {pymupdf_version}"
                 f"pdf2docx: {pdf2docx_version}\n"
                 f"openpyxl: {openpyxl_version}\n"
                 f"Sentry SDK: {sentry_version}"

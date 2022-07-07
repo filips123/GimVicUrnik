@@ -36,47 +36,49 @@ classifiers = [
 [tool.poetry.scripts]
 gimvicurnik = "gimvicurnik.__main__:main"
 
+# TODO: Replace pdf2docx with PyMuPDF/pdfplumber/pdfminer
 [tool.poetry.dependencies]
-python = "^3.6.2"
-PyYAML = "^5.4.1"
-PyMuPDF = "=1.18.19"
-Flask = "^2.0.3"
-click = "^8.0.4"
+python = "^3.8"
+PyYAML = "^6.0.0"
+Flask = "^2.1.2"
+click = "^8.1.3"
 schema = "^0.7.5"
-requests = "^2.27.1"
-SQLAlchemy = "^1.4.31"
+requests = "^2.28.1"
+SQLAlchemy = "^1.4.39"
 pdf2docx = "=0.4.6"
-openpyxl = "^3.0.9"
-icalendar = "^4.0.9"
-beautifulsoup4 = { extras = ["lxml"], version = "^4.10.0" }
+openpyxl = "^3.0.10"
+icalendar = "^4.1.0"
+beautifulsoup4 = { extras = ["lxml"], version = "^4.11.1" }
 
 # Optional support for Sentry integration
-sentry-sdk = { extras = ["flask", "sqlalchemy"], version = "^1.5.5", optional = true }
+sentry-sdk = { extras = ["flask", "sqlalchemy"], version = "^1.6.0", optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.0.2", optional = true }
+mysqlclient = { version = "^2.1.1", optional = true }
 psycopg2 = { version = "^2.9.3", optional = true }
 
 [tool.poetry.dev-dependencies]
-flakeheaven = "^0.11.1"
-black = "^22.1.0"
-flake8-black = "^0.2.4"
-flake8-bugbear = "^21.11.29"
+flakeheaven = "2.0.0"
+black = "^22.6.0"
+flake8-black = "^0.3.3"
+flake8-bugbear = "^22.7.1"
 
 [tool.poetry.extras]
 sentry = ["sentry-sdk"]
-mysql = ["PyMySQL"]
+mysql-py = ["PyMySQL"]
+mysql-c = ["mysqlclient"]
 pgsql = ["psycopg2"]
 
-[tool.flakehell]
+[tool.flakeheaven]
 max_line_length = 130
 format = "grouped"
 
-[tool.flakehell.plugins]
+[tool.flakeheaven.plugins]
 "flake8-black" = ["+*"]
 "flake8-bugbear" = ["+*"]
 "mccabe" = ["+*"]
-"pycodestyle" = ["+*", "-E203", "-E501", "-E722", "-W503"]
+"pycodestyle" = ["+*", "-E203", "-W503"]
 "pyflakes" = ["+*", "-F401"]
 
 [tool.black]
