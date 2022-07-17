@@ -36,6 +36,11 @@
       :message="themeStatus"
       label="Barvna tema" />
 
+    <settings-action v-model="moodleTokenDialog"
+      :icon="mdiKey"
+      :message="moodleTokenStatus"
+      label="Moodle žeton" />
+
     <v-divider class="my-6" />
 
     <settings-action :icon="mdiUpdate"
@@ -71,6 +76,10 @@
     <v-dialog v-model="themeSelectionDialog" width="35rem">
       <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
     </v-dialog>
+
+    <v-dialog v-model="moodleTokenDialog" width="35rem">
+      <moodle-token v-if="moodleTokenDialog" @closeDialog=closeMoodleTokenDialog />
+    </v-dialog>
   </div>
 </template>
 
@@ -88,12 +97,13 @@
 </style>
 
 <script lang="ts">
-import { mdiDatabaseImportOutline, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import LunchSelection from '@/components/settings/LunchSelection.vue'
+import MoodleToken from '@/components/settings/MoodleToken.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import SnackSelection from '@/components/settings/SnackSelection.vue'
@@ -103,6 +113,7 @@ import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
   components: {
+    MoodleToken,
     DataCollectionSelection,
     ThemeSelection,
     SnackSelection,
@@ -117,6 +128,7 @@ export default class Settings extends Vue {
   mdiDatabaseImportOutline = mdiDatabaseImportOutline
   mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
+  mdiKey = mdiKey
 
   // Get app version
   get appVersion (): string {
@@ -198,12 +210,18 @@ export default class Settings extends Vue {
     }
   }
 
+  // Get Moodle token status as string
+  get moodleTokenStatus (): string {
+    return SettingsModule.moodleToken ? 'Nastavljen' : 'Ni nastavljen'
+  }
+
   // Dialog states
   entitySelectionDialog = false
   snackSelectionDialog = false
   lunchSelectionDialog = false
   dataCollectionDialog = false
   themeSelectionDialog = false
+  moodleTokenDialog = false
 
   entitySelectionPersistent = false
 
@@ -304,6 +322,10 @@ export default class Settings extends Vue {
 
   closeThemeDialog (): void {
     this.themeSelectionDialog = false
+  }
+
+  closeMoodleTokenDialog (): void {
+    this.moodleTokenDialog = false
   }
 
   persistEntityDialog (persistent: boolean): void {

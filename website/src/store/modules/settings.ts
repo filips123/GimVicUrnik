@@ -69,6 +69,8 @@ class Settings extends VuexModule {
 
   theme: ThemeType = ThemeType.System
 
+  moodleToken: string | null = null
+
   @Mutation
   setSelectedEntity (selectedEntity: SelectedEntity): void {
     this.selectedEntity = selectedEntity
@@ -139,6 +141,11 @@ class Settings extends VuexModule {
   @Mutation
   setTheme (theme: ThemeType): void {
     this.theme = theme
+  }
+
+  @Mutation
+  setMoodleToken (moodleToken: string | null): void {
+    this.moodleToken = moodleToken
   }
 }
 
