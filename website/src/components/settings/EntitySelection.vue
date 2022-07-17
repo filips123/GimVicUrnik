@@ -36,7 +36,7 @@ export default class EntitySelection extends Vue {
   // 3: Teacher selection
   // 4: Classroom selection
   @Prop() initialSelectionStage!: string
-  currentSelectionStage = parseInt(this.initialSelectionStage)
+  currentSelectionStage = NaN
 
   @Prop() isDialog!: boolean
 
@@ -45,6 +45,9 @@ export default class EntitySelection extends Vue {
 
   created (): void {
     StorageModule.updateLists()
+
+    // Set current selection stage to the required initial stage
+    this.currentSelectionStage = parseInt(this.initialSelectionStage)
 
     // Save handler so it can be destroyed later
     this.stateHandler = (event) => {

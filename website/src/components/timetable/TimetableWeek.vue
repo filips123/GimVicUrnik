@@ -112,10 +112,12 @@ export default class TimetableWeek extends Vue {
   daysInWeek = daysInWeek
   hourTimes = hourTimes
 
-  currentDay = getCurrentDay()
-
   detailSeparator = ' - '
   contentSeparator = '/&#8203;'
+
+  get currentDay (): number {
+    return getCurrentDay()
+  }
 
   get currentEntity (): SelectedEntity | null {
     return StateModule.currentEntity

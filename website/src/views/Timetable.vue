@@ -35,6 +35,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
+import { TouchHandlers } from 'vuetify'
 
 import Loading from '@/components/base/Loading.vue'
 import { EntityType, SettingsModule } from '@/store/modules/settings'
@@ -55,19 +56,19 @@ export default class Timetable extends Vue {
 
   // Custom touch function which does not stop propagation
   // This is needed for pull to refresh to work
-  tabsItemsTouch = {
-    left: (): void => {
+  tabsItemsTouch: TouchHandlers = {
+    left: () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.prev() : this.$refs.tabs.next()
     },
-    right: (): void => {
+    right: () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.$vuetify.rtl ? this.$refs.tabs.next() : this.$refs.tabs.prev()
     },
-    end: (): void => undefined,
-    start: (): void => undefined
+    end: () => undefined,
+    start: () => undefined
   }
 
   get currentDay (): number {
@@ -104,17 +105,17 @@ export default class Timetable extends Vue {
       const data = this.$route.params.value.split(',')
 
       // Get class/teacher/classroom from URL
-      if (type === 'classes' && data.every(elem => (StorageModule.classList || []).includes(elem))) {
+      if (type === 'classes' && data.some(elem => (StorageModule.classList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Class,
           data: data
         })
-      } else if (type === 'teachers' && data.every(elem => (StorageModule.teacherList || []).includes(elem))) {
+      } else if (type === 'teachers' && data.some(elem => (StorageModule.teacherList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Teacher,
           data: data
         })
-      } else if (type === 'classrooms' && data.every(elem => (StorageModule.classroomList || []).includes(elem))) {
+      } else if (type === 'classrooms' && data.some(elem => (StorageModule.classroomList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Classroom,
           data: data

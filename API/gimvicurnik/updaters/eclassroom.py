@@ -209,7 +209,8 @@ class EClassroomUpdater:
                     if not any(row):
                         self.logger.error(
                             "Something is wrong with the substitutions file; the row should have at least one non-empty value",
-                            extra={"row": row},
+                            extra={"row": row, "url": url},
+                            stack_info=True,
                         )
                         continue
 
@@ -421,7 +422,8 @@ class EClassroomUpdater:
         # Daily lunch schedule format, used starting with March 2021
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
         # Example: delitevKosila-1sept2021-SRE-objava-PDF.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?-[A-Z]{3}-(?i:objava).*\.pdf$", url):
+        # Example: delitevKosila-1feb2022-objava-PDF.pdf
+        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?(?:-[A-Z]{3})?-(?i:objava).*\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -464,7 +466,7 @@ class EClassroomUpdater:
             return None
 
         # Special case: Unknown teacher
-        if name == "X" or name == "x" or name == "/" or name == "MANJKA":
+        if not name or name == "X" or name == "x" or name == "/" or name == "MANJKA":
             return None
 
         # Special case: Multiple Krapež teachers
@@ -547,6 +549,10 @@ class EClassroomUpdater:
 
                 # Skip empty rows
                 if len(row) != 5 or not row[0]:
+                    continue
+
+                # Skip rows with incomplete data
+                if not row[2] or not row[4]:
                     continue
 
                 # Handle multiple times in the same cell

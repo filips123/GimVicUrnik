@@ -138,9 +138,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateLists (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state.classList
+    const isStoredLocally = 'storage' in localStorage && this.classList
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -172,9 +170,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateTimetable (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state.timetable
+    const isStoredLocally = 'storage' in localStorage && this.timetable
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -199,9 +195,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateSubstitutions (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state._substitutions
+    const isStoredLocally = 'storage' in localStorage && this._substitutions
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -229,9 +223,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateEmptyClassrooms (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state.emptyClassrooms
+    const isStoredLocally = 'storage' in localStorage && this.emptyClassrooms
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -256,9 +248,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateLunchSchedule (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state._substitutions
+    const isStoredLocally = 'storage' in localStorage && this._substitutions
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -288,9 +278,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateMenus (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state._substitutions
+    const isStoredLocally = 'storage' in localStorage && this._substitutions
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
@@ -320,9 +308,7 @@ class Storage extends VuexModule {
 
   @MutationAction
   async updateDocuments (forceUpdate = false) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isStoredLocally = 'storage' in localStorage && this.state.documents
+    const isStoredLocally = 'storage' in localStorage && this.documents
     const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
 
     if (!navigator.onLine) {
