@@ -1,30 +1,37 @@
+from __future__ import annotations
+
 import datetime
 import hashlib
 import logging
 import re
+import typing
 from collections import defaultdict
 
 import requests
 
-from ..database import Class, Classroom, Document, Lesson, Teacher
+from ..database import Class, Classroom, Document, DocumentType, Lesson, Teacher
 from ..errors import TimetableApiError
 from ..utils.database import get_or_create
 
+if typing.TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+    from ..config import ConfigSourcesTimetable
+
 
 class TimetableUpdater:
-    raw = None
-    hash = None
+    raw: str
+    hash: str
 
-    def __init__(self, config, session):
-        self.url = config["url"]
-        self.session = session
+    def __init__(self, config: ConfigSourcesTimetable, session: Session) -> None:
         self.logger = logging.getLogger(__name__)
+        self.url = config.url
+        self.session = session
 
-    def update(self):
+    def update(self) -> None:
         self._download()
         self._parse()
 
-    def _download(self):
+    def _download(self) -> None:
         try:
             response = requests.get(self.url)
             content = response.content
@@ -36,10 +43,10 @@ class TimetableUpdater:
         self.raw = content.decode("utf8")
         self.hash = str(hashlib.sha256(content).hexdigest())
 
-    def _parse(self):
+    def _parse(self) -> None:
         # Skip parsing if the timetable is unchanged
-        document = self.session.query(Document).filter(Document.type == "timetable", Document.url == self.url).first()
-        if self.hash == getattr(document, "hash", False):
+        document = self.session.query(Document).filter(Document.type == DocumentType.TIMETABLE, Document.url == self.url).first()
+        if document and document.hash == self.hash:
             self.logger.info("Skipped because the timetable is unchanged")
             self.logger.debug("Hash: %s", document.hash)
             self.logger.debug("Last updated: %s", document.date)
@@ -75,7 +82,7 @@ class TimetableUpdater:
             document = Document()
 
         document.date = datetime.datetime.now().date()
-        document.type = "timetable"
+        document.type = DocumentType.TIMETABLE
         document.url = self.url
         document.hash = self.hash
 

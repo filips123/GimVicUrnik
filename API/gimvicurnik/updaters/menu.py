@@ -1,34 +1,47 @@
+from __future__ import annotations
+
 import datetime
 import hashlib
 import logging
 import os
 import re
 import tempfile
+import typing
 
 import requests
 from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
-from pdf2docx import extract_tables
+from pdf2docx import extract_tables  # type: ignore
 
-from ..database import Document, LunchMenu, SnackMenu
+from ..database import Document, DocumentType, LunchMenu, SnackMenu
 from ..errors import MenuApiError, MenuDateError, MenuFormatError
 from ..utils.sentry import with_span
 
+if typing.TYPE_CHECKING:
+    from typing import Iterator, Tuple
+    from sqlalchemy.orm import Session
+    from sentry_sdk.tracing import Span
+    from ..config import ConfigSourcesMenu
+
 
 class MenuUpdater:
-    def __init__(self, config, session):
-        self.url = config["url"]
-        self.session = session
+    def __init__(self, config: ConfigSourcesMenu, session: Session):
         self.logger = logging.getLogger(__name__)
+        self.url = config.url
+        self.session = session
 
-    def update(self):
+    def update(self) -> None:
         for type, url, date in self._get_documents():
-            if type == "snack":
-                self._store_snack_menu(url, date)
-            elif type == "lunch":
-                self._store_lunch_menu(url, date)
+            # Decorators that add keyword arguments currently cannot be typed correctly
+            # This seems to be a limitation of Python's typing system and cannot be resolved
+            # Until Python/mypy add support for this, we have to ignore call argument types
 
-    def _get_documents(self):
+            if type == DocumentType.SNACK_MENU:
+                self._store_snack_menu(url, date)  # type: ignore[call-arg]
+            elif type == DocumentType.LUNCH_MENU:
+                self._store_lunch_menu(url, date)  # type: ignore[call-arg]
+
+    def _get_documents(self) -> Iterator[Tuple[DocumentType, str, datetime.date]]:
         try:
             response = requests.get(self.url)
             response.raise_for_status()
@@ -47,9 +60,9 @@ class MenuUpdater:
                 contents = str(link.contents[0]).lower()
 
                 if "malica" in contents:
-                    menu_type = "snack"
+                    menu_type = DocumentType.SNACK_MENU
                 elif "kosilo" in contents:
-                    menu_type = "lunch"
+                    menu_type = DocumentType.LUNCH_MENU
                 else:
                     continue
 
@@ -59,7 +72,7 @@ class MenuUpdater:
                 yield menu_type, menu_url, menu_date
 
     @staticmethod
-    def _get_date(url):
+    def _get_date(url: str) -> datetime.date:
         # There are multiple known date formats in URLs
         # They need to be parsed separately
 
@@ -132,7 +145,7 @@ class MenuUpdater:
         raise MenuDateError("Unknown menu date URL format: " + url.rsplit("/", 1)[-1])
 
     @with_span(op="document", pass_span=True)
-    def _store_snack_menu(self, url, date, span):
+    def _store_snack_menu(self, url: str, date: datetime.date, span: Span) -> None:
         response = requests.get(url)
         format = url.rsplit(".", 1)[-1]
 
@@ -145,8 +158,8 @@ class MenuUpdater:
         span.set_tag("document.format", format)
 
         # Skip unchanged lunch menu documents
-        document = self.session.query(Document).filter(Document.type == "snack-menu", Document.url == url).first()
-        if hash == getattr(document, "hash", False):
+        document = self.session.query(Document).filter(Document.type == DocumentType.SNACK_MENU, Document.url == url).first()
+        if document and document.hash == hash:
             self.logger.info("Skipped because the snack menu document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
             self.logger.debug("Date: %s", document.date)
@@ -207,7 +220,7 @@ class MenuUpdater:
             # Extract workbook from XLSX file
             wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
 
-            menu = None
+            menu = {}
             days = 0
 
             # Parse tables into menus and store them
@@ -216,11 +229,12 @@ class MenuUpdater:
                     if not hasattr(wr[0].border, "bottom"):
                         continue
 
+                    # Store the menu after the end of table
                     if wr[0].border.bottom.color:
                         if menu and menu["date"]:
-                            model = self.session.query(LunchMenu).filter(LunchMenu.date == menu["date"]).first()
+                            model = self.session.query(SnackMenu).filter(SnackMenu.date == menu["date"]).first()
                             if not model:
-                                model = LunchMenu()
+                                model = SnackMenu()
 
                             model.date = menu["date"]
                             model.normal = "\n".join(menu["normal"][1:])
@@ -268,7 +282,7 @@ class MenuUpdater:
             created = False
 
         document.date = date
-        document.type = "snack-menu"
+        document.type = DocumentType.SNACK_MENU
         document.url = url
         document.description = "Jedilnik za malico"
         document.hash = hash
@@ -285,7 +299,7 @@ class MenuUpdater:
             self.logger.info("Updated the snack menu document for %s", document.date)
 
     @with_span(op="document", pass_span=True)
-    def _store_lunch_menu(self, url, date, span):
+    def _store_lunch_menu(self, url: str, date: datetime.date, span: Span) -> None:
         response = requests.get(url)
         format = url.rsplit(".", 1)[-1]
 
@@ -298,8 +312,8 @@ class MenuUpdater:
         span.set_tag("document.format", format)
 
         # Skip unchanged lunch menu documents
-        document = self.session.query(Document).filter(Document.type == "lunch-menu", Document.url == url).first()
-        if hash == getattr(document, "hash", False):
+        document = self.session.query(Document).filter(Document.type == DocumentType.LUNCH_MENU, Document.url == url).first()
+        if document and document.hash == hash:
             self.logger.info("Skipped because the lunch menu document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
             self.logger.debug("Date: %s", document.date)
@@ -358,7 +372,7 @@ class MenuUpdater:
             # Extract workbook from XLSX file
             wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
 
-            menu = None
+            menu = {}
             days = 0
 
             # Parse tables into menus and store them
@@ -409,7 +423,7 @@ class MenuUpdater:
             created = False
 
         document.date = date
-        document.type = "lunch-menu"
+        document.type = DocumentType.LUNCH_MENU
         document.url = url
         document.description = "Jedilnik za kosilo"
         document.hash = hash

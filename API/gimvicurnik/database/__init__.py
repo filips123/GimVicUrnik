@@ -1,34 +1,75 @@
-from sqlalchemy import Column, Date, ForeignKey, Index, Integer, SmallInteger, Text, Time, func, or_
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import aliased, relationship, sessionmaker
+from __future__ import annotations
+
+import enum
+import typing
+
+from sqlalchemy import Column, Date, Enum, ForeignKey, Index, Integer, SmallInteger, Text, Time, func, or_
+from sqlalchemy.orm import aliased, declarative_base, relationship, scoped_session, sessionmaker
+
+if typing.TYPE_CHECKING:
+    import datetime
+    from typing import Any, Dict, Iterator, List, Optional
 
 Base = declarative_base()
-Session = sessionmaker()
+
+SessionFactory = sessionmaker()
+Session = scoped_session(SessionFactory)
+
+
+@enum.unique
+class DocumentType(enum.Enum):
+    # Unparsable document types
+    CIRCULAR = "circular"
+    OTHER = "other"
+
+    # Parsable document types
+    TIMETABLE = "timetable"
+    SUBSTITUTIONS = "substitutions"
+    LUNCH_MENU = "lunch-menu"
+    SNACK_MENU = "snack-menu"
+    LUNCH_SCHEDULE = "lunch-schedule"
+
+    @classmethod
+    def names(cls, _obj: Any = None) -> List[str]:
+        return [member.name for member in cls]
+
+    @classmethod
+    def values(cls, _obj: Any = None) -> List[str]:
+        return [member.value for member in cls]
 
 
 class Document(Base):
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True)
-
-    # types - circular, other, substitutions, lunch-menu, snack-menu, lunch-schedule
     date = Column(Date)
-    type = Column(Text)
+
+    # TODO: Split date into created, modified and effective dates
+    # created = Column(DateTime)
+    # modified = Column(DateTime)
+    # effective = Column(Date, nullable=True)
+
+    # TODO: Create "parsed?" field and use it in updaters to re-parse documents
+
+    type = Column(Enum(DocumentType, values_callable=DocumentType.values))
     url = Column(Text)
     hash = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
 
 
 class Entity:
-    __tablename__ = None
+    __tablename__: str
 
     id = Column(Integer, primary_key=True)
     name = Column(Text)
 
     @classmethod
-    def get_lessons(cls, session, names=None):
+    def get_lessons(
+        cls,
+        names: Optional[List[str]] = None,
+    ) -> Iterator[Dict[str, Any]]:
         query = (
-            session.query(Lesson, Class.name, Teacher.name, Classroom.name)
+            Session.query(Lesson, Class.name, Teacher.name, Classroom.name)
             .join(Class)
             .join(Teacher)
             .join(Classroom, isouter=True)
@@ -49,7 +90,11 @@ class Entity:
             }
 
     @classmethod
-    def get_substitutions(cls, session, date, names=None):
+    def get_substitutions(
+        cls,
+        date: Optional[datetime.date] = None,
+        names: Optional[List[str]] = None,
+    ) -> Iterator[Dict[str, Any]]:
         original_teacher = aliased(Teacher)
         teacher = aliased(Teacher)
 
@@ -57,7 +102,7 @@ class Entity:
         classroom = aliased(Classroom)
 
         query = (
-            session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
+            Session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
             .join(Class)
             .join(original_teacher, Substitution.original_teacher_id == original_teacher.id, isouter=True)
             .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)
@@ -103,12 +148,12 @@ class Classroom(Entity, Base):
     __tablename__ = "classrooms"
 
     @classmethod
-    def get_empty(cls, session):
+    def get_empty(cls) -> Iterator[Dict[str, Any]]:
         days = (1, 5)
-        times = session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
+        times = Session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
 
-        classrooms = list(session.query(Classroom).order_by(Classroom.name))
-        lessons = list(session.query(Lesson).join(Classroom))
+        classrooms = list(Session.query(Classroom).order_by(Classroom.name))
+        lessons = list(Session.query(Lesson).join(Classroom))
 
         for day in range(days[0], days[1] + 1):
             for time in range(times[0], times[1] + 1):
@@ -142,13 +187,13 @@ class Lesson(Base):
     subject = Column(Text, nullable=True)
 
     class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_ = relationship("Class", backref="lessons")
+    class_: Class = relationship("Class", backref="lessons")
 
     teacher_id = Column(Integer, ForeignKey("teachers.id"), index=True)
-    teacher = relationship("Teacher", backref="lessons")
+    teacher: Teacher = relationship("Teacher", backref="lessons")
 
     classroom_id = Column(Integer, ForeignKey("classrooms.id"), index=True)
-    classroom = relationship("Classroom", backref="lessons")
+    classroom: Classroom = relationship("Classroom", backref="lessons")
 
 
 class Substitution(Base):
@@ -163,19 +208,19 @@ class Substitution(Base):
     subject = Column(Text, nullable=True)
 
     original_teacher_id = Column(Integer, ForeignKey("teachers.id"))
-    original_teacher = relationship("Teacher", foreign_keys=[original_teacher_id])
+    original_teacher: Teacher = relationship("Teacher", foreign_keys=[original_teacher_id])
 
     original_classroom_id = Column(Integer, ForeignKey("classrooms.id"))
-    original_classroom = relationship("Classroom", foreign_keys=[original_classroom_id])
+    original_classroom: Classroom = relationship("Classroom", foreign_keys=[original_classroom_id])
 
     class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_ = relationship("Class", backref="substitutions", foreign_keys=[class_id])
+    class_: Class = relationship("Class", backref="substitutions", foreign_keys=[class_id])
 
     teacher_id = Column(Integer, ForeignKey("teachers.id"), index=True)
-    teacher = relationship("Teacher", backref="substitutions", foreign_keys=[teacher_id])
+    teacher: Teacher = relationship("Teacher", backref="substitutions", foreign_keys=[teacher_id])
 
     classroom_id = Column(Integer, ForeignKey("classrooms.id"), index=True)
-    classroom = relationship("Classroom", backref="substitutions", foreign_keys=[classroom_id])
+    classroom: Classroom = relationship("Classroom", backref="substitutions", foreign_keys=[classroom_id])
 
 
 class LunchSchedule(Base):
@@ -187,7 +232,7 @@ class LunchSchedule(Base):
     time = Column(Time)
 
     class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_ = relationship("Class")
+    class_: Class = relationship("Class")
 
     location = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)

@@ -4,29 +4,32 @@
   <channel>
     <title>{{ name }} - Gimnazija Vič</title>
     <description>{{ name }} - Gimnazija Vič</description>
-    <link>{{ urls["website"] }}/documents</link>
+    <link>{{ urls.website }}/documents</link>
     <lastBuildDate>{{ last_updated.strftime("%a, %d %b %Y %H:%M:%S %Z") }}</lastBuildDate>
 
-    <atom:link href="{{ urls["api"] }}/feeds/{{ type }}.rss" rel="self" type="application/rss+xml" />
-    <atom:link href="{{ urls["api"] }}/feeds/{{ type }}.atom" rel="alternate" type="application/atom+xml" />
-    <atom:link href="{{ urls["website"] }}/documents" rel="alternate" type="text/html" />
+    <atom:link href="{{ urls.api }}/feed/{{ type }}.rss" rel="self" type="application/rss+xml" />
+    <atom:link href="{{ urls.api }}/feed/{{ type }}.atom" rel="alternate" type="application/atom+xml" />
+    <atom:link href="{{ urls.website }}/documents" rel="alternate" type="text/html" />
 
     <image>
       <title>{{ name }} - Gimnazija Vič</title>
-      <link>{{ urls["website"] }}/documents</link>
-      <url>{{ urls["website"] }}/img/icons/android-chrome-192x192.png</url>
+      <link>{{ urls.website }}/documents</link>
+      <url>{{ urls.website }}/img/icons/android-chrome-192x192.png</url>
     </image>
-    <webfeeds:icon>{{ urls["website"] }}/img/icons/android-chrome-192x192.png</webfeeds:icon>
+    <webfeeds:icon>{{ urls.website }}/img/icons/android-chrome-192x192.png</webfeeds:icon>
 
-    {% for model in entries %}
+    {% for entry in entries %}
       <item>
-        {% if display_date and display_date_type == "daily" %}<title>{{ model.description }}, {{ model.date | date_format_daily }}</title>
-        {% elif display_date and display_date_type == "weekly" %}<title>{{ model.description }}, {{ model.date | date_format_weekly }}</title>
-        {% else %}<title>{{ model.description }}</title>
+        {% if date_display == DateDisplay.DAILY %}<title>{{ entry.description }}, {{ entry.date | date }}</title>
+        {% elif date_display == DateDisplay.WEEKLY %}<title>{{ entry.description }}, {{ entry.date | week }}</title>
+        {% else %}<title>{{ entry.description }}</title>
         {% endif %}
-        <link>{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}</link>
-        <guid>{{ model.url if not config["shareToken"] else tokenize_url(model.url, config, token) }}</guid>
-        <pubDate>{{ model.date.strftime("%a, %d %b %Y %H:%M:%S %Z") }}</pubDate>
+        <guid>{{ entry.url }}</guid>
+        <link>{{ entry.url }}</link>
+        <enclosure url="{{ entry.url }}" type="{{ get_mime_type(entry.url) }}" length="0" />
+        <pubDate>{{ entry.date.strftime("%a, %d %b %Y %H:%M:%S %Z") }}</pubDate>
+        <atom:published>{{ entry.date.strftime("%Y-%m-%dT%H:%M:%S%z") }}</atom:published>
+        <atom:updated>{{ entry.date.strftime("%Y-%m-%dT%H:%M:%S%z") }}</atom:updated>
       </item>
     {% endfor %}
   </channel>

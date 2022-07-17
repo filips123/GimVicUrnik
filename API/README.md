@@ -27,7 +27,7 @@ You will also need to install [one of SQLAlchemy dialects](https://docs.sqlalche
 
 ### Configuration
 
-GimVičUrnik API uses YAML file for configuration. Example file can be found at [`config.yaml.sample`](config.yaml.sample). You can also see the default values and the schema [in the source code](gimvicurnik/__init__.py). If you don't plan to use Sentry, you can delete its section entirely. Logging section will by default display INFO or higher log levels to stdout, but you can also delete or change the section if you don't want that.
+GimVičUrnik API uses YAML file for configuration. Example file can be found at [`config.yaml.sample`](config.yaml.sample). You can also see default values and the schema [in the source code](gimvicurnik/config/__init__.py). If you don't plan to use Sentry, you can delete its section entirely. Logging section will by default display INFO or higher log levels to stdout, but you can also delete or change it if you don't want that.
 
 You need to obtain the e-classroom token as specified in the [Moodle Forum Discussion](https://moodle.org/mod/forum/discuss.php?d=193857).
 
@@ -54,7 +54,7 @@ In production, you should use any WSGI-compatible server. See [Flask Documentati
 
 ### Using the API
 
-You can retrieve all API routes using the `gimvicurnik routes` commands. The official client can be found in [in the `website` directory](../website).
+You can retrieve all API routes using the `gimvicurnik routes` commands. The official client can be found [in the `website` directory](../website).
 
 ### Debugging
 

@@ -1,25 +1,17 @@
-from contextlib import contextmanager
+from __future__ import annotations
 
-from ..database import Session
+import typing
 
+if typing.TYPE_CHECKING:
+    from typing import Any, Tuple, Type, TypeVar
+    from sqlalchemy.orm import Session
+    from ..database import Base
 
-@contextmanager
-def session_scope():
-    """Wrap SQLAlchemy session into `with` block."""
-
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except BaseException:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    BaseModel = TypeVar("BaseModel", bound=Base)
 
 
-def get_or_create(session, model, **kwargs):
-    """Get or create a new SQLAlchemy model."""
+def get_or_create(session: Session, model: Type[BaseModel], **kwargs: Any) -> Tuple[BaseModel, bool]:
+    """Get SQLAlchemy model or create a new one."""
 
     instance = session.query(model).filter_by(**kwargs).first()
     if instance:

@@ -1,26 +1,43 @@
-import os
-from datetime import datetime, timedelta
+from __future__ import annotations
 
+import datetime
+import os
+import typing
+
+import cattrs
 import yaml
-from flask import Flask, jsonify, render_template, request
-from schema import Optional, Or, Schema, SchemaError
-from sqlalchemy import create_engine, or_
-from sqlalchemy.orm import scoped_session
+from flask import Flask, request
+from sqlalchemy import create_engine
 from werkzeug.exceptions import HTTPException
 
+from .blueprints import (
+    CalendarHandler,
+    DocumentsHandler,
+    FeedHandler,
+    ListHandler,
+    MenusHandler,
+    ScheduleHandler,
+    SubstitutionsHandler,
+    TimetableHandler,
+)
 from .commands import (
     cleanup_database_command,
     create_database_command,
-    create_substitutions_command,
     update_eclassroom_command,
     update_menu_command,
     update_timetable_command,
 )
-from .database import Class, Classroom, Document, Entity, LunchMenu, LunchSchedule, Session, SnackMenu, Teacher
+from .config import Config
+from .database import Session, SessionFactory
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
+from .utils.errors import format_exception
 from .utils.flask import DateConverter, ListConverter
-from .utils.ical import create_schedule_calendar, create_school_calendar
-from .utils.url import tokenize_url
+
+if typing.TYPE_CHECKING:
+    from typing import Any, Dict, Optional, Union
+    from sqlalchemy.engine import Engine
+    from werkzeug import Response
+    from flask.typing import ResponseReturnValue
 
 
 class GimVicUrnik:
@@ -30,158 +47,125 @@ class GimVicUrnik:
     and application routes.
     """
 
-    schema = Schema(
-        {
-            "sources": {
-                "timetable": {
-                    "url": str,
-                },
-                "eclassroom": {
-                    "url": str,
-                    "token": str,
-                    "course": int,
-                    "pluginfile": {
-                        "webservice": str,
-                        "normal": str,
-                        Optional("shareToken", default=False): bool,
-                    },
-                },
-                "menu": {
-                    "url": str,
-                },
-            },
-            "urls": {
-                "website": str,
-                "api": str,
-            },
-            "database": str,
-            Optional("sentry"): {
-                "dsn": str,
-                Optional("enabled", default=True): bool,
-                Optional("collectIPs", default=False): bool,
-                Optional("releasePrefix", default=""): str,
-                Optional("releaseSuffix", default=""): str,
-                Optional("maxBreadcrumbs", default=100): int,
-                Optional("sampleRate", default={"commands": 0.5, "requests": 0.25, "other": 0.25}): {
-                    "commands": float,
-                    "requests": float,
-                    "other": float,
-                },
-            },
-            Optional("logging"): Or(dict, str),
-            Optional("cors"): [str],
-            "hourtimes": [
-                {
-                    "hour": {
-                        "name": str,
-                        "start": str,
-                        "end": str,
-                    }
-                },
-            ],
-            Optional("debug", default=False): bool,
-        }
-    )
+    app: Flask
+    config: Config
+    engine: Engine
 
-    def __init__(self, configfile):
+    def __init__(self, configfile: str) -> None:
         try:
             with open(configfile, encoding="utf-8") as file:
-                config = yaml.load(file, Loader=yaml.FullLoader)
+                config = yaml.load(file, Loader=yaml.CLoader)
+                self.config = cattrs.structure(config, Config)
         except OSError as error:
             raise ConfigReadError(str(error)) from error
         except yaml.YAMLError as error:
             raise ConfigParseError(str(error)) from error
-
-        try:
-            self.config = self.schema.validate(config)
-        except SchemaError as error:
-            raise ConfigValidationError(str(error)) from error
+        except cattrs.errors.BaseValidationError as error:
+            msg = "Failed to validate config\n" + format_exception(error)
+            raise ConfigValidationError(msg) from error
 
         self.configure_logging()
         self.configure_sentry()
+        self.configure_database()
 
-        self.session: scoped_session = None  # type: ignore
-        self.engine = create_engine(self.config["database"])
-        Session.configure(bind=self.engine)
+        self.app = Flask("gimvicurnik", static_folder=None, template_folder=None)
+        self.app.config["GIMVICURNIK"] = self
 
-        self.app = Flask("gimvicurnik", static_folder=None)
-        self.app.gimvicurnik = self
-
-        self.create_sentry_hooks()
         self.create_error_hooks()
+        self.create_sentry_hooks()
         self.create_database_hooks()
         self.create_cors_hooks()
-
-        self.convert_date_objects()
 
         self.register_route_converters()
         self.register_jinja_filters()
         self.register_commands()
         self.register_routes()
 
-    def configure_logging(self):
-        """Configure logging from file or dict config if requested in the configuration file."""
+    def configure_logging(self) -> None:
+        """Configure logging from file or dict config."""
 
-        if "logging" in self.config:
+        if self.config.logging:
             import logging.config
 
-            if isinstance(self.config["logging"], dict):
-                logging.config.dictConfig(self.config["logging"])
-            elif isinstance(self.config["logging"], str):
-                logging.config.fileConfig(self.config["logging"])
+            if isinstance(self.config.logging, dict):
+                logging.config.dictConfig(self.config.logging)
+            elif isinstance(self.config.logging, str):
+                logging.config.fileConfig(self.config.logging)
 
-    def configure_sentry(self):
-        """Configure Sentry integration if requested in the configuration file."""
+    def configure_sentry(self) -> None:
+        """Configure Sentry integration."""
 
-        if "sentry" in self.config and self.config["sentry"]["enabled"]:
+        if self.config.sentry and self.config.sentry.enabled:
+            import pkg_resources
             import sentry_sdk
             from sentry_sdk.integrations.flask import FlaskIntegration
             from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+            from sentry_sdk.integrations.pure_eval import PureEvalIntegration
 
-            # Try to get package version, otherwise use commit hash from Sentry
-            # Also modify version so it becomes valid SemVer version
-            try:
-                import pkg_resources
+            sentry_config = self.config.sentry
 
-                version = pkg_resources.get_distribution("gimvicurnik").version
-                version = version.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
+            # Get the package version and modify it, so it becomes valid SemVer version
+            version = pkg_resources.get_distribution("gimvicurnik").version
+            version = version.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
 
-            except Exception:
-                from sentry_sdk.utils import get_default_release
-
-                version = get_default_release()
-
+            # Get current environment and calculate release
             environment = os.environ.get("FLASK_ENV", "production")
-            release = self.config["sentry"]["releasePrefix"] + version + self.config["sentry"]["releaseSuffix"]
+            release = sentry_config.releasePrefix + version + sentry_config.releaseSuffix
 
-            # Create custom traces sampler so command and request traces can be configured separately
-            def _sentry_traces_sampler(context):
+            # Create custom traces sampler so different traces can be configured separately
+            def _sentry_traces_sampler(context: Dict[str, Any]) -> Union[float, int, bool]:
                 if context["transaction_context"]["op"] == "command":
-                    return self.config["sentry"]["sampleRate"]["commands"]
+                    return sentry_config.sampleRate.commands
                 elif context["transaction_context"]["op"] == "http.server":
-                    return self.config["sentry"]["sampleRate"]["requests"]
+                    return sentry_config.sampleRate.requests
                 else:
-                    return self.config["sentry"]["sampleRate"]["other"]
+                    return sentry_config.sampleRate.other
 
             # Init the Sentry SDK
             sentry_sdk.init(
-                dsn=self.config["sentry"]["dsn"],
-                max_breadcrumbs=self.config["sentry"]["maxBreadcrumbs"],
+                dsn=sentry_config.dsn,
+                max_breadcrumbs=sentry_config.maxBreadcrumbs,
                 traces_sampler=_sentry_traces_sampler,
-                integrations=[FlaskIntegration(transaction_style="url"), SqlalchemyIntegration()],
+                integrations=[
+                    FlaskIntegration(transaction_style="url"),
+                    SqlalchemyIntegration(),
+                    PureEvalIntegration(),
+                ],
                 environment=environment,
                 release=release,
             )
 
-    def create_sentry_hooks(self):
-        """Add user IP to Sentry if this is enabled, except if user has DNT or GPC headers."""
+    def configure_database(self) -> None:
+        """Configure database session."""
 
-        if "sentry" in self.config and self.config["sentry"]["collectIPs"]:
+        self.engine = create_engine(self.config.database)
+        SessionFactory.configure(bind=self.engine)
+
+    def create_error_hooks(self) -> None:
+        """Add error handlers that shows errors as JSON."""
+
+        @self.app.errorhandler(HTTPException)
+        def _handle_http_exception(error: HTTPException) -> ResponseReturnValue:
+            return (
+                {
+                    "error": {
+                        "status": error.code,
+                        "name": error.name,
+                        "description": error.description,
+                    },
+                },
+                error.code or 500,
+            )
+
+    def create_sentry_hooks(self) -> None:
+        """Add user's IP to Sentry if this is enabled, except if the user has DNT or GPC headers."""
+
+        if self.config.sentry and self.config.sentry.enabled and self.config.sentry.collectIPs:
             from sentry_sdk.integrations import wsgi
             import sentry_sdk
 
             @self.app.before_request
-            def _add_user_ip():
+            def _add_user_ip() -> None:
                 # Add non-identifiable user ID to users with DNT or GPC headers
                 if request.headers.get("DNT") == "1" or request.headers.get("Sec-GPC") == "1":
                     sentry_sdk.set_user({"id": "0000000000000000000000000000000000000000"})
@@ -190,84 +174,53 @@ class GimVicUrnik:
                 # Use Sentry helper to get user IP
                 sentry_sdk.set_user({"ip_address": wsgi.get_client_ip(request.environ)})
 
-    def create_error_hooks(self):
-        """Add error handlers that will show errors as JSON."""
+    def create_database_hooks(self) -> None:
+        """Remove database session after request."""
 
-        @self.app.errorhandler(HTTPException)
-        def resource_not_found(error):
-            return (
-                jsonify(
-                    {
-                        "error": {
-                            "status": error.code,
-                            "name": error.name,
-                            "description": error.description,
-                        },
-                    },
-                ),
-                error.code,
-            )
+        @self.app.teardown_appcontext
+        def _close_session(_error: Optional[BaseException] = None) -> None:
+            Session.remove()
 
-    def create_database_hooks(self):
-        """Create and close the database session for each request."""
-
-        @self.app.before_request
-        def _create_session():
-            self.session = scoped_session(Session)
-
-        @self.app.teardown_request
-        def _close_session(error):
-            if error:
-                self.session.rollback()
-            else:
-                self.session.commit()
-                self.session.close()
-
-    def create_cors_hooks(self):
+    def create_cors_hooks(self) -> None:
         """Allow CORS for specific URLs."""
 
         @self.app.after_request
-        def _apply_cors(response):
-            if "cors" not in self.config:
+        def _apply_cors(response: Response) -> Response:
+            if not self.config.cors:
                 return response
 
             # Set request origin as allowed origin if it is allowed in config
-            if "*" in self.config["cors"]:
+            if "*" in self.config.cors:
                 response.headers["Access-Control-Allow-Origin"] = "*"
-            elif "Origin" in request.headers and request.headers["Origin"] in self.config["cors"]:
+            elif "Origin" in request.headers and request.headers["Origin"] in self.config.cors:
                 response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
 
-            # Allow Sentry-Trace header
-            response.headers["Access-Control-Allow-Headers"] = "Sentry-Trace"
+            # Allow Sentry-Trace and other tracing headers
+            tracing_headers = "Sentry-Trace, Traceparent, Tracestate, Baggage"
+            response.headers["Access-Control-Allow-Headers"] = tracing_headers
 
             return response
 
-    def convert_date_objects(self):
-        """Convert %H%M notation to Python `datetime` object for all hour times."""
-
-        for hour in self.config["hourtimes"]:
-            date_start = datetime.strptime(hour["hour"]["start"], "%H%M")
-            date_end = datetime.strptime(hour["hour"]["end"], "%H%M")
-            hour["hour"]["start"] = timedelta(hours=date_start.hour, minutes=date_start.minute)
-            hour["hour"]["end"] = timedelta(hours=date_end.hour, minutes=date_end.minute)
-
-    def register_route_converters(self):
+    def register_route_converters(self) -> None:
         """Register all custom route converters."""
 
         self.app.url_map.converters["date"] = DateConverter
         self.app.url_map.converters["list"] = ListConverter
 
-    def register_jinja_filters(self):
+    def register_jinja_filters(self) -> None:
         """Register all custom Jinja filters."""
 
-        def format_date(date):
+        def _format_date(date: datetime.date) -> str:
             return date.strftime("%d. %m. %Y")
 
-        filters = self.app.jinja_env.filters
-        filters["date_format_daily"] = format_date
-        filters["date_format_weekly"] = lambda date: f"{format_date(date)} — {format_date((date + timedelta(days=4)))}"
+        def _format_week(date: datetime.date) -> str:
+            return f"{_format_date(date)} — {_format_date((date + datetime.timedelta(days=4)))}"
 
-    def register_commands(self):
+        filters = self.app.jinja_env.filters
+        filters["date"] = _format_date
+        filters["week"] = _format_week
+
+    def register_commands(self) -> None:
         """Register all application commands."""
 
         self.app.cli.add_command(update_timetable_command)
@@ -276,300 +229,24 @@ class GimVicUrnik:
         self.app.cli.add_command(create_database_command)
         self.app.cli.add_command(cleanup_database_command)
 
-        if "debug" in self.config and self.config["debug"]:
-            self.app.cli.add_command(create_substitutions_command)
-
-    def register_routes(self):
+    def register_routes(self) -> None:
         """Register all application routes."""
 
-        def create_feed(filter, name, type, format, display_date=None, display_date_type="daily"):
-            query = (
-                self.session.query(Document.date, Document.type, Document.url, Document.description)
-                .filter(filter)
-                .order_by(Document.date)
-            )
-
-            content = render_template(
-                f"{format}.xml",
-                urls=self.config["urls"],
-                name=name,
-                type=type,
-                entries=query,
-                last_updated=max(model.date for model in query),
-                display_date=display_date,
-                display_date_type=display_date_type,
-            )
-
-            return (
-                content,
-                200,
-                {"Content-Type": f"application/{format}+xml; charset=utf-8"},
-            )
-
-        @self.app.route("/list/classes")
-        def _list_classes():
-            return jsonify([model.name for model in self.session.query(Class).order_by(Class.name)])
-
-        @self.app.route("/list/teachers")
-        def _list_teachers():
-            return jsonify([model.name for model in self.session.query(Teacher).order_by(Teacher.name)])
-
-        @self.app.route("/list/classrooms")
-        def _list_classrooms():
-            return jsonify([model.name for model in self.session.query(Classroom).order_by(Classroom.name)])
-
-        @self.app.route("/timetable")
-        def _get_timetable():
-            return jsonify(list(Entity.get_lessons(self.session)))
-
-        @self.app.route("/timetable/classes/<list:classes>")
-        def _get_timetable_for_classes(classes):
-            return jsonify(list(Class.get_lessons(self.session, classes)))
-
-        @self.app.route("/timetable/teachers/<list:teachers>")
-        def _get_timetable_for_teachers(teachers):
-            return jsonify(list(Teacher.get_lessons(self.session, teachers)))
-
-        @self.app.route("/timetable/classrooms/<list:classrooms>")
-        def _get_timetable_for_classrooms(classrooms):
-            return jsonify(list(Classroom.get_lessons(self.session, classrooms)))
-
-        @self.app.route("/timetable/classrooms/empty")
-        def _get_timetable_for_empty_classrooms():
-            return jsonify(list(Classroom.get_empty(self.session)))
-
-        @self.app.route("/substitutions/date/<date:date>")
-        def _get_substitutions(date):
-            return jsonify(list(Entity.get_substitutions(self.session, date)))
-
-        @self.app.route("/substitutions/date/<date:date>/classes/<list:classes>")
-        def _get_substitutions_for_classes(date, classes):
-            return jsonify(list(Class.get_substitutions(self.session, date, classes)))
-
-        @self.app.route("/substitutions/date/<date:date>/teachers/<list:teachers>")
-        def _get_substitutions_for_teachers(date, teachers):
-            return jsonify(list(Teacher.get_substitutions(self.session, date, teachers)))
-
-        @self.app.route("/substitutions/date/<date:date>/classrooms/<list:classrooms>")
-        def _get_substitutions_for_classrooms(date, classrooms):
-            return jsonify(list(Classroom.get_substitutions(self.session, date, classrooms)))
-
-        @self.app.route("/schedule/date/<date:date>")
-        def _get_lunch_schedule(date):
-            return jsonify(
-                [
-                    {
-                        "class": model.class_.name,
-                        "date": model.date.strftime("%Y-%m-%d"),
-                        "time": model.time.strftime("%H:%M"),
-                        "location": model.location,
-                        "notes": model.notes,
-                    }
-                    for model in (
-                        self.session.query(LunchSchedule)
-                        .join(Class)
-                        .filter(LunchSchedule.date == date)
-                        .order_by(LunchSchedule.time, LunchSchedule.class_)
-                    )
-                ]
-            )
-
-        @self.app.route("/schedule/date/<date:date>/classes/<list:classes>")
-        def _get_lunch_schedule_for_class(date, classes):
-            return jsonify(
-                [
-                    {
-                        "class": model.class_.name,
-                        "date": model.date.strftime("%Y-%m-%d"),
-                        "time": model.time.strftime("%H:%M"),
-                        "location": model.location,
-                        "notes": model.notes,
-                    }
-                    for model in (
-                        self.session.query(LunchSchedule)
-                        .join(Class)
-                        .filter(LunchSchedule.date == date, Class.name.in_(classes))
-                        .order_by(LunchSchedule.time, LunchSchedule.class_)
-                    )
-                ]
-            )
-
-        @self.app.route("/menus/date/<date:date>")
-        def _get_menus(date):
-            snack = self.session.query(SnackMenu).filter(SnackMenu.date == date).first()
-            lunch = self.session.query(LunchMenu).filter(LunchMenu.date == date).first()
-
-            if snack:
-                snack = {
-                    "normal": snack.normal,
-                    "poultry": snack.poultry,
-                    "vegetarian": snack.vegetarian,
-                    "fruitvegetable": snack.fruitvegetable,
-                }
-
-            if lunch:
-                lunch = {
-                    "normal": lunch.normal,
-                    "vegetarian": lunch.vegetarian,
-                }
-
-            return jsonify(
-                {
-                    "snack": snack,
-                    "lunch": lunch,
-                }
-            )
-
-        @self.app.route("/documents")
-        def _get_documents():
-            query = self.session.query(Document.date, Document.type, Document.url, Document.description).order_by(Document.date)
-
-            config = self.config["sources"]["eclassroom"]["pluginfile"]
-            token = self.config["sources"]["eclassroom"]["token"]
-
-            return jsonify(
-                [
-                    {
-                        "date": model.date.strftime("%Y-%m-%d"),
-                        "type": model.type,
-                        "url": model.url if not config["shareToken"] else tokenize_url(model.url, config, token),
-                        "description": model.description,
-                    }
-                    for model in query
-                ]
-            )
-
-        @self.app.route("/feeds/circulars.atom")
-        def _circulars_get_atom():
-            return create_feed(
-                filter=or_(Document.type == "circular", Document.type == "other"),
-                name="Okrožnice",
-                type="circulars",
-                format="atom",
-                display_date=False,
-            )
-
-        @self.app.route("/feeds/circulars.rss")
-        def _circulars_get_rss():
-            return create_feed(
-                filter=or_(Document.type == "circular", Document.type == "other"),
-                name="Okrožnice",
-                type="circulars",
-                format="rss",
-                display_date=False,
-            )
-
-        @self.app.route("/feeds/substitutions.atom")
-        def _substitutions_get_atom():
-            return create_feed(
-                filter=Document.type == "substitutions",
-                name="Nadomeščanja",
-                type="substitutions",
-                format="atom",
-                display_date=True,
-                display_date_type="daily",
-            )
-
-        @self.app.route("/feeds/substitutions.rss")
-        def _substitutions_get_rss():
-            return create_feed(
-                filter=Document.type == "substitutions",
-                name="Nadomeščanja",
-                type="substitutions",
-                format="rss",
-                display_date=True,
-                display_date_type="daily",
-            )
-
-        @self.app.route("/feeds/schedules.atom")
-        def _schedules_get_atom():
-            return create_feed(
-                filter=Document.type == "lunch-schedule",
-                name="Razporedi delitve kosila",
-                type="schedules",
-                format="atom",
-                display_date=True,
-                display_date_type="daily",
-            )
-
-        @self.app.route("/feeds/schedules.rss")
-        def _schedules_get_rss():
-            return create_feed(
-                filter=Document.type == "lunch-schedule",
-                name="Razporedi delitve kosila",
-                type="schedules",
-                format="rss",
-                display_date=True,
-                display_date_type="daily",
-            )
-
-        @self.app.route("/feeds/menus.atom")
-        def _menu_get_atom():
-            return create_feed(
-                filter=or_(Document.type == "snack-menu", Document.type == "lunch-menu"),
-                name="Jedilniki",
-                type="menus",
-                format="atom",
-                display_date=True,
-                display_date_type="weekly",
-            )
-
-        @self.app.route("/feeds/menus.rss")
-        def _menu_get_rss():
-            return create_feed(
-                filter=or_(Document.type == "snack-menu", Document.type == "lunch-menu"),
-                name="Jedilniki",
-                type="menus",
-                format="rss",
-                display_date=True,
-                display_date_type="weekly",
-            )
-
-        @self.app.route("/calendar/combined/<list:classes>")
-        def _get_calendar_for_classes(classes):
-            return create_school_calendar(
-                Class.get_substitutions(self.session, None, classes),
-                Class.get_lessons(self.session, classes),
-                self.config["hourtimes"],
-                f"Koledar - {', '.join(classes)} - Gimnazija Vič",
-            )
-
-        @self.app.route("/calendar/timetable/<list:classes>")
-        def _get_calendar_timetable_for_classes(classes):
-            return create_school_calendar(
-                Class.get_substitutions(self.session, None, classes),
-                Class.get_lessons(self.session, classes),
-                self.config["hourtimes"],
-                f"Urnik - {', '.join(classes)} - Gimnazija Vič",
-                substitutions=False,
-            )
-
-        @self.app.route("/calendar/substitutions/<list:classes>")
-        def _get_calendar_substitutions_for_classes(classes):
-            return create_school_calendar(
-                Class.get_substitutions(self.session, None, classes),
-                Class.get_lessons(self.session, classes),
-                self.config["hourtimes"],
-                f"Nadomeščanja - {', '.join(classes)} - Gimnazija Vič",
-                timetable=False,
-            )
-
-        @self.app.route("/calendar/schedules/<list:classes>")
-        def _get_calendar_schedules_for_classes(classes):
-            return create_schedule_calendar(
-                self.session.query(LunchSchedule)
-                .join(Class)
-                .filter(Class.name.in_(classes))
-                .order_by(LunchSchedule.time, LunchSchedule.class_),
-                f"Razporedi delitve kosila - {', '.join(classes)} - Gimnazija Vič",
-            )
+        ListHandler.register(self.app, self.config)
+        TimetableHandler.register(self.app, self.config)
+        SubstitutionsHandler.register(self.app, self.config)
+        MenusHandler.register(self.app, self.config)
+        ScheduleHandler.register(self.app, self.config)
+        DocumentsHandler.register(self.app, self.config)
+        FeedHandler.register(self.app, self.config)
+        CalendarHandler.register(self.app, self.config)
 
 
-def create_app():
+def create_app() -> Flask:
     """Application factory that accepts a configuration file from environment variable."""
 
     if "GIMVICURNIK_CONFIG" in os.environ:
-        configfile = os.environ.get("GIMVICURNIK_CONFIG")
+        configfile = os.environ["GIMVICURNIK_CONFIG"]
     else:
         raise ConfigError("Missing config filename")
 

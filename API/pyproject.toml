@@ -37,21 +37,26 @@ classifiers = [
 gimvicurnik = "gimvicurnik.__main__:main"
 
 # TODO: Replace pdf2docx with PyMuPDF/pdfplumber/pdfminer
+# TODO: Update to stable Flask once 2.2.0 is released
+# TODO: Update to stable cattrs once 22.2.0 is released
 [tool.poetry.dependencies]
 python = "^3.8"
 PyYAML = "^6.0.0"
-Flask = "^2.1.2"
+flask = { git = "https://github.com/pallets/flask.git", rev = "900e118" }
 click = "^8.1.3"
 schema = "^0.7.5"
+attrs = "21.4.0"
+cattrs = { git = "https://github.com/python-attrs/cattrs.git", rev = "56eda37" }
 requests = "^2.28.1"
 SQLAlchemy = "^1.4.39"
 pdf2docx = "=0.4.6"
 openpyxl = "^3.0.10"
 icalendar = "^4.1.0"
-beautifulsoup4 = { extras = ["lxml"], version = "^4.11.1" }
+beautifulsoup4 = { version = "^4.11.1", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { extras = ["flask", "sqlalchemy"], version = "^1.6.0", optional = true }
+sentry-sdk = { version = "^1.7.2", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+setuptools = { version = "^63.2.0", optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.0.2", optional = true }
@@ -64,9 +69,16 @@ black = "^22.6.0"
 flake8-black = "^0.3.3"
 flake8-bugbear = "^22.7.1"
 mypy = "^0.961"
+typing-extensions = "^4.3.0"
+sqlalchemy2-stubs = "^0.0.2-alpha.24"
+types-setuptools = "^63.2.0"
+types-pyyaml = "^6.0.10"
+types-openpyxl = "^3.0.4"
+types-requests = "^2.28.1"
+types-beautifulsoup4 = "^4.11.3"
 
 [tool.poetry.extras]
-sentry = ["sentry-sdk"]
+sentry = ["sentry-sdk", "setuptools"]
 mysql-py = ["PyMySQL"]
 mysql-c = ["mysqlclient"]
 pgsql = ["psycopg2"]
@@ -79,7 +91,7 @@ format = "grouped"
 "flake8-black" = ["+*"]
 "flake8-bugbear" = ["+*"]
 "mccabe" = ["+*"]
-"pycodestyle" = ["+*", "-E203", "-W503"]
+"pycodestyle" = ["+*", "-E203", "-E501", "-W503"]
 "pyflakes" = ["+*", "-F401"]
 
 [tool.black]
@@ -87,6 +99,7 @@ line-length = 130
 
 [tool.mypy]
 python_version = 3.8
+plugins = "sqlalchemy.ext.mypy.plugin"
 show_column_numbers = true
 show_error_codes = true
 allow_redefinition = true
