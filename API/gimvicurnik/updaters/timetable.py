@@ -44,8 +44,13 @@ class TimetableUpdater:
         self.hash = str(hashlib.sha256(content).hexdigest())
 
     def _parse(self) -> None:
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == DocumentType.TIMETABLE, Document.url == self.url)
+            .first()
+        )
+
         # Skip parsing if the timetable is unchanged
-        document = self.session.query(Document).filter(Document.type == DocumentType.TIMETABLE, Document.url == self.url).first()
         if document and document.hash == self.hash:
             self.logger.info("Skipped because the timetable is unchanged")
             self.logger.debug("Hash: %s", document.hash)
@@ -62,6 +67,7 @@ class TimetableUpdater:
             lessons[key].append(value.strip())
 
         # Convert raw data into a model
+        # fmt: off
         models = [
             {
                 "day": lesson[5],
@@ -73,6 +79,7 @@ class TimetableUpdater:
             }
             for _, lesson in lessons.items()
         ]
+        # fmt: on
 
         self.session.query(Lesson).delete()
         self.session.bulk_insert_mappings(Lesson, models)

@@ -66,7 +66,10 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info("Preparing iCalendar event", extra={"type": "timetable", "source": subject})
+                logger.info(
+                    "Preparing iCalendar event",
+                    extra={"type": "timetable", "source": subject},
+                )
 
                 # Create event and add internal properties
                 event = Event()
@@ -91,15 +94,22 @@ def create_school_calendar(
                 event.add("SUMMARY", subject["subject"])
                 event.add("ORGANIZER", subject["teacher"])
                 event.add("LOCATION", subject["classroom"])
+                event.add("DURATION", timedelta(minutes=45))
 
-                # Event "starts" on -08-31, so it can repeat properly
+                # Lesson "starts" on -08-31, so it can repeat properly
                 start = datetime(year, 8, 31) + times[subject["time"]].start
                 event.add("DTSTART", start)
                 event.add("EXDATE", start)
 
-                # Every lesson lasts 45min and repeats every week
-                event.add("DURATION", timedelta(minutes=45))
-                event.add("RRULE", vRecur(freq="WEEKLY", byday=weekdays[subject["day"]], until=datetime(year + 1, 6, 25)))
+                # Lesson repeats every week
+                event.add(
+                    "RRULE",
+                    vRecur(
+                        freq="WEEKLY",
+                        byday=weekdays[subject["day"]],
+                        until=datetime(year + 1, 6, 25),
+                    ),
+                )
 
                 # Add lesson to the week table
                 weektable[subject["day"]][subject["time"]] = event
@@ -113,7 +123,10 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info("Preparing iCalendar event", extra={"type": "substitution", "source": subject})
+                logger.info(
+                    "Preparing iCalendar event",
+                    extra={"type": "substitution", "source": subject},
+                )
 
                 # Create event and add internal properties
                 event = Event()
@@ -178,7 +191,10 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
             span.set_tag("event.time", model.time)
             span.set_data("event.source", model)
 
-            logger.info("Preparing iCalendar event", extra={"type": "lunch-schedule", "source": model})
+            logger.info(
+                "Preparing iCalendar event",
+                extra={"type": "lunch-schedule", "source": model},
+            )
 
             # Assert date and time exist, so mypy does not complain
             if typing.TYPE_CHECKING:
@@ -192,15 +208,25 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
             event.add("COLOR", "darkblue")
             event.add(
                 "UID",
-                sha256(f"{model.date}{model.time}{model.class_.name}{model.location}{model.notes}".encode("utf-8")).hexdigest(),
+                sha256(
+                    (
+                        str(model.date)
+                        + str(model.time)
+                        + str(model.class_.name)
+                        + str(model.location)
+                        + str(model.notes)
+                    ).encode("utf-8")
+                ).hexdigest(),
             )
 
             # Add lunch schedule properties
+            start = datetime.combine(model.date, model.time)
+            end = start + timedelta(minutes=15)
             event.add("SUMMARY", "Kosilo")
             event.add("DESCRIPTION", model.notes or "")
             event.add("LOCATION", model.location)
-            event.add("DTSTART", datetime.combine(model.date, model.time))
-            event.add("DTEND", datetime.combine(model.date, model.time) + timedelta(minutes=15))
+            event.add("DTSTART", start)
+            event.add("DTEND", end)
 
             # Add lunch schedule to the calendar
             calendar.add_component(event)
@@ -218,7 +244,7 @@ class CalendarHandler(BaseHandler):
     @classmethod
     def routes(cls, bp: Blueprint, config: Config) -> None:
         @bp.route("/calendar/combined/<list:classes>")
-        def get_calendar_combined_for_classes(classes: List[str]) -> Response:
+        def get_combined_calendar_for_classes(classes: List[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -228,7 +254,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/timetable/<list:classes>")
-        def get_calendar_timetable_for_classes(classes: List[str]) -> Response:
+        def get_timetable_calendar_for_classes(classes: List[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -239,7 +265,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/substitutions/<list:classes>")
-        def get_calendar_substitutions_for_classes(classes: List[str]) -> Response:
+        def get_substitutions_calendar_for_classes(classes: List[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -250,7 +276,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/schedules/<list:classes>")
-        def get_calendar_schedules_for_classes(classes: List[str]) -> Response:
+        def get_schedules_calendar_for_classes(classes: List[str]) -> Response:
             return create_schedule_calendar(
                 Session.query(LunchSchedule)
                 .join(Class)

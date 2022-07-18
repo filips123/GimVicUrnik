@@ -44,7 +44,10 @@ except ImportError:
     sentry_available = False
 
 
-def with_transaction(pass_transaction: bool = False, **kwargs: Any) -> Callable[[Callable[TP, TR]], Callable[TP, TR]]:
+def with_transaction(
+    pass_transaction: bool = False,
+    **kwargs: Any,
+) -> Callable[[Callable[TP, TR]], Callable[TP, TR]]:
     """
     Wrap the function inside the Sentry transaction.
 
@@ -74,7 +77,10 @@ def with_transaction(pass_transaction: bool = False, **kwargs: Any) -> Callable[
     return _transaction_decorator
 
 
-def with_span(pass_span: bool = False, **kwargs: Any) -> Callable[[Callable[SP, SR]], Callable[SP, SR]]:
+def with_span(
+    pass_span: bool = False,
+    **kwargs: Any,
+) -> Callable[[Callable[SP, SR]], Callable[SP, SR]]:
     """
     Wrap the function inside the Sentry span.
 

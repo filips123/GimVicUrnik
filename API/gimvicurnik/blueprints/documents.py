@@ -18,7 +18,12 @@ class DocumentsHandler(BaseHandler):
     def routes(cls, bp: Blueprint, config: Config) -> None:
         @bp.route("/documents")
         def get_documents() -> List[Dict[str, Any]]:
-            query = Session.query(Document.date, Document.type, Document.url, Document.description).order_by(Document.date)
+            # fmt: off
+            query = (
+                Session.query(Document.date, Document.type, Document.url, Document.description)
+                .order_by(Document.date)
+            )
+            # fmt: on
 
             return [
                 {

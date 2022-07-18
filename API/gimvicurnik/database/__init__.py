@@ -3,7 +3,19 @@ from __future__ import annotations
 import enum
 import typing
 
-from sqlalchemy import Column, Date, Enum, ForeignKey, Index, Integer, SmallInteger, Text, Time, func, or_
+from sqlalchemy import (
+    Column,
+    Date,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    SmallInteger,
+    Text,
+    Time,
+    func,
+    or_,
+)
 from sqlalchemy.orm import aliased, declarative_base, relationship, scoped_session, sessionmaker
 
 if typing.TYPE_CHECKING:
@@ -101,6 +113,7 @@ class Entity:
         original_classroom = aliased(Classroom)
         classroom = aliased(Classroom)
 
+        # fmt: off
         query = (
             Session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
             .join(Class)
@@ -110,6 +123,7 @@ class Entity:
             .join(classroom, Substitution.classroom_id == classroom.id, isouter=True)
             .order_by(Substitution.day, Substitution.time)
         )
+        # fmt: on
 
         if date:
             query = query.filter(Substitution.date == date)

@@ -111,14 +111,19 @@ class MenuUpdater:
         date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)
 
         if date:
-            return datetime.date(year=int(date.group(3)), month=short_month_to_number[date.group(2)], day=int(date.group(1)))
+            return datetime.date(
+                year=int(date.group(3)),
+                month=short_month_to_number[date.group(2)],
+                day=int(date.group(1)),
+            )
 
         # Example: 09-splet-oktober-1-teden-09-M.pdf
         # Another example: 05-splet-februar-3-teden-M-PDF.pdf
         # Another example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
         # Another example: 01-splet-september-4-teden-02-M-popravek.pdf
         # Another example: 01-splet-januar1-teden-02-K.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)
+        rgx = r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+"
+        date = re.search(rgx, url)
 
         if date:
             year = datetime.datetime.now().year
@@ -157,8 +162,13 @@ class MenuUpdater:
         span.set_tag("document.type", "snack-menu")
         span.set_tag("document.format", format)
 
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == DocumentType.SNACK_MENU, Document.url == url)
+            .first()
+        )
+
         # Skip unchanged lunch menu documents
-        document = self.session.query(Document).filter(Document.type == DocumentType.SNACK_MENU, Document.url == url).first()
         if document and document.hash == hash:
             self.logger.info("Skipped because the snack menu document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
@@ -232,7 +242,14 @@ class MenuUpdater:
                     # Store the menu after the end of table
                     if wr[0].border.bottom.color:
                         if menu and menu["date"]:
-                            model = self.session.query(SnackMenu).filter(SnackMenu.date == menu["date"]).first()
+                            # fmt: off
+                            model = (
+                                self.session.query(SnackMenu)
+                                .filter(SnackMenu.date == menu["date"])
+                                .first()
+                            )
+                            # fmt: on
+
                             if not model:
                                 model = SnackMenu()
 
@@ -311,8 +328,13 @@ class MenuUpdater:
         span.set_tag("document.type", "lunch-menu")
         span.set_tag("document.format", format)
 
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == DocumentType.LUNCH_MENU, Document.url == url)
+            .first()
+        )
+
         # Skip unchanged lunch menu documents
-        document = self.session.query(Document).filter(Document.type == DocumentType.LUNCH_MENU, Document.url == url).first()
         if document and document.hash == hash:
             self.logger.info("Skipped because the lunch menu document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
@@ -383,7 +405,14 @@ class MenuUpdater:
 
                     if wr[0].border.bottom.color:
                         if menu and menu["date"]:
-                            model = self.session.query(LunchMenu).filter(LunchMenu.date == menu["date"]).first()
+                            # fmt: off
+                            model = (
+                                self.session.query(LunchMenu)
+                                .filter(LunchMenu.date == menu["date"])
+                                .first()
+                            )
+                            # fmt: on
+
                             if not model:
                                 model = LunchMenu()
 

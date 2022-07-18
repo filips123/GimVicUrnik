@@ -36,6 +36,14 @@ normalize_url = lambda url, *args: url
 tokenize_url = lambda url, *args: url
 
 
+header_substitutions = ["ODSOTNI UČITELJ/ICA", "URA", "RAZRED", "UČILNICA", "NADOMEŠČA", "PREDMET", "OPOMBA"]
+header_lesson_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMETA", "UČILNICA", "OPOMBA"]
+header_subject_change = ["RAZRED", "URA", "UČITELJ", "PREDMET", "UČILNICA", "OPOMBA"]
+header_classroom_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMET", "IZ UČILNICE", "V UČILNICO", "OPOMBA"]
+header_more_teachers = ["URA", "UČITELJ", "RAZRED", "UČILNICA", "OPOMBA"]
+header_reservations = ["URA", "UČILNICA", "REZERVIRAL/A", "OPOMBA"]
+
+
 class EClassroomUpdater:
     def __init__(self, config: ConfigSourcesEClassroom, session: Session) -> None:
         self.url = config.webserviceUrl
@@ -90,7 +98,11 @@ class EClassroomUpdater:
             if object["course"] != self.course:
                 continue
 
-            yield object["name"], object["externalurl"], datetime.datetime.fromtimestamp(object["timemodified"])
+            yield (
+                object["name"],
+                object["externalurl"],
+                datetime.datetime.fromtimestamp(object["timemodified"]),
+            )
 
     def _get_documents(self) -> Iterator[Tuple[str, str, datetime.date]]:
         params = {
@@ -137,7 +149,14 @@ class EClassroomUpdater:
     @with_span(op="document", pass_span=True)
     def _store_generic(self, name: str, url: str, date: datetime.date, urltype: str, span: Span) -> None:
         # Add or skip new generic document
-        model, created = get_or_create(session=self.session, model=Document, date=date, type=urltype, url=url, description=name)
+        model, created = get_or_create(
+            session=self.session,
+            model=Document,
+            date=date,
+            type=urltype,
+            url=url,
+            description=name,
+        )
 
         span.description = model.url
         span.set_tag("document.url", model.url)
@@ -165,8 +184,15 @@ class EClassroomUpdater:
         span.set_tag("document.url", url)
         span.set_tag("document.type", "substitutions")
 
+        # fmt: off
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == "substitutions", Document.url == url)
+            .first()
+        )
+        # fmt: on
+
         # Skip unchanged substitutions documents
-        document = self.session.query(Document).filter(Document.type == "substitutions", Document.url == url).first()
         if document and document.hash == hash:
             self.logger.info("Skipped because the substitutions document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
@@ -191,13 +217,6 @@ class EClassroomUpdater:
         # Extract all tables from PDF file
         tables = with_span(op="extract")(extract_tables)(filename)
         os.remove(filename)
-
-        header_substitutions = ["ODSOTNI UČITELJ/ICA", "URA", "RAZRED", "UČILNICA", "NADOMEŠČA", "PREDMET", "OPOMBA"]
-        header_lesson_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMETA", "UČILNICA", "OPOMBA"]
-        header_subject_change = ["RAZRED", "URA", "UČITELJ", "PREDMET", "UČILNICA", "OPOMBA"]
-        header_classroom_change = ["RAZRED", "URA", "UČITELJ/ICA", "PREDMET", "IZ UČILNICE", "V UČILNICO", "OPOMBA"]
-        header_more_teachers = ["URA", "UČITELJ", "RAZRED", "UČILNICA", "OPOMBA"]
-        header_reservations = ["URA", "UČILNICA", "REZERVIRAL/A", "OPOMBA"]
 
         substitutions = []
 
@@ -233,7 +252,8 @@ class EClassroomUpdater:
                 if parser_type == "substitutions":
                     if not any(row):
                         self.logger.error(
-                            "Something is wrong with the substitutions file; the row should have at least one non-empty value",
+                            "Something is wrong with the substitutions file; "
+                            "the row should have at least one non-empty value",
                             extra={"row": row, "url": url},
                             stack_info=True,
                         )
@@ -243,9 +263,12 @@ class EClassroomUpdater:
                     subject = self._normalize_other_names(row[5])
 
                     # Get original teacher if it is specified
+                    # fmt: off
                     original_teacher = self._normalize_teacher_name(row[0]) if row[0] else last_original_teacher
                     last_original_teacher = original_teacher
+                    # fmt: on
 
+                    # Get classroom (which stays the same)
                     original_classroom = self._normalize_other_names(row[3])
                     classroom = original_classroom
 
@@ -368,7 +391,10 @@ class EClassroomUpdater:
                     # fmt: on
 
         # Store substitutions in database
-        substitutions = [dict(element) for element in {tuple(substitution.items()) for substitution in substitutions}]
+        # TODO: Is this really needed?
+        substitutions = [
+            dict(element) for element in {tuple(substitution.items()) for substitution in substitutions}
+        ]
 
         self.session.query(Substitution).filter(Substitution.date == date).delete()
         self.session.bulk_insert_mappings(Substitution, substitutions)
@@ -408,8 +434,13 @@ class EClassroomUpdater:
         span.set_tag("document.url", url)
         span.set_tag("document.type", "lunch-schedule")
 
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == "lunch-schedule", Document.url == url)
+            .first()
+        )
+
         # Skip unchanged lunch schedule document documents
-        document = self.session.query(Document).filter(Document.type == "lunch-schedule", Document.url == url).first()
         if document and document.hash == hash:
             self.logger.info("Skipped because the lunch schedule document for %s is unchanged", document.date)
             self.logger.debug("URL: %s", document.url)
@@ -434,13 +465,13 @@ class EClassroomUpdater:
 
         # Daily lunch schedule format, used until October 2020
         # Example: delitevKosila-0-15-okt2020-CET-objava.pdf
-        if re.search(r"\/delitevKosila-0-[0-9]+-[a-z0-9]+-[A-Z]{3}-(?i:objava)\.pdf$", url):
+        if re.search(r"/delitevKosila-0-\d+-[a-z\d]+-[A-Z]{3}-(?i:objava)\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
         # Weekly lunch schedule format, used in February 2021
         # Example: delitevKosila-15-19-feb2021.pdf
-        elif re.search(r"\/delitevKosila-[1-9][0-9]+-[1-9][0-9]+-[a-z0-9]+(?:-popravek-[a-z0-9]+)?\.pdf$", url):
+        elif re.search(r"/delitevKosila-[1-9]\d+-[1-9]\d+-[a-z\d]+(?:-popravek-[a-z\d]+)?\.pdf$", url):
             date = self._get_weekly_lunch_schedule_date(name, url)
             self._parse_weekly_lunch_schedule(date, tables)
 
@@ -448,7 +479,7 @@ class EClassroomUpdater:
         # Example: delitevKosila-mar9-2021-TOR-objava-PDF-0.pdf
         # Example: delitevKosila-1sept2021-SRE-objava-PDF.pdf
         # Example: delitevKosila-1feb2022-objava-PDF.pdf
-        elif re.search(r"\/delitevKosila-[a-z0-9]+(?:-[0-9]+)?(?:-[A-Z]{3})?-(?i:objava).*\.pdf$", url):
+        elif re.search(r"/delitevKosila-[a-z\d]+(?:-\d+)?(?:-[A-Z]{3})?-(?i:objava).*\.pdf$", url):
             date = self._get_daily_lunch_schedule_date(name, url)
             self._parse_daily_lunch_schedule(date, tables)
 
@@ -458,7 +489,11 @@ class EClassroomUpdater:
 
         # Get lunch schedule for the same date if schedule was updated and URL has changed
         if not document:
-            document = self.session.query(Document).filter(Document.type == "lunch-schedule", Document.date == date).first()
+            document = (
+                self.session.query(Document)
+                .filter(Document.type == "lunch-schedule", Document.date == date)
+                .first()
+            )
 
         # Update or create a document
         if not document:
@@ -553,7 +588,10 @@ class EClassroomUpdater:
             "dec": 12,
         }
 
-        search = re.search(r"\/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$", url)
+        search = re.search(
+            r"/delitevKosila-([1-9][0-9]+)-[0-9][1-9]+-([a-z]+)([1-9][0-9]+)(?:-popravek-[a-z0-9]+)?\.pdf$",
+            url,
+        )
         return datetime.date(year=int(search.group(3)), month=month_to_number[search.group(2)], day=int(search.group(1)))  # type: ignore # FIXME
 
     def _parse_daily_lunch_schedule(self, date: datetime.date, tables: List[Any]) -> None:
@@ -624,7 +662,11 @@ class EClassroomUpdater:
 
         for table in tables:
             # Skip instructions
-            if not table[0][0] or "V jedilnico prihajate z maskami" in table[0][0] or "JEDILNICA 1" in table[0][0]:
+            if (
+                not table[0][0]
+                or "V jedilnico prihajate z maskami" in table[0][0]
+                or "JEDILNICA 1" in table[0][0]
+            ):
                 continue
 
             for row in table:

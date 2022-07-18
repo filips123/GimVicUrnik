@@ -22,13 +22,22 @@ class SubstitutionsHandler(BaseHandler):
             return list(Entity.get_substitutions(date))
 
         @bp.route("/substitutions/date/<date:date>/classes/<list:classes>")
-        def get_substitutions_for_classes(date: datetime.date, classes: List[str]) -> List[Dict[str, Any]]:
+        def get_substitutions_for_classes(
+            date: datetime.date,
+            classes: List[str],
+        ) -> List[Dict[str, Any]]:
             return list(Class.get_substitutions(date, classes))
 
         @bp.route("/substitutions/date/<date:date>/teachers/<list:teachers>")
-        def get_substitutions_for_teachers(date: datetime.date, teachers: List[str]) -> List[Dict[str, Any]]:
+        def get_substitutions_for_teachers(
+            date: datetime.date,
+            teachers: List[str],
+        ) -> List[Dict[str, Any]]:
             return list(Teacher.get_substitutions(date, teachers))
 
         @bp.route("/substitutions/date/<date:date>/classrooms/<list:classrooms>")
-        def get_substitutions_for_classrooms(date: datetime.date, classrooms: List[str]) -> List[Dict[str, Any]]:
+        def get_substitutions_for_classrooms(
+            date: datetime.date,
+            classrooms: List[str],
+        ) -> List[Dict[str, Any]]:
             return list(Classroom.get_substitutions(date, classrooms))

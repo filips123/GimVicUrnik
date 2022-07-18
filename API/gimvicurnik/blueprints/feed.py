@@ -94,7 +94,10 @@ class FeedHandler(BaseHandler):
         @bp.route("/feed/circulars.rss", defaults={"feed_format": FeedFormat.RSS})
         def get_circulars_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
             return _create_feed(
-                query_filter=or_(Document.type == DocumentType.CIRCULAR, Document.type == DocumentType.OTHER),
+                query_filter=or_(
+                    Document.type == DocumentType.CIRCULAR,
+                    Document.type == DocumentType.OTHER,
+                ),
                 feed_name="Okrožnice",
                 feed_type=FeedType.CIRCULARS,
                 feed_format=feed_format,
@@ -126,7 +129,10 @@ class FeedHandler(BaseHandler):
         @bp.route("/feed/menus.rss", defaults={"feed_format": FeedFormat.RSS})
         def get_menus_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
             return _create_feed(
-                query_filter=or_(Document.type == DocumentType.SNACK_MENU, Document.type == DocumentType.LUNCH_MENU),
+                query_filter=or_(
+                    Document.type == DocumentType.SNACK_MENU,
+                    Document.type == DocumentType.LUNCH_MENU,
+                ),
                 feed_name="Jedilniki",
                 feed_type=FeedType.MENUS,
                 feed_format=feed_format,
