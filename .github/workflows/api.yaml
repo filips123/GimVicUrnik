@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Configure Poetry cache
         uses: actions/cache@v3
@@ -48,11 +46,44 @@ jobs:
           ~/.local/bin/poetry config virtualenvs.create false
           echo "~/.local/bin" >> $GITHUB_PATH
 
-      - name: Install tools
-        run: ~/.local/share/pypoetry/venv/bin/pip install poetry-dynamic-versioning
-
       - name: Install dependencies
         run: poetry install
 
       - name: Lint the project
         run: flakeheaven lint
+
+  typecheck:
+    name: Typechecking
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure Poetry cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pypoetry
+            ~/.local/share/pypoetry
+            ~/.local/bin/poetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+          ~/.local/bin/poetry config virtualenvs.create false
+          echo "~/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Typecheck the project
+        run: mypy gimvicurnik
