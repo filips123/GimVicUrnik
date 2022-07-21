@@ -19,6 +19,7 @@ export interface Lesson {
 
 export interface Substitution extends Lesson {
   date: string;
+  notes: string;
   'original-teacher': string;
   'original-classroom': string;
 }

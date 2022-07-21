@@ -144,12 +144,15 @@ def create_school_calendar(
                             + str(subject["class"])
                             + str(subject["classroom"])
                             + str(subject["teacher"])
+                            + str(subject["original-classroom"])
+                            + str(subject["original-teacher"])
                         ).encode("utf-8")
                     ).hexdigest(),
                 )
 
                 # Add basic substitution properties
                 event.add("SUMMARY", subject["subject"])
+                event.add("DESCRIPTION", subject["notes"] or "")
                 event.add("ORGANIZER", subject["teacher"])
                 event.add("LOCATION", subject["classroom"])
 
@@ -224,7 +227,7 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
             end = start + timedelta(minutes=15)
             event.add("SUMMARY", "Kosilo")
             event.add("DESCRIPTION", model.notes or "")
-            event.add("LOCATION", model.location)
+            event.add("LOCATION", model.location or "")
             event.add("DTSTART", start)
             event.add("DTEND", end)
 

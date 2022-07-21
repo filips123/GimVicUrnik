@@ -7,6 +7,7 @@ import re
 import tempfile
 import typing
 from datetime import date, datetime, timezone
+from itertools import product
 
 import requests
 from pdf2docx import extract_tables  # type: ignore
@@ -22,9 +23,6 @@ if typing.TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
-    from typing import Iterator
-    from sqlalchemy.orm import Session
-    from sentry_sdk.tracing import Span
 
 
 class ParserType(enum.Enum):
@@ -34,6 +32,7 @@ class ParserType(enum.Enum):
     CLASSROOM_CHANGE = "classroom-change"
     MORE_TEACHERS = "more-teachers"
     RESERVATIONS = "reservations"
+    UNKNOWN = "unknown"
 
 
 class EClassroomUpdater(BaseMultiUpdater):
@@ -219,23 +218,26 @@ class EClassroomUpdater(BaseMultiUpdater):
         os.remove(filename)
 
         if document.type == DocumentType.SUBSTITUTIONS:
-            self._parse_substitutions(tables, effective, document.url)
+            self._parse_substitutions(tables, effective)
         elif document.type == DocumentType.LUNCH_SCHEDULE:
             self._parse_lunch_schedule(tables, effective)
         else:
             # This cannot happen because only menus are provided by the API
             raise KeyError("Unknown parsable document type from the e-classroom")
 
-    @staticmethod
-    def _normalize_teacher_name(name: str) -> Optional[str]:
+    def _normalize_teacher_name(self, name: str) -> Optional[str]:
         """Normalize the teacher name."""
 
         # Special case: Additional lesson
         if name == "Po urniku ni pouka":
             return None
 
+        # Special case: No teacher
+        if name == "samozaposleni":
+            return None
+
         # Special case: Unknown teacher
-        if not name or name == "X" or name == "x" or name == "/" or name == "MANJKA":
+        if self._is_name_empty(name):
             return None
 
         # Special case: Multiple Krapež teachers
@@ -267,15 +269,33 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Use only surname and replace ć with č
         return name.split()[0].replace("ć", "č")
 
-    @staticmethod
-    def _normalize_other_names(name: str) -> Optional[str]:
-        """Normalize other types of names."""
+    def _normalize_classroom_name(self, name: str) -> Optional[str]:
+        """Normalize the classroom name."""
 
-        # Special case: Unknown entity
-        if name == "X" or name == "x" or name == "/" or name == "MANJKA":
+        # Special case: Unknown classroom
+        if self._is_name_empty(name):
             return None
 
+        # Special case: Classroom aliases
+        # Maybe these mappings aren't correct, but who knows...
+        if name == "Mala dvorana" or name == "Mala telovadnica":
+            return "TV2"
+        if name == "Velika dvorana" or name == "Velika telovadnica":
+            return "TV1"
+
+        # Return the normal name
         return name
+
+    def _normalize_other_names(self, name: str) -> Optional[str]:
+        """Normalize other types of names."""
+
+        return name if not self._is_name_empty(name) else None
+
+    @staticmethod
+    def _is_name_empty(name: str) -> bool:
+        """Return whether the name is empty."""
+
+        return not name or name == "X" or name == "x" or name == "/" or name == "MANJKA"
 
     def _format_substitution(
         self,
@@ -283,9 +303,10 @@ class EClassroomUpdater(BaseMultiUpdater):
         day: int,
         time: int,
         subject: Optional[str],
+        notes: Optional[str],
         original_teacher: Optional[str],
         original_classroom: Optional[str],
-        class_: str,
+        class_: Optional[str],
         teacher: Optional[str],
         classroom: Optional[str],
     ) -> Dict[str, Any]:
@@ -297,15 +318,16 @@ class EClassroomUpdater(BaseMultiUpdater):
             "day": day,
             "time": time,
             "subject": subject,
+            "notes": notes,
             "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
             "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
-            "class_id": get_or_create(self.session, model=Class, name=class_)[0].id,
+            "class_id": get_or_create(self.session, model=Class, name=class_)[0].id if class_ else None,
             "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
             "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
         }
         # fmt: on
 
-    def _parse_substitutions(self, tables: List[Any], effective: date, url: str) -> None:
+    def _parse_substitutions(self, tables: List[Any], effective: date) -> None:
         """Parse the substitutions document."""
 
         # fmt: off
@@ -347,140 +369,150 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif row == header_reservations:
                     parser_type = ParserType.RESERVATIONS
                     continue
+                elif len(row) and row[0] == "Oddelek":
+                    parser_type = ParserType.UNKNOWN
+
+                # Skip empty rows
+                if not any(row):
+                    continue
 
                 # Parse substitutions
                 if parser_type == ParserType.SUBSTITUTUONS:
-                    if not any(row):
-                        self.logger.error(
-                            "Something is wrong with the substitutions file; "
-                            "the row should have at least one non-empty value",
-                            extra={"row": row, "url": url},
-                            stack_info=True,
-                        )
-                        continue
-
+                    # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[5])
+                    notes = self._normalize_other_names(row[6])
 
-                    # Get original teacher if it is specified
+                    # Get the original teacher if it is specified
+                    # Otherwise, use the last specified original teacher
                     # fmt: off
                     original_teacher = self._normalize_teacher_name(row[0]) if row[0] else last_original_teacher
                     last_original_teacher = original_teacher
                     # fmt: on
 
-                    # Get classroom (which stays the same)
-                    original_classroom = self._normalize_other_names(row[3])
-                    classroom = original_classroom
+                    # Get the new teacher
+                    teacher = self._normalize_teacher_name(row[4])
+
+                    # Get the classroom (which stays the same)
+                    # There may be multiple classrooms per row
+                    classrooms = [self._normalize_classroom_name(name) for name in row[3].split(", ")]
 
                     # Handle multiple classes
                     classes = row[2].replace(". ", "").split(" - ")
                     classes = classes[:-1] if len(classes) > 1 else classes
 
-                    # Get new teacher
-                    teacher = self._normalize_teacher_name(row[4])
-
-                    for class_ in classes:
-                        substitutions.append(
-                            self._format_substitution(
-                                effective,
-                                day,
-                                time,
-                                subject,
-                                original_teacher,
-                                original_classroom,
-                                class_,
-                                teacher,
-                                classroom,
-                            )
-                        )
+                    # fmt: off
+                    for class_, classroom in product(classes, classrooms):
+                        substitutions.append(self._format_substitution(
+                            effective, day, time,
+                            subject, notes,
+                            original_teacher, classroom,
+                            class_, teacher, classroom,
+                        ))
+                    # fmt: on
 
                 elif parser_type == ParserType.LESSON_CHANGE:
+                    # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[3].split(" → ")[1])
+                    notes = self._normalize_other_names(row[5])
 
+                    # Get the original and the new teacher
                     original_teacher = self._normalize_teacher_name(row[2].split(" → ")[0])
-                    original_classroom = self._normalize_other_names(row[4])
+                    teacher = self._normalize_teacher_name(row[2].split(" → ")[1])
+
+                    # Get the original and the new classrooms
+                    # They are commonly the same, but not always
+                    # There may also be multiple classrooms per row
+                    split_classrooms = row[4].split(" → ")
+                    original_classrooms = []
+                    classrooms = []
+
+                    if len(split_classrooms) == 1:
+                        # Classroom has stayed the same
+                        # fmt: off
+                        original_classrooms = [self._normalize_classroom_name(name) for name in split_classrooms[0].split(", ")]
+                        classrooms = original_classrooms
+                        # fmt: on
+
+                    elif len(split_classrooms) == 2:
+                        # Classroom has changed
+                        # fmt: off
+                        original_classrooms = [self._normalize_classroom_name(name) for name in split_classrooms[0].split(", ")]
+                        classrooms = [self._normalize_classroom_name(name) for name in split_classrooms[1].split(", ")]
+                        # fmt: on
 
                     # Handle multiple classes
                     classes = row[0].replace(". ", "").split(" - ")
                     classes = classes[:-1] if len(classes) > 1 else classes
 
-                    teacher = self._normalize_teacher_name(row[2].split(" → ")[1])
-                    classroom = original_classroom
-
-                    for class_ in classes:
-                        substitutions.append(
-                            self._format_substitution(
-                                effective,
-                                day,
-                                time,
-                                subject,
-                                original_teacher,
-                                original_classroom,
-                                class_,
-                                teacher,
-                                classroom,
-                            )
-                        )
+                    # fmt: off
+                    for class_, original_classroom, classroom in product(classes, original_classrooms, classrooms):
+                        substitutions.append(self._format_substitution(
+                            effective, day, time,
+                            subject, notes,
+                            original_teacher, original_classroom,
+                            class_, teacher, classroom,
+                        ))
+                    # fmt: on
 
                 elif parser_type == ParserType.SUBJECT_CHANGE:
+                    # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[3].split(" → ")[1])
+                    notes = self._normalize_other_names(row[5])
 
+                    # Get the teacher (which stays the same)
                     original_teacher = self._normalize_teacher_name(row[2])
-                    original_classroom = self._normalize_other_names(row[4])
-
-                    # Handle multiple classes
-                    classes = row[0].replace(". ", "").split(" - ")
-                    classes = classes[:-1] if len(classes) > 1 else classes
-
                     teacher = original_teacher
+
+                    # Get the classroom (which stays the same)
+                    original_classroom = self._normalize_classroom_name(row[4])
                     classroom = original_classroom
 
+                    # Handle multiple classes
+                    classes = row[0].replace(". ", "").split(" - ")
+                    classes = classes[:-1] if len(classes) > 1 else classes
+
+                    # fmt: off
                     for class_ in classes:
-                        substitutions.append(
-                            self._format_substitution(
-                                effective,
-                                day,
-                                time,
-                                subject,
-                                original_teacher,
-                                original_classroom,
-                                class_,
-                                teacher,
-                                classroom,
-                            )
-                        )
+                        substitutions.append(self._format_substitution(
+                            effective, day, time,
+                            subject, notes,
+                            original_teacher, original_classroom,
+                            class_, teacher, classroom,
+                        ))
+                    # fmt: on
 
                 elif parser_type == ParserType.CLASSROOM_CHANGE:
+                    # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
                     subject = self._normalize_other_names(row[3])
+                    notes = self._normalize_other_names(row[6])
 
+                    # Get the teacher (which stays the same)
                     original_teacher = self._normalize_teacher_name(row[2])
-                    original_classrooms = [self._normalize_other_names(name) for name in row[4].split(", ")]
+                    teacher = original_teacher
+
+                    # Get the original and the new classrooms
+                    # fmt: off
+                    original_classrooms = [self._normalize_classroom_name(name) for name in row[4].split(", ")]
+                    classrooms = [self._normalize_classroom_name(name) for name in row[5].split(", ")]
+                    # fmt: on
 
                     # Handle multiple classes
                     classes = row[0].replace(". ", "").split(" - ")
                     classes = classes[:-1] if len(classes) > 1 else classes
 
-                    teacher = original_teacher
-                    classroom = self._normalize_other_names(row[5])
-
-                    for class_ in classes:
-                        for original_classroom in original_classrooms:
-                            substitutions.append(
-                                self._format_substitution(
-                                    effective,
-                                    day,
-                                    time,
-                                    subject,
-                                    original_teacher,
-                                    original_classroom,
-                                    class_,
-                                    teacher,
-                                    classroom,
-                                )
-                            )
+                    # fmt: off
+                    for class_, original_classroom, classroom in product(classes, original_classrooms, classrooms):
+                        substitutions.append(self._format_substitution(
+                            effective, day, time,
+                            subject, notes,
+                            original_teacher, original_classroom,
+                            class_, teacher, classroom,
+                        ))
+                    # fmt: on
 
         # Deduplicate substitutions
         substitutions = [dict(subs2) for subs2 in {tuple(subs1.items()) for subs1 in substitutions}]
@@ -541,13 +573,26 @@ class EClassroomUpdater(BaseMultiUpdater):
                 last_notes = notes
 
                 # Get classes and location if they are specified
-                classes = row[2].replace("(", "").replace(")", "").split(",") if row[2] else None
+                classes: List[Optional[str]]
+                location: Optional[str]
+                classes = row[2].replace("(", "").replace(")", "").split(",") if row[2] else [None]
                 location = row[4].strip() if row[4] else None
 
+                # Handle special format for multiple classes
+                if len(classes) == 1 and isinstance(classes[0], str):
+                    if search := re.search(r"(\d)\. ?[lL]\.", classes[0]):
+                        class_letters = ["A", "B", "C", "D", "E", "F"]
+                        classes = [search.group(1) + class_ for class_ in class_letters]
+
                 for class_ in classes:
+                    # fmt: off
+                    class_name = class_.strip() if class_ else None
+                    class_id = get_or_create(self.session, model=Class, name=class_name)[0].id if class_name else None
+                    # fmt: on
+
                     schedule.append(
                         {
-                            "class_id": get_or_create(self.session, model=Class, name=class_.strip())[0].id,
+                            "class_id": class_id,
                             "date": effective,
                             "time": time,
                             "location": location,

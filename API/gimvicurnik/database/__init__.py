@@ -141,6 +141,7 @@ class Entity:
                 "day": model[0].day,
                 "time": model[0].time,
                 "subject": model[0].subject,
+                "notes": model[0].notes,
                 "class": model[1],
                 "original-teacher": model[2],
                 "original-classroom": model[3],
@@ -214,11 +215,12 @@ class Substitution(Base):
     __table_args__ = (Index("ix_substitutions_day_time", "day", "time"),)
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
+    date = Column(Date, index=True)
 
     day = Column(SmallInteger)
     time = Column(SmallInteger)
     subject = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
 
     original_teacher_id = Column(Integer, ForeignKey("teachers.id"))
     original_teacher: Teacher = relationship("Teacher", foreign_keys=[original_teacher_id])
@@ -241,7 +243,7 @@ class LunchSchedule(Base):
     __table_args__ = (Index("ix_lunch_schedule_date_time", "date", "time"),)
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
+    date = Column(Date, index=True)
     time = Column(Time)
 
     class_id = Column(Integer, ForeignKey("classes.id"), index=True)
