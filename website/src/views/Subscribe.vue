@@ -5,7 +5,7 @@
       <url-display label="Okrožnice" :value="`${vueAppApi}/feed/circulars.atom`"></url-display>
       <url-display label="Nadomeščanja" :value="`${vueAppApi}/feed/substitutions.atom`"></url-display>
       <url-display label="Jedilniki" :value="`${vueAppApi}/feed/menus.atom`"></url-display>
-      <url-display label="Razporedi delitve kosila" :value="`${vueAppApi}/feed/schedules.atom`"></url-display>
+      <url-display label="Razporedi kosila" :value="`${vueAppApi}/feed/schedules.atom`"></url-display>
     </div>
 
     <div class="pt-6" ref="calendarLinks">
@@ -13,7 +13,7 @@
       <url-display label="Urnik & Nadomeščanja" :value="`${vueAppApi}/calendar/combined/${selectedEntity}`"></url-display>
       <url-display label="Urnik" :value="`${vueAppApi}/calendar/timetable/${selectedEntity}`"></url-display>
       <url-display label="Nadomeščanja" :value="`${vueAppApi}/calendar/substitutions/${selectedEntity}`"></url-display>
-      <url-display label="Razporedi delitve kosila" :value="`${vueAppApi}/calendar/schedules/${selectedEntity}`"></url-display>
+      <url-display label="Razporedi kosila" :value="`${vueAppApi}/calendar/schedules/${selectedEntity}`"></url-display>
     </div>
   </div>
 </template>

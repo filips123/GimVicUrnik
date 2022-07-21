@@ -20,17 +20,29 @@ class DocumentsHandler(BaseHandler):
         def get_documents() -> List[Dict[str, Any]]:
             # fmt: off
             query = (
-                Session.query(Document.date, Document.type, Document.url, Document.description)
-                .order_by(Document.date)
+                Session.query(
+                    Document.type,
+                    Document.created,
+                    Document.modified,
+                    Document.effective,
+                    Document.url,
+                    Document.title,
+                )
+                .order_by(
+                    Document.created,
+                    Document.modified,
+                )
             )
             # fmt: on
 
             return [
                 {
-                    "date": model.date.strftime("%Y-%m-%d"),
-                    "type": model.type.value,
-                    "url": model.url,
-                    "description": model.description,
+                    "type": document.type.value,
+                    "created": document.created.isoformat() if document.created else None,
+                    "modified": document.modified.isoformat() if document.modified else None,
+                    "effective": document.effective.isoformat() if document.effective else None,
+                    "url": document.url,
+                    "title": document.title,
                 }
-                for model in query
+                for document in query
             ]

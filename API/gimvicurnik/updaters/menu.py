@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import hashlib
 import logging
 import os
 import re
@@ -13,37 +12,32 @@ from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
 from pdf2docx import extract_tables  # type: ignore
 
-from ..database import Document, DocumentType, LunchMenu, SnackMenu
+from .base import BaseMultiUpdater, DocumentInfo
+from ..database import DocumentType, LunchMenu, SnackMenu
 from ..errors import MenuApiError, MenuDateError, MenuFormatError
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Iterator, Tuple
+    from typing import Iterator
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesMenu
 
 
-class MenuUpdater:
+class MenuUpdater(BaseMultiUpdater):
+    source = "website"
+    error = MenuApiError
+
     def __init__(self, config: ConfigSourcesMenu, session: Session):
         self.logger = logging.getLogger(__name__)
-        self.url = config.url
+        self.config = config
         self.session = session
 
-    def update(self) -> None:
-        for type, url, date in self._get_documents():
-            # Decorators that add keyword arguments currently cannot be typed correctly
-            # This seems to be a limitation of Python's typing system and cannot be resolved
-            # Until Python/mypy add support for this, we have to ignore call argument types
+    def get_documents(self) -> Iterator[DocumentInfo]:
+        """Download and parse the website to retrieve all menu URLs."""
 
-            if type == DocumentType.SNACK_MENU:
-                self._store_snack_menu(url, date)  # type: ignore[call-arg]
-            elif type == DocumentType.LUNCH_MENU:
-                self._store_lunch_menu(url, date)  # type: ignore[call-arg]
-
-    def _get_documents(self) -> Iterator[Tuple[DocumentType, str, datetime.date]]:
         try:
-            response = requests.get(self.url)
+            response = requests.get(self.config.url)
             response.raise_for_status()
 
             soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")
@@ -66,15 +60,22 @@ class MenuUpdater:
                 else:
                     continue
 
-                menu_url = self.url + link["href"]
-                menu_date = self._get_date(menu_url)
+                menu_url = self.config.url + link["href"]
+                yield DocumentInfo(type=menu_type, url=menu_url)
 
-                yield menu_type, menu_url, menu_date
+    def get_document_title(self, document: DocumentInfo) -> str:
+        """Return the document name from its type."""
 
-    @staticmethod
-    def _get_date(url: str) -> datetime.date:
-        # There are multiple known date formats in URLs
-        # They need to be parsed separately
+        if document.type == DocumentType.SNACK_MENU:
+            return "Jedilnik za malico"
+        elif document.type == DocumentType.LUNCH_MENU:
+            return "Jedilnik za kosilo"
+        else:
+            # This cannot happen because only menus are provided by the API
+            raise KeyError("Unknown document type for menu")
+
+    def get_document_effective(self, document: DocumentInfo) -> datetime.date:
+        """Parse and return custom date formats from the document URL."""
 
         short_month_to_number = {
             "jan": 1,
@@ -91,7 +92,7 @@ class MenuUpdater:
             "dec": 12,
         }
 
-        full_month_to_number = {
+        long_month_to_number = {
             "januar": 1,
             "februar": 2,
             "marec": 3,
@@ -106,9 +107,17 @@ class MenuUpdater:
             "december": 12,
         }
 
+        url = document.url
+
+        # Some empty strings are needed here because of a Black bug that removed our comments
+        # TODO: Remove them once the project updates to Black 22.7 (or a version with the fix)
+        # SEE: https://github.com/psf/black/issues/2646
+
+        # == FORMAT TYPE 1
         # Example: KOSILO-4jan-8jan-2021.pdf
-        # Another example: KOSILO-25jan-29jan-2021-PDF.pdf
-        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)
+        # Example: KOSILO-25jan-29jan-2021-PDF.pdf
+        ""
+        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)  # fmt: skip
 
         if date:
             return datetime.date(
@@ -117,29 +126,32 @@ class MenuUpdater:
                 day=int(date.group(1)),
             )
 
+        # == FORMAT TYPE 2
         # Example: 09-splet-oktober-1-teden-09-M.pdf
-        # Another example: 05-splet-februar-3-teden-M-PDF.pdf
-        # Another example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
-        # Another example: 01-splet-september-4-teden-02-M-popravek.pdf
-        # Another example: 01-splet-januar1-teden-02-K.pdf
-        rgx = r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+"
-        date = re.search(rgx, url)
+        # Example: 05-splet-februar-3-teden-M-PDF.pdf
+        # Example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
+        # Example: 01-splet-september-4-teden-02-M-popravek.pdf
+        # Example: 01-splet-januar1-teden-02-K.pdf
+        ""
+        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
 
         if date:
-            year = datetime.datetime.now().year
-            month = full_month_to_number[date.group(1)]
+            today = datetime.date.today()
+            year = today.year
 
-            # In case if menu is provided for the next year
-            if datetime.datetime.now().month == 12 and month == 1:
+            # Get week and month from URL
+            week = int(date.group(2))
+            month = long_month_to_number[date.group(1)]
+
+            # In case the menu is provided for the next year
+            if today.month == 12 and month == 1:
                 year += 1
 
-            # In case if menu is provided for the last year
-            if datetime.datetime.now().month == 1 and month == 12:
+            # In case the menu is provided for the last year
+            if today.month == 1 and month == 12:
                 year -= 1
 
-            week = int(date.group(2))
-
-            # Get start of nth week of month
+            # Get start of nth week of the month
             first = datetime.date(year, month, 1)
             diff = -first.weekday() if month == 9 else 7 - first.weekday()
             diff = diff if diff < 7 else 0
@@ -147,56 +159,45 @@ class MenuUpdater:
 
             return new
 
+        # == UNKNOWN FORMAT
         raise MenuDateError("Unknown menu date URL format: " + url.rsplit("/", 1)[-1])
 
-    @with_span(op="document", pass_span=True)
-    def _store_snack_menu(self, url: str, date: datetime.date, span: Span) -> None:
-        response = requests.get(url)
-        format = url.rsplit(".", 1)[-1]
+    def document_needs_parsing(self, document: DocumentInfo) -> bool:
+        """Return whether the document needs parsing."""
 
-        content = response.content
-        hash = str(hashlib.sha256(content).hexdigest())
+        # All documents provided by this updater need parsing
+        return True
 
-        span.description = url
-        span.set_tag("document.url", url)
-        span.set_tag("document.type", "snack-menu")
-        span.set_tag("document.format", format)
+    @with_span(op="parse", pass_span=True)
+    def parse_document(self, document: DocumentInfo, content: bytes, effective: datetime.date, span: Span) -> None:  # type: ignore[override]
+        """Parse the document and store extracted data."""
 
-        document = (
-            self.session.query(Document)
-            .filter(Document.type == DocumentType.SNACK_MENU, Document.url == url)
-            .first()
-        )
+        # Get document format from its URL
+        docformat = document.url.rsplit(".", 1)[-1]
+        span.set_tag("document.format", docformat)
+        span.set_tag("document.type", document.type.value)
 
-        # Skip unchanged lunch menu documents
-        if document and document.hash == hash:
-            self.logger.info("Skipped because the snack menu document for %s is unchanged", document.date)
-            self.logger.debug("URL: %s", document.url)
-            self.logger.debug("Date: %s", document.date)
-            self.logger.debug("Hash: %s", document.hash)
-
-            span.set_tag("document.date", document.date)
-            span.set_tag("document.hash", document.hash)
-            span.set_tag("document.action", "skipped")
-
-            return
-
-        # Save content to temporary file
+        # Save the content to a temporary file
         filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
         file = open(filename, mode="w+b")
         file.write(content)
         file.close()
 
-        if format == "pdf":
-            # Extract all tables from PDF file
+        if document.type == DocumentType.SNACK_MENU:
+            self._parse_snack_menu(docformat, filename, effective)
+        elif document.type == DocumentType.LUNCH_MENU:
+            self._parse_lunch_menu(docformat, filename, effective)
+        else:
+            # This cannot happen because only menus are provided by the API
+            raise KeyError("Unknown document type for menu")
+
+    def _parse_snack_menu(self, docformat: str, filename: str, effective: datetime.date) -> None:
+        """Parse the snack menu document."""
+
+        if docformat == "pdf":
+            # Extract all tables from a PDF file
             tables = with_span(op="extract")(extract_tables)(filename)
             os.remove(filename)
-
-            try:
-                date = datetime.datetime.strptime(tables[0][1][0].split("\n")[1].strip(), "%d.%m.%Y").date()
-            except (AttributeError, ValueError, IndexError) as error:
-                self.logger.warning("Failed to get snack menu date from file, falling back to date from URL")
-                self.logger.warning(error)
 
             days = 0
 
@@ -206,7 +207,7 @@ class MenuUpdater:
                     if len(row) != 5 or "NV in N" in row[1]:
                         continue
 
-                    current = date + datetime.timedelta(days=days)
+                    current = effective + datetime.timedelta(days=days)
                     days += 1
 
                     menu = {
@@ -218,6 +219,7 @@ class MenuUpdater:
                     }
 
                     model = self.session.query(SnackMenu).filter(SnackMenu.date == current).first()
+
                     if not model:
                         model = SnackMenu()
 
@@ -226,8 +228,8 @@ class MenuUpdater:
 
                     self.session.add(model)
 
-        elif format == "xlsx":
-            # Extract workbook from XLSX file
+        elif docformat == "xlsx":
+            # Extract workbook from an XLSX file
             wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
 
             menu = {}
@@ -271,7 +273,7 @@ class MenuUpdater:
                         }
 
                     if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                        menu["date"] = date + datetime.timedelta(days=days)
+                        menu["date"] = effective + datetime.timedelta(days=days)
 
                     if wr[1].value:
                         menu["normal"].append(wr[1].value.strip())
@@ -289,80 +291,15 @@ class MenuUpdater:
             os.remove(filename)
 
         else:
-            raise MenuFormatError("Unknown menu document format: " + format)
+            raise MenuFormatError("Unknown snack menu document format: " + docformat)
 
-        # Update or create a document
-        if not document:
-            document = Document()
-            created = True
-        else:
-            created = False
+    def _parse_lunch_menu(self, docformat: str, filename: str, effective: datetime.date) -> None:
+        """Parse the lunch menu document."""
 
-        document.date = date
-        document.type = DocumentType.SNACK_MENU
-        document.url = url
-        document.description = "Jedilnik za malico"
-        document.hash = hash
-
-        self.session.add(document)
-
-        span.set_tag("document.date", document.date)
-        span.set_tag("document.hash", document.hash)
-        span.set_tag("document.action", "created" if created else "updated")
-
-        if created:
-            self.logger.info("Created a new snack menu document for %s", document.date)
-        else:
-            self.logger.info("Updated the snack menu document for %s", document.date)
-
-    @with_span(op="document", pass_span=True)
-    def _store_lunch_menu(self, url: str, date: datetime.date, span: Span) -> None:
-        response = requests.get(url)
-        format = url.rsplit(".", 1)[-1]
-
-        content = response.content
-        hash = str(hashlib.sha256(content).hexdigest())
-
-        span.description = url
-        span.set_tag("document.url", url)
-        span.set_tag("document.type", "lunch-menu")
-        span.set_tag("document.format", format)
-
-        document = (
-            self.session.query(Document)
-            .filter(Document.type == DocumentType.LUNCH_MENU, Document.url == url)
-            .first()
-        )
-
-        # Skip unchanged lunch menu documents
-        if document and document.hash == hash:
-            self.logger.info("Skipped because the lunch menu document for %s is unchanged", document.date)
-            self.logger.debug("URL: %s", document.url)
-            self.logger.debug("Date: %s", document.date)
-            self.logger.debug("Hash: %s", document.hash)
-
-            span.set_tag("document.date", document.date)
-            span.set_tag("document.hash", document.hash)
-            span.set_tag("document.action", "skipped")
-
-            return
-
-        # Save content to temporary file
-        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + "." + format)
-        file = open(filename, mode="w+b")
-        file.write(content)
-        file.close()
-
-        if format == "pdf":
-            # Extract all tables from PDF file
+        if docformat == "pdf":
+            # Extract all tables from a PDF file
             tables = with_span(op="extract")(extract_tables)(filename)
             os.remove(filename)
-
-            try:
-                date = datetime.datetime.strptime(tables[0][1][0].split("\n")[1].strip(), "%d.%m.%Y").date()
-            except (AttributeError, ValueError, IndexError) as error:
-                self.logger.warning("Failed to get lunch menu date from file, falling back to date from URL")
-                self.logger.warning(error)
 
             days = 0
 
@@ -372,7 +309,7 @@ class MenuUpdater:
                     if len(row) != 3 or "N KOSILO" in row[1]:
                         continue
 
-                    current = date + datetime.timedelta(days=days)
+                    current = effective + datetime.timedelta(days=days)
                     days += 1
 
                     menu = {
@@ -382,6 +319,7 @@ class MenuUpdater:
                     }
 
                     model = self.session.query(LunchMenu).filter(LunchMenu.date == current).first()
+
                     if not model:
                         model = LunchMenu()
 
@@ -391,7 +329,7 @@ class MenuUpdater:
                     self.session.add(model)
 
         elif format == "xlsx":
-            # Extract workbook from XLSX file
+            # Extract workbook from an XLSX file
             wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
 
             menu = {}
@@ -430,7 +368,7 @@ class MenuUpdater:
                         }
 
                     if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                        menu["date"] = date + datetime.timedelta(days=days)
+                        menu["date"] = effective + datetime.timedelta(days=days)
 
                     if wr[1].value:
                         menu["normal"].append(wr[1].value.strip())
@@ -442,28 +380,4 @@ class MenuUpdater:
             os.remove(filename)
 
         else:
-            raise MenuFormatError("Unknown menu document format: " + format)
-
-        # Update or create a document
-        if not document:
-            document = Document()
-            created = True
-        else:
-            created = False
-
-        document.date = date
-        document.type = DocumentType.LUNCH_MENU
-        document.url = url
-        document.description = "Jedilnik za kosilo"
-        document.hash = hash
-
-        self.session.add(document)
-
-        span.set_tag("document.date", document.date)
-        span.set_tag("document.hash", document.hash)
-        span.set_tag("document.action", "created" if created else "updated")
-
-        if created:
-            self.logger.info("Created a new lunch menu document for %s", document.date)
-        else:
-            self.logger.info("Updated the lunch menu document for %s", document.date)
+            raise MenuFormatError("Unknown lunch menu document format: " + docformat)

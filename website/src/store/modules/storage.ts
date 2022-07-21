@@ -56,10 +56,12 @@ export interface Menu {
 }
 
 export interface Document {
-  data: string;
   type: string;
+  created: string;
+  modified: string;
+  effective: string;
   url: string;
-  description: string;
+  title: string;
 }
 
 export function getLessonId (substitution: Lesson): string {

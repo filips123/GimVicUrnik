@@ -6,7 +6,7 @@ import typing
 from datetime import date
 
 from flask import render_template
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 
 from .base import BaseHandler
 from ..database import Document, DocumentType, Session
@@ -35,23 +35,24 @@ class DateDisplay(enum.Enum):
     WEEKLY = "weekly"
 
 
+def get_mime_type(url: str) -> str:
+    """Get MIME type for a few extensions we know documents use."""
+
+    if re.match(r"\.pdf(?:\?[\w=]*)?$", url):
+        return "application/pdf"
+    if url.endswith(".docx"):
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if url.endswith(".xlsx"):
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return "application/octet-stream"
+
+
 class FeedHandler(BaseHandler):
     name = "feed"
     template_folder = "templates"
 
     @classmethod
     def routes(cls, bp: Blueprint, config: Config) -> None:
-        def _get_mime_type(url: str) -> str:
-            """Get MIME type for a few extensions we know documents use."""
-
-            if re.match(r"\.pdf(?:\?[\w=]*)?$", url):
-                return "application/pdf"
-            if url.endswith(".docx"):
-                return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            if url.endswith(".xlsx"):
-                return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            return "application/octet-stream"
-
         def _create_feed(
             query_filter: Any,
             feed_name: str,
@@ -63,17 +64,21 @@ class FeedHandler(BaseHandler):
 
             # Get all documents that match the filter
             query = list(
-                Session.query(Document.date, Document.type, Document.url, Document.description)
+                Session.query(
+                    Document.type,
+                    Document.created,
+                    Document.modified,
+                    Document.effective,
+                    Document.url,
+                    Document.title,
+                )
                 .filter(query_filter)
-                .order_by(Document.date)
+                .order_by(Document.created, Document.modified)
             )
 
-            # Find latest document date and use it as feed updated date
-            # TODO: This needs to be changed once dates are split
-            if query:
-                last_updated = max(model.date for model in query)
-            else:
-                last_updated = date.fromtimestamp(0)
+            # Find the latest feed modification datetime
+            last_updated = Session.query(func.max(Document.modified)).filter(query_filter).scalar()
+            last_updated = last_updated or date.fromtimestamp(0)
 
             # Render the feed from Atom/RSS template
             content = render_template(
@@ -84,7 +89,7 @@ class FeedHandler(BaseHandler):
                 entries=query,
                 last_updated=last_updated,
                 date_display=date_display,
-                get_mime_type=_get_mime_type,
+                get_mime_type=get_mime_type,
                 DateDisplay=DateDisplay,
             )
 
@@ -119,7 +124,7 @@ class FeedHandler(BaseHandler):
         def get_schedules_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
             return _create_feed(
                 query_filter=Document.type == DocumentType.LUNCH_SCHEDULE,
-                feed_name="Razporedi delitve kosila",
+                feed_name="Razporedi kosila",
                 feed_type=FeedType.SCHEDULES,
                 feed_format=feed_format,
                 date_display=DateDisplay.DAILY,

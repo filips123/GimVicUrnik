@@ -36,7 +36,6 @@ classifiers = [
 [tool.poetry.scripts]
 gimvicurnik = "gimvicurnik.__main__:main"
 
-# TODO: Replace pdf2docx with PyMuPDF/pdfplumber/pdfminer
 # TODO: Update to stable Flask once 2.2.0 is released
 # TODO: Update to stable cattrs once 22.2.0 is released
 [tool.poetry.dependencies]
@@ -49,7 +48,8 @@ attrs = "21.4.0"
 cattrs = { git = "https://github.com/python-attrs/cattrs.git", rev = "56eda37" }
 requests = "^2.28.1"
 SQLAlchemy = "^1.4.39"
-pdf2docx = "=0.4.6"
+PyMuPDF = "~1.18.19"
+pdf2docx = "~0.4.6"
 openpyxl = "^3.0.10"
 icalendar = "^4.1.0"
 beautifulsoup4 = { version = "^4.11.1", extras = ["lxml"] }

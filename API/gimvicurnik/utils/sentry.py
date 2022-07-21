@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
     SP = ParamSpec("SP")
     SR = TypeVar("SR")
 
-__all__ = ["start_transaction", "start_span", "with_transaction", "with_span"]
+__all__ = ["start_transaction", "start_span", "with_transaction", "with_span", "sentry_available"]
 
 
 class WithMock(Mock):
@@ -33,7 +33,7 @@ class WithMock(Mock):
 
 
 try:
-    from sentry_sdk import Hub, start_transaction, start_span
+    from sentry_sdk import start_transaction, start_span
 
     sentry_available = True
 
@@ -95,12 +95,12 @@ def with_span(
 
     def _span_decorator(function: Callable[SP, SR]) -> Callable[SP, SR]:
         def _span_wrapper(*fargs: SP.args, **fkwargs: SP.kwargs) -> SR:
-            if not sentry_available or not Hub.current.scope.span:
+            if not sentry_available:
                 if pass_span:
                     fkwargs["span"] = Mock()
                 return function(*fargs, **fkwargs)
 
-            with Hub.current.scope.span.start_child(**kwargs) as span:
+            with start_span(**kwargs) as span:
                 if pass_span:
                     fkwargs["span"] = span
                 return function(*fargs, **fkwargs)

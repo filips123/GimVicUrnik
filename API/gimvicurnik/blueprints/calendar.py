@@ -282,6 +282,6 @@ class CalendarHandler(BaseHandler):
                 .join(Class)
                 .filter(Class.name.in_(classes))
                 .order_by(LunchSchedule.time, LunchSchedule.class_),
-                f"Razporedi delitve kosila - {', '.join(classes)} - Gimnazija Vič",
+                f"Razporedi kosila - {', '.join(classes)} - Gimnazija Vič",
                 config.urls.api + request.path,
             )

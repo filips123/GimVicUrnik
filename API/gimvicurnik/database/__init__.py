@@ -4,8 +4,10 @@ import enum
 import typing
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Date,
+    DateTime,
     Enum,
     ForeignKey,
     Index,
@@ -54,19 +56,16 @@ class Document(Base):
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
+    type = Column(Enum(DocumentType, values_callable=DocumentType.values), index=True)
 
-    # TODO: Split date into created, modified and effective dates
-    # created = Column(DateTime)
-    # modified = Column(DateTime)
-    # effective = Column(Date, nullable=True)
+    created = Column(DateTime, nullable=True)
+    modified = Column(DateTime, nullable=True)
+    effective = Column(Date, nullable=True)
 
-    # TODO: Create "parsed?" field and use it in updaters to re-parse documents
-
-    type = Column(Enum(DocumentType, values_callable=DocumentType.values))
     url = Column(Text)
+    title = Column(Text, nullable=True)
     hash = Column(Text, nullable=True)
-    description = Column(Text, nullable=True)
+    parsed = Column(Boolean, nullable=True)
 
 
 class Entity:

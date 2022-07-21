@@ -4,7 +4,7 @@
   <title>{{ name }} - Gimnazija Vič</title>
   <subtitle>{{ name }} - Gimnazija Vič</subtitle>
   <id>{{ urls.api }}/feed/{{ type }}.atom</id>
-  <updated>{{ last_updated.strftime("%Y-%m-%dT%H:%M:%S%z") }}</updated>
+  <updated>{{ last_updated.strftime("%Y-%m-%dT%H:%M:%SZ") }}</updated>
 
   <link href="{{ urls.api }}/feed/{{ type }}.atom" rel="self" type="application/atom+xml" />
   <link href="{{ urls.api }}/feed/{{ type }}.rss" rel="alternate" type="application/rss+xml" />
@@ -20,15 +20,15 @@
 
   {% for entry in entries %}
     <entry>
-      {% if date_display == DateDisplay.DAILY %}<title>{{ entry.description }}, {{ entry.date | date }}</title>
-      {% elif date_display == DateDisplay.WEEKLY %}<title>{{ entry.description }}, {{ entry.date | week }}</title>
-      {% else %}<title>{{ entry.description }}</title>
+      {% if date_display == DateDisplay.DAILY %}<title>{{ entry.title }}, {{ entry.effective | date }}</title>
+      {% elif date_display == DateDisplay.WEEKLY %}<title>{{ entry.title }}, {{ entry.effective | week }}</title>
+      {% else %}<title>{{ entry.title }}</title>
       {% endif %}
       <id>{{ entry.url }}</id>
       <link rel="alternate" href="{{ entry.url }}" type="{{ get_mime_type(entry.url) }}" />
       <link rel="enclosure" href="{{ entry.url }}" type="{{ get_mime_type(entry.url) }}" />
-      <published>{{ entry.date.strftime("%Y-%m-%dT%H:%M:%S%z") }}</published>
-      <updated>{{ entry.date.strftime("%Y-%m-%dT%H:%M:%S%z") }}</updated>
+      <published>{{ entry.created.strftime("%Y-%m-%dT%H:%M:%SZ") }}</published>
+      <updated>{{ entry.modified.strftime("%Y-%m-%dT%H:%M:%SZ") }}</updated>
     </entry>
   {% endfor %}
 </feed>
