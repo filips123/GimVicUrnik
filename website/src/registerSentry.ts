@@ -4,9 +4,9 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import { init as sentryInit } from '@sentry/vue'
-import { VueRouterInstrumentation } from '@sentry/vue/dist/router'
+import { VueRouterInstrumentation } from '@sentry/vue/types/router'
 import { captureException } from '@sentry/browser'
-import { Transaction, TransactionContext } from '@sentry/types'
+import { Transaction, TransactionContext, TransactionSource } from '@sentry/types'
 import { Integrations } from '@sentry/tracing'
 
 import router from '@/router'
@@ -34,14 +34,21 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
           hash: to.hash
         }
 
-        let opName = to.path
+        // Determine transaction name based on route's path
+        let transactionName = to.path
+        let transactionSource: TransactionSource = 'url'
 
+        // Parametrize timetable transactions in the same style as backend
         if (to.name === 'timetable' && ['classes', 'teachers', 'classrooms'].includes(to.params.type) && to.params.value) {
           if (!(to.params.type === 'classrooms' && to.params.value === 'empty')) {
-            opName = to.matched[0].path.replace(':type?', to.params.type).replace(':value?', `<${to.params.type}>`)
+            transactionName = to.matched[0].path.replace(':type?', to.params.type).replace(':value?', `<${to.params.type}>`)
+            transactionSource = 'route'
           }
+
+        // Create 404 transaction when a valid entity hasn't been found
         } else if ((to.name === 'timetable' && to.params.type) || to.name === 'notfound') {
-          opName = 'generic 404 request'
+          transactionName = 'generic 404 request'
+          transactionSource = 'custom'
         }
 
         const isPageLoadNavigation = from.name == null && from.matched.length === 0
@@ -49,19 +56,25 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
 
         if (startTransactionOnPageLoad && isPageLoadNavigation) {
           startTransaction({
-            name: opName,
+            name: transactionName,
             op: 'pageload',
             tags,
-            data
+            data,
+            metadata: {
+              source: transactionSource
+            }
           })
         }
 
         if (startTransactionOnLocationChange && !isPageLoadNavigation && !isNotFoundNavigation) {
           startTransaction({
-            name: opName,
+            name: transactionName,
             op: 'navigation',
             tags,
-            data
+            data,
+            metadata: {
+              source: transactionSource
+            }
           })
         }
 
@@ -100,6 +113,6 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
     autoSessionTracking: SettingsModule.dataCollection.performance,
     tracingOptions: { trackComponents: true },
 
-    integrations: integrations
+    integrations
   })
 }
