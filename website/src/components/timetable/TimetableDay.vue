@@ -187,7 +187,7 @@ export default class TimetableDay extends Vue {
     // Change separator if needed
     this.separator = this.currentEntity?.type !== EntityType.EmptyClassrooms ? '/&#8203;' : ' - '
 
-    return data
+    return data.sort((a, b) => a.time - b.time)
   }
 }
 </script>
