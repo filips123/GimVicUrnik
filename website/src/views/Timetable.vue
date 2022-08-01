@@ -108,17 +108,17 @@ export default class Timetable extends Vue {
       if (type === 'classes' && data.some(elem => (StorageModule.classList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Class,
-          data: data
+          data
         })
       } else if (type === 'teachers' && data.some(elem => (StorageModule.teacherList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Teacher,
-          data: data
+          data
         })
       } else if (type === 'classrooms' && data.some(elem => (StorageModule.classroomList || []).includes(elem))) {
         StateModule.setCurrentEntity({
           type: EntityType.Classroom,
-          data: data
+          data
         })
       } else if (type === 'classrooms' && data.includes('empty')) {
         StateModule.setCurrentEntity({

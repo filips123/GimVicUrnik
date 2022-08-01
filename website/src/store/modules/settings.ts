@@ -80,13 +80,13 @@ class Settings extends VuexModule {
 
   @Mutation
   setSelectedMenuSnack (snack: SnackType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack: snack, lunch: LunchType.Normal }
+    if (this.selectedMenu === null) this.selectedMenu = { snack, lunch: LunchType.Normal }
     else this.selectedMenu.snack = snack
   }
 
   @Mutation
   setSelectedMenuLunch (lunch: LunchType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch: lunch }
+    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch }
     else this.selectedMenu.lunch = lunch
   }
 

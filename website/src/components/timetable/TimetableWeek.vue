@@ -158,7 +158,7 @@ export default class TimetableWeek extends Vue {
           }[] | undefined
         }[]
       } = {
-        time: time,
+        time,
         days: []
       }
 
@@ -186,7 +186,7 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'teacher',
-                contents: lesson.teachers
+                contents: lesson.teachers.filter(x => x)
               },
               {
                 type: 'classroom',
@@ -203,7 +203,7 @@ export default class TimetableWeek extends Vue {
             details: [
               {
                 type: 'class',
-                contents: lesson.classes
+                contents: lesson.classes.filter(x => x)
               },
               {
                 type: 'subject',
@@ -224,7 +224,7 @@ export default class TimetableWeek extends Vue {
             details: [
               {
                 type: 'class',
-                contents: lesson.classes
+                contents: lesson.classes.filter(x => x)
               },
               {
                 type: 'subject',
@@ -232,7 +232,7 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'teacher',
-                contents: lesson.teachers
+                contents: lesson.teachers.filter(x => x)
               }
             ].filter(x => x.contents.length)
           })
