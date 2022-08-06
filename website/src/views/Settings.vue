@@ -47,11 +47,12 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
-    <v-dialog v-model="entitySelectionDialog" width="35rem">
+    <v-dialog v-model="entitySelectionDialog" v-bind:persistent="entitySelectionPersistent" width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
         is-dialog="1"
-        @closeDialog=closeEntityDialog />
+        @closeDialog=closeEntityDialog
+        @persistDialog=persistEntityDialog />
     </v-dialog>
 
     <v-dialog v-model="snackSelectionDialog" width="35rem">
@@ -203,6 +204,8 @@ export default class Settings extends Vue {
   dataCollectionDialog = false
   themeSelectionDialog = false
 
+  entitySelectionPersistent = false
+
   // Sync toggles with Vuex state
   get showSubstitutions (): boolean {
     return SettingsModule.showSubstitutions
@@ -292,6 +295,10 @@ export default class Settings extends Vue {
 
   closeThemeDialog (): void {
     this.themeSelectionDialog = false
+  }
+
+  persistEntityDialog (persistent: boolean): void {
+    this.entitySelectionPersistent = persistent
   }
 }
 </script>
