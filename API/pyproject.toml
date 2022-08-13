@@ -54,7 +54,6 @@ beautifulsoup4 = { version = "^4.11.1", extras = ["lxml"] }
 
 # Optional support for Sentry integration
 sentry-sdk = { version = "^1.9.5", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
-setuptools = { version = "^64.0.3", optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.0.2", optional = true }
@@ -69,14 +68,13 @@ flake8-bugbear = "^22.7.1"
 mypy = "^0.971"
 typing-extensions = "^4.3.0"
 sqlalchemy2-stubs = "^0.0.2-alpha.25"
-types-setuptools = "^64.0.1"
 types-pyyaml = "^6.0.11"
 types-openpyxl = "^3.0.4"
 types-requests = "^2.28.8"
 types-beautifulsoup4 = "^4.11.4"
 
 [tool.poetry.extras]
-sentry = ["sentry-sdk", "setuptools"]
+sentry = ["sentry-sdk"]
 mysql-py = ["PyMySQL"]
 mysql-c = ["mysqlclient"]
 pgsql = ["psycopg2"]

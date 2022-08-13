@@ -96,7 +96,8 @@ class GimVicUrnik:
         """Configure Sentry integration."""
 
         if self.config.sentry and self.config.sentry.enabled:
-            import pkg_resources
+            from importlib import metadata
+
             import sentry_sdk
             from sentry_sdk.integrations.flask import FlaskIntegration
             from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -105,7 +106,7 @@ class GimVicUrnik:
             sentry_config = self.config.sentry
 
             # Get the package version and modify it, so it becomes valid SemVer version
-            version = pkg_resources.get_distribution("gimvicurnik").version
+            version = metadata.version("gimvicurnik")
             version = version.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
 
             # Get current environment and calculate release

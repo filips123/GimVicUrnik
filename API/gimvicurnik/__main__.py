@@ -35,22 +35,22 @@ class GimVicUrnikGroup(FlaskGroup):
             if not value or ctx.resilient_parsing:
                 return
 
-            import pkg_resources
+            from importlib import metadata
             import platform
 
             python_version = platform.python_version()
-            gimvicurnik_version = pkg_resources.get_distribution("gimvicurnik").version
-            sqlalchemy_version = pkg_resources.get_distribution("sqlalchemy").version
-            requests_version = pkg_resources.get_distribution("requests").version
-            flask_version = pkg_resources.get_distribution("flask").version
-            werkzeug_version = pkg_resources.get_distribution("werkzeug").version
-            pymupdf_version = pkg_resources.get_distribution("pymupdf").version
-            pdf2docx_version = pkg_resources.get_distribution("pdf2docx").version
-            openpyxl_version = pkg_resources.get_distribution("openpyxl").version
+            gimvicurnik_version = metadata.version("gimvicurnik")
+            sqlalchemy_version = metadata.version("sqlalchemy")
+            requests_version = metadata.version("requests")
+            flask_version = metadata.version("flask")
+            werkzeug_version = metadata.version("werkzeug")
+            pymupdf_version = metadata.version("pymupdf")
+            pdf2docx_version = metadata.version("pdf2docx")
+            openpyxl_version = metadata.version("openpyxl")
 
             try:
-                sentry_version = pkg_resources.get_distribution("sentry-sdk").version
-            except pkg_resources.DistributionNotFound:
+                sentry_version = metadata.version("sentry-sdk")
+            except metadata.PackageNotFoundError:
                 sentry_version = "None"
 
             click.echo(
