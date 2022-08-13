@@ -110,7 +110,7 @@ class GimVicUrnik:
             version = version.replace(".", "$$$", 2).replace(".", "-", 1).replace("$$$", ".")
 
             # Get current environment and calculate release
-            environment = os.environ.get("FLASK_ENV", "production")
+            environment = os.environ.get("GIMVICURNIK_ENV", "production")
             release = sentry_config.releasePrefix + version + sentry_config.releaseSuffix
 
             # Create custom traces sampler so different traces can be configured separately

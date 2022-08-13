@@ -90,7 +90,7 @@ class GimVicUrnikGroup(FlaskGroup):
             "A utility script for the GimVicUrnik application.\n\n"
             "Configuration file can be provided as --config argument or as the "
             "GIMVICURNIK_CONFIG environment variable. Development mode can be "
-            "enabled with the FLASK_ENV environment variable set to 'development'.\n\n"
+            "enabled by setting FLASK_DEBUG environment variable to 1.\n\n"
             "Note: Due to the limitations of the command parser, some application-specific "
             "commands won't be displayed in the command list if the configuration file "
             "is not specified as environment variable or is invalid."
