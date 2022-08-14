@@ -46,7 +46,7 @@ logging:
         - console
 
 lessonTimes:
-  - name: "predura"
+  - name: "Predura"
     start: "0710"
     end: "0755"
   - name: "1. ura"

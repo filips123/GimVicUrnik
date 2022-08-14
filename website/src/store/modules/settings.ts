@@ -58,6 +58,7 @@ class Settings extends VuexModule {
   showSubstitutions = true
   showLinksInTimetable = true
   showHoursInTimetable = true
+  enableShowingDetails = true
   enablePullToRefresh = true
   enableUpdateOnLoad = true
 
@@ -103,6 +104,11 @@ class Settings extends VuexModule {
   @Mutation
   setShowHoursInTimetable (showHoursInTimetable: boolean): void {
     this.showHoursInTimetable = showHoursInTimetable
+  }
+
+  @Mutation
+  setEnableShowingDetails (enableShowingDetails: boolean): void {
+    this.enableShowingDetails = enableShowingDetails
   }
 
   @Mutation
