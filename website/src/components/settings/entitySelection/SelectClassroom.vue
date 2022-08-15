@@ -9,7 +9,8 @@
         :item-text="item => item.text"
         :item-value="item => item.value"
         :items="availableClassrooms"
-        label="Izberite učilnico" />
+        label="Izberite učilnico"
+        color="green" />
       <v-switch v-model="saveSelection" class="v-input--reverse" color="green" label="Shrani izbiro:" />
     </v-card-text>
 
