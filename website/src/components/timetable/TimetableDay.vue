@@ -2,7 +2,7 @@
 
 <template>
   <v-sheet class="ma-3" elevation="2">
-    <v-simple-table class="timetable-day">
+    <v-simple-table class="timetable-day" v-bind:class="{ 'details-enabled': showDetails }">
       <template v-slot:default>
         <tbody>
           <tr v-for="lesson in lessons" :key="lesson.time"
@@ -47,11 +47,19 @@
 }
 
 // Change background change on hover
-.theme--light .timetable-day > .v-data-table__wrapper > table > tbody > tr:hover {
+.theme--light .timetable-day tr:not(.highlight):hover  {
+  background: initial !important;
+}
+
+.theme--light .timetable-day.details-enabled tr:hover {
   background: #d9d9d9 !important;
 }
 
-.theme--dark .timetable-day > .v-data-table__wrapper > table > tbody > tr:hover {
+.theme--dark .timetable-day tr:not(.highlight):hover  {
+  background: initial !important;
+}
+
+.theme--dark .timetable-day.details-enabled tr:hover {
   background: #444 !important;
 }
 
@@ -64,11 +72,11 @@
 
 // Set substitution highlights
 .theme--light .highlight {
-  background: #eee !important;
+  background: #eee;
 }
 
 .theme--dark .highlight {
-  background: #393939 !important;
+  background: #393939;
 }
 
 </style>

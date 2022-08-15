@@ -95,7 +95,7 @@
 
 // Set current day highlight
 .theme--light .highlight-light {
-  background: #f8f8f8;
+  background: #f6f6f6;
 }
 
 .theme--dark .highlight-light {
