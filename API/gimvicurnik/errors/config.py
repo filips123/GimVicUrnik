@@ -1,6 +1,3 @@
-from schema import SchemaError
-from yaml import YAMLError
-
 from .base import GimVicUrnikError
 
 
@@ -8,13 +5,13 @@ class ConfigError(GimVicUrnikError):
     pass
 
 
-class ConfigReadError(ConfigError, OSError):
+class ConfigReadError(ConfigError):
     pass
 
 
-class ConfigParseError(ConfigError, YAMLError):
+class ConfigParseError(ConfigError):
     pass
 
 
-class ConfigValidationError(ConfigError, SchemaError):
+class ConfigValidationError(ConfigError):
     pass

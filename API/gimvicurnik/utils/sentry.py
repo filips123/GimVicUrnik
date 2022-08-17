@@ -1,38 +1,67 @@
+from __future__ import annotations
+
+import typing
 from unittest.mock import Mock
+
+if typing.TYPE_CHECKING:
+    from types import TracebackType
+    from typing import Any, Callable, Optional, Type, TypeVar
+    from typing_extensions import ParamSpec
+
+    TP = ParamSpec("TP")
+    TR = TypeVar("TR")
+
+    SP = ParamSpec("SP")
+    SR = TypeVar("SR")
+
+__all__ = ["start_transaction", "start_span", "with_transaction", "with_span", "sentry_available"]
 
 
 class WithMock(Mock):
-    def __enter__(self):
+    """Mock that can be used with a `with` block."""
+
+    def __enter__(self) -> WithMock:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         pass
 
 
 try:
-    from sentry_sdk import Hub, start_transaction, start_span
+    from sentry_sdk import start_transaction, start_span
 
     sentry_available = True
 
 except ImportError:
-    Hub = None
     start_transaction = WithMock()
     start_span = WithMock()
 
     sentry_available = False
 
 
-def with_transaction(pass_transaction=False, **kwargs):
+def with_transaction(
+    pass_transaction: bool = False,
+    **kwargs: Any,
+) -> Callable[[Callable[TP, TR]], Callable[TP, TR]]:
     """
-    Wrap the function inside the Sentry transaction if the Sentry
-    is installed, otherwise return transaction stub/mock.
+    Wrap the function inside the Sentry transaction.
 
-    :param bool pass_transaction: Should the transaction be passes to wrapped function?
+    If `pass_transaction` is `True` and Sentry is installed, the transaction
+    will be passed as a `transaction` keyword-argument. If Sentry is not
+    installed, empty transaction mock will be passed instead.
+
+    :param bool pass_transaction: Should the transaction be passed to the wrapped function?
+    :param dict kwargs: Arguments to be passed to `start_transaction`
     :return: The function decorator
     """
 
-    def _transaction_decorator(function):
-        def _transaction_wrapper(*fargs, **fkwargs):
+    def _transaction_decorator(function: Callable[TP, TR]) -> Callable[TP, TR]:
+        def _transaction_wrapper(*fargs: TP.args, **fkwargs: TP.kwargs) -> TR:
             if not sentry_available:
                 if pass_transaction:
                     fkwargs["transaction"] = Mock()
@@ -48,23 +77,30 @@ def with_transaction(pass_transaction=False, **kwargs):
     return _transaction_decorator
 
 
-def with_span(pass_span=False, **kwargs):
+def with_span(
+    pass_span: bool = False,
+    **kwargs: Any,
+) -> Callable[[Callable[SP, SR]], Callable[SP, SR]]:
     """
-    Wrap the function inside the Sentry span if the Sentry
-    is installed, otherwise return span stub/mock.
+    Wrap the function inside the Sentry span.
 
-    :param bool pass_span: Should the span be passes to wrapped function?
+    If `pass_span` is `True` and Sentry is installed, the span
+    will be passed as a `span` keyword-argument. If Sentry is not
+    installed, empty span mock will be passed instead.
+
+    :param bool pass_span: Should the span be passed to the wrapped function?
+    :param dict kwargs: Arguments to be passed to `start_child`
     :return: The function decorator
     """
 
-    def _span_decorator(function):
-        def _span_wrapper(*fargs, **fkwargs):
-            if not sentry_available or not Hub.current.scope.span:
+    def _span_decorator(function: Callable[SP, SR]) -> Callable[SP, SR]:
+        def _span_wrapper(*fargs: SP.args, **fkwargs: SP.kwargs) -> SR:
+            if not sentry_available:
                 if pass_span:
                     fkwargs["span"] = Mock()
                 return function(*fargs, **fkwargs)
 
-            with Hub.current.scope.span.start_child(**kwargs) as span:
+            with start_span(**kwargs) as span:
                 if pass_span:
                     fkwargs["span"] = span
                 return function(*fargs, **fkwargs)

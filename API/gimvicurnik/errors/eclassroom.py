@@ -15,7 +15,3 @@ class InvalidTokenError(ClassroomApiError):
 
 class InvalidRecordError(ClassroomApiError):
     pass
-
-
-class LunchScheduleError(ClassroomError):
-    pass

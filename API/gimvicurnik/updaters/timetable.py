@@ -1,60 +1,106 @@
-import datetime
-import hashlib
+from __future__ import annotations
+
 import logging
 import re
+import typing
 from collections import defaultdict
+from datetime import datetime
+from hashlib import sha256
 
 import requests
 
-from ..database import Class, Classroom, Document, Lesson, Teacher
+from ..database import Class, Classroom, Document, DocumentType, Lesson, Teacher
 from ..errors import TimetableApiError
 from ..utils.database import get_or_create
+from ..utils.sentry import sentry_available, with_span
+
+if typing.TYPE_CHECKING:
+    from typing import Tuple
+    from sqlalchemy.orm import Session
+    from sentry_sdk.tracing import Span
+    from ..config import ConfigSourcesTimetable
 
 
 class TimetableUpdater:
-    raw = None
-    hash = None
-
-    def __init__(self, config, session):
-        self.url = config["url"]
-        self.session = session
+    def __init__(self, config: ConfigSourcesTimetable, session: Session) -> None:
         self.logger = logging.getLogger(__name__)
+        self.config = config
+        self.session = session
 
-    def update(self):
-        self._download()
-        self._parse()
+    def update(self) -> None:
+        """Update the timetable."""
 
-    def _download(self):
         try:
-            response = requests.get(self.url)
-            content = response.content
+            self._parse()  # type: ignore[call-arg]
 
+        except Exception as error:
+            if sentry_available:
+                import sentry_sdk
+
+                # fmt: off
+                sentry_sdk.set_context("document", {
+                    "URL": self.config.url,
+                    "type​": DocumentType.TIMETABLE.value
+                })
+                # fmt: on
+
+                sentry_sdk.set_tag("document_source", "timetable")
+                sentry_sdk.set_tag("document_type", DocumentType.TIMETABLE.value)
+
+            self.logger.exception(error)
+
+    def _download(self) -> Tuple[str, str]:
+        """Download the timetable JS file."""
+
+        try:
+            response = requests.get(self.config.url)
+            content = response.content
             response.raise_for_status()
         except IOError as error:
-            raise TimetableApiError("Error while downloading timetable") from error
+            raise TimetableApiError("Error while downloading the timetable") from error
 
-        self.raw = content.decode("utf8")
-        self.hash = str(hashlib.sha256(content).hexdigest())
+        return content.decode("utf8"), sha256(content).hexdigest()
 
-    def _parse(self):
+    @with_span(op="document", pass_span=True)
+    def _parse(self, span: Span) -> None:
+        """Parse the timetable JS file and store lessons."""
+
+        span.description = self.config.url
+        span.set_tag("document.url", self.config.url)
+        span.set_tag("document.type", DocumentType.TIMETABLE.value)
+        span.set_tag("document.action", "crashed")
+
+        # Download the timetable JS and get its hash
+        raw_data, new_hash = self._download()
+
+        # Try to find an existing timetable document
+        document = (
+            self.session.query(Document)
+            .filter(Document.type == DocumentType.TIMETABLE, Document.url == self.config.url)
+            .first()
+        )
+
         # Skip parsing if the timetable is unchanged
-        document = self.session.query(Document).filter(Document.type == "timetable", Document.url == self.url).first()
-        if self.hash == getattr(document, "hash", False):
+        if document and document.hash == new_hash:
             self.logger.info("Skipped because the timetable is unchanged")
             self.logger.debug("Hash: %s", document.hash)
-            self.logger.debug("Last updated: %s", document.date)
+            self.logger.debug("Last updated: %s", document.modified)
+
+            span.set_tag("document.hash", document.hash)
+            span.set_tag("document.modified", document.modified)
+            span.set_tag("document.action", "skipped")
 
             return
 
         # Get raw data from timetable file
-        regex = r'podatki\[([0-9]+)\]\[[0-9]\] = "?([^"\n]*)"?'
-        data = re.findall(regex, self.raw, re.MULTILINE)
+        data = re.findall(r"podatki\[(\d+)]\[\d] = \"?([^\"\n]*)\"?", raw_data, re.MULTILINE)
 
         lessons = defaultdict(list)
         for key, value in data:
             lessons[key].append(value.strip())
 
         # Convert raw data into a model
+        # fmt: off
         models = [
             {
                 "day": lesson[5],
@@ -66,6 +112,7 @@ class TimetableUpdater:
             }
             for _, lesson in lessons.items()
         ]
+        # fmt: on
 
         self.session.query(Lesson).delete()
         self.session.bulk_insert_mappings(Lesson, models)
@@ -73,12 +120,18 @@ class TimetableUpdater:
         # Update or create a document
         if not document:
             document = Document()
+            created = True
+        else:
+            created = False
 
-        document.date = datetime.datetime.now().date()
-        document.type = "timetable"
-        document.url = self.url
-        document.hash = self.hash
-
+        document.type = DocumentType.TIMETABLE
+        document.modified = datetime.utcnow()
+        document.url = self.config.url
+        document.hash = new_hash
         self.session.add(document)
+
+        span.set_tag("document.hash", document.hash)
+        span.set_tag("document.modified", document.modified)
+        span.set_tag("document.action", "created" if created else "updated")
 
         self.logger.info("Finished updating the timetable")

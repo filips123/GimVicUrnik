@@ -1,9 +1,9 @@
 <template>
   <div class="documents px-0 pt-0 pt-md-6">
-    <document-list :documents="circulars" title="Okrožnice" />
-    <document-list :documents="substitutions" class="mt-4" title="Nadomeščanja" />
-    <document-list :documents="lunchSchedule" class="mt-4" title="Razporedi delitve kosila" />
-    <document-list :documents="menus" class="mt-4" title="Jedilniki" display-week-date="true" />
+    <document-list :documents="circulars" title="Okrožnice" displayed-date="created" />
+    <document-list :documents="substitutions" class="mt-4" title="Nadomeščanja" displayed-date="effective" />
+    <document-list :documents="lunchSchedule" class="mt-4" title="Razporedi kosila" displayed-date="effective" />
+    <document-list :documents="menus" class="mt-4" title="Jedilniki" displayed-date="effective" display-date-as-week="true" />
   </div>
 </template>
 

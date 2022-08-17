@@ -7,11 +7,10 @@
       <v-expansion-panel-content>
         <v-list>
           <v-item-group>
-            <v-list-item v-for="(substitution, id) in documents" :key="id" :href="substitution.url" two-line>
+            <v-list-item v-for="(document, id) in documents" :key="id" :href="document.url" two-line>
               <v-list-item-content>
-                <v-list-item-title class="pl-1">{{ substitution.description }}</v-list-item-title>
-                <v-list-item-subtitle v-if="!displayWeekDate">{{ formatDate(substitution.date) }}</v-list-item-subtitle>
-                <v-list-item-subtitle v-else>{{ formatDate(substitution.date) }} — {{ formatEndDate(substitution.date) }}</v-list-item-subtitle>
+                <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
+                <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
           </v-item-group>
@@ -53,9 +52,32 @@ import { getWeekDays } from '@/utils/days'
 
 @Component
 export default class DocumentList extends Vue {
-  @Prop() displayWeekDate!: boolean
   @Prop() title!: string
   @Prop() documents!: Document[]
+
+  @Prop() displayedDate!: string
+  @Prop() displayDateAsWeek!: boolean
+
+  displayDate (document: Document): string {
+    let date
+
+    switch (this.displayedDate) {
+      case 'created':
+        date = document.created
+        break
+      case 'modified':
+        date = document.modified
+        break
+      case 'effective':
+        date = document.effective
+        break
+    }
+
+    if (!date) return ''
+
+    if (!this.displayDateAsWeek) return this.formatDate(date)
+    else return `${this.formatDate(date)} — ${this.formatEndDate(date)}`
+  }
 
   formatDate (date: string): string {
     return new Date(date).toLocaleDateString('sl')

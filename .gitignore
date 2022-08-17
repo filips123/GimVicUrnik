@@ -78,6 +78,7 @@ tmp/
 .eslintcache
 .grunt
 .lock-wscript
+.mypy_cache
 .node_repl_history
 .npm
 .nyc_output

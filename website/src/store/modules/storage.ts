@@ -19,6 +19,7 @@ export interface Lesson {
 
 export interface Substitution extends Lesson {
   date: string;
+  notes: string;
   'original-teacher': string;
   'original-classroom': string;
 }
@@ -56,10 +57,12 @@ export interface Menu {
 }
 
 export interface Document {
-  data: string;
   type: string;
+  created: string;
+  modified: string;
+  effective: string;
   url: string;
-  description: string;
+  title: string;
 }
 
 export function getLessonId (substitution: Lesson): string {

@@ -2,13 +2,11 @@ sources:
   timetable:
     url: https://projekti.gimvic.org/urnik/data.js
   eclassroom:
-    url: https://ucilnica.gimvic.org/webservice/rest/server.php
     token: YOUR-TOKEN-HERE
+    webserviceUrl: https://ucilnica.gimvic.org/webservice/rest/server.php
+    pluginFileWebserviceUrl: https://ucilnica.gimvic.org/webservice/pluginfile.php
+    pluginFileNormalUrl: https://ucilnica.gimvic.org/pluginfile.php
     course: 118
-    pluginfile:
-      webservice: https://ucilnica.gimvic.org/webservice/pluginfile.php
-      normal: https://ucilnica.gimvic.org/pluginfile.php
-      shareToken: false
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
 
@@ -23,11 +21,11 @@ cors:
 
 sentry:
   dsn: YOUR-DSN-HERE
-  enabled: false
+  enabled: true
   collectIPs: false
   maxBreadcrumbs: 100
   sampleRate:
-    commands: 0.5
+    commands: 1.0
     requests: 0.5
     other: 0.5
 
@@ -47,44 +45,34 @@ logging:
       handlers:
         - console
 
-hourtimes:
-  - hour:
-      name: "predura"
-      start: "0710"
-      end: "0755"
-  - hour:
-      name: "1. ura"
-      start: "0800"
-      end: "0845"
-  - hour:
-      name: "2. ura"
-      start: "0850"
-      end: "0935"
-  - hour:
-      name: "3. ura"
-      start: "0940"
-      end: "1025"
-  - hour:
-      name: "4. ura"
-      start: "1055"
-      end: "1140"
-  - hour:
-      name: "5. ura"
-      start: "1145"
-      end: "1230"
-  - hour:
-      name: "6. ura"
-      start: "1235"
-      end: "1320"
-  - hour:
-      name: "7. ura"
-      start: "1325"
-      end: "1410"
-  - hour:
-      name: "8. ura"
-      start: "1415"
-      end: "1500"
-  - hour:
-      name: "9. ura"
-      start: "1505"
-      end: "1550"
+lessonTimes:
+  - name: "predura"
+    start: "0710"
+    end: "0755"
+  - name: "1. ura"
+    start: "0800"
+    end: "0845"
+  - name: "2. ura"
+    start: "0850"
+    end: "0935"
+  - name: "3. ura"
+    start: "0940"
+    end: "1025"
+  - name: "4. ura"
+    start: "1055"
+    end: "1140"
+  - name: "5. ura"
+    start: "1145"
+    end: "1230"
+  - name: "6. ura"
+    start: "1235"
+    end: "1320"
+  - name: "7. ura"
+    start: "1325"
+    end: "1410"
+  - name: "8. ura"
+    start: "1415"
+    end: "1500"
+  - name: "9. ura"
+    start: "1505"
+    end: "1550"
