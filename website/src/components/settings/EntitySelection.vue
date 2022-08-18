@@ -51,12 +51,19 @@ export default class EntitySelection extends Vue {
 
     // Save handler so it can be destroyed later
     this.stateHandler = (event) => {
+      // Get current stage from state
       if ('entitySelectionStage' in event.state) {
         this.currentSelectionStage = event.state.entitySelectionStage
       }
 
-      if (this.currentSelectionStage === -1 && this.isDialog) {
-        this.closeDialog()
+      if (this.isDialog) {
+        // Make dialog persistent if it's on stage > 1
+        this.persistDialog(this.currentSelectionStage > 1)
+
+        // Close dialog if it's on stage == -1
+        if (this.currentSelectionStage === -1) {
+          this.closeDialog()
+        }
       }
     }
 
@@ -73,10 +80,15 @@ export default class EntitySelection extends Vue {
 
   destroyed (): void {
     removeEventListener('popstate', this.stateHandler)
+    this.persistDialog(false)
   }
 
   closeDialog (): void {
     this.$emit('closeDialog')
+  }
+
+  persistDialog (persistent = true): void {
+    if (this.isDialog) this.$emit('persistDialog', persistent)
   }
 
   clickedOk (): void {
@@ -87,16 +99,19 @@ export default class EntitySelection extends Vue {
   selectedClassType (): void {
     history.pushState({ entitySelectionStage: 2 }, '')
     this.currentSelectionStage = 2
+    this.persistDialog()
   }
 
   selectedTeacherType (): void {
     history.pushState({ entitySelectionStage: 3 }, '')
     this.currentSelectionStage = 3
+    this.persistDialog()
   }
 
   selectedClassroomType (): void {
     history.pushState({ entitySelectionStage: 4 }, '')
     this.currentSelectionStage = 4
+    this.persistDialog()
   }
 }
 </script>

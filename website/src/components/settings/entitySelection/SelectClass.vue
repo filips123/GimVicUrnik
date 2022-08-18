@@ -8,6 +8,7 @@
       <v-select v-model="selectedClasses"
         :items="availableClasses"
         label="Izberite razred in izbirne predmete"
+        color="green"
         multiple />
       <v-switch v-model="saveSelection" class="v-input--reverse" color="green" label="Shrani izbiro:" />
     </v-card-text>

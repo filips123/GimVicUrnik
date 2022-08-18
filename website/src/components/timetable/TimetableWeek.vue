@@ -7,9 +7,9 @@
         <thead>
           <tr>
             <th class="timetable-time" :colspan="showHours ? 2 : 1">Ura</th>
-            <th v-for="(name, index) in daysInWeek"
-              :key="index"
-              v-bind:class="{ 'highlight-light': index === currentDay }">{{ name }}
+            <th v-for="(name, index) in daysInWeek" :key="index"
+              v-bind:class="{ 'highlight-light': index === currentDay }">
+              {{ name }}
             </th>
           </tr>
         </thead>
@@ -23,7 +23,8 @@
             </template>
             <td v-for="(data, day) in lesson.days"
               :key="day"
-              v-bind:class="{ 'highlight-light': day === currentDay, highlight: data.substitution }">
+              v-bind:class="{ 'highlight-light': day === currentDay, highlight: data.substitution }"
+              @click.stop="handleDetailsClick($event, day, lesson.time, currentEntity)">
               <span v-if="data.substitution && !data.details">/</span>
               <span v-for="(detail, detailIndex) in data.details" :key="detail.type">
                 <span v-if="detailIndex !== 0" v-html="detailSeparator"></span>
@@ -37,6 +38,14 @@
         </tbody>
       </template>
     </v-simple-table>
+
+    <v-dialog v-model="lessonDetailsDialog" width="25rem">
+      <lesson-details v-if="lessonDetailsDialog"
+        @closeDialog="lessonDetailsDialog = false"
+        v-bind:lesson-day="selectedLessonDay"
+        v-bind:lesson-time="selectedLessonTime"
+        v-bind:lesson-entity="selectedLessonEntity" />
+    </v-dialog>
   </v-sheet>
 </template>
 
@@ -86,7 +95,7 @@
 
 // Set current day highlight
 .theme--light .highlight-light {
-  background: #f8f8f8;
+  background: #f6f6f6;
 }
 
 .theme--dark .highlight-light {
@@ -97,6 +106,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 
+import LessonDetails from '@/components/timetable/LessonDetails.vue'
 import { EntityType, SelectedEntity, SettingsModule } from '@/store/modules/settings'
 import { StateModule } from '@/store/modules/state'
 import { daysInWeek, getCurrentDay } from '@/utils/days'
@@ -106,7 +116,7 @@ import { getTimetableData } from '@/utils/timetable'
 import TimetableLink from './TimetableLink.vue'
 
 @Component({
-  components: { TimetableLink }
+  components: { LessonDetails, TimetableLink }
 })
 export default class TimetableWeek extends Vue {
   daysInWeek = daysInWeek
@@ -114,6 +124,11 @@ export default class TimetableWeek extends Vue {
 
   detailSeparator = ' - '
   contentSeparator = '/&#8203;'
+
+  lessonDetailsDialog = false
+  selectedLessonDay?: number
+  selectedLessonTime?: number
+  selectedLessonEntity?: SelectedEntity
 
   get currentDay (): number {
     return getCurrentDay()
@@ -125,6 +140,10 @@ export default class TimetableWeek extends Vue {
 
   get showHours (): boolean {
     return SettingsModule.showHoursInTimetable
+  }
+
+  get showDetails () :boolean {
+    return SettingsModule.enableShowingDetails
   }
 
   get lessons (): {
@@ -158,7 +177,7 @@ export default class TimetableWeek extends Vue {
           }[] | undefined
         }[]
       } = {
-        time: time,
+        time,
         days: []
       }
 
@@ -186,7 +205,7 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'teacher',
-                contents: lesson.teachers
+                contents: lesson.teachers.filter(x => x)
               },
               {
                 type: 'classroom',
@@ -203,7 +222,7 @@ export default class TimetableWeek extends Vue {
             details: [
               {
                 type: 'class',
-                contents: lesson.classes
+                contents: lesson.classes.filter(x => x)
               },
               {
                 type: 'subject',
@@ -224,7 +243,7 @@ export default class TimetableWeek extends Vue {
             details: [
               {
                 type: 'class',
-                contents: lesson.classes
+                contents: lesson.classes.filter(x => x)
               },
               {
                 type: 'subject',
@@ -232,7 +251,7 @@ export default class TimetableWeek extends Vue {
               },
               {
                 type: 'teacher',
-                contents: lesson.teachers
+                contents: lesson.teachers.filter(x => x)
               }
             ].filter(x => x.contents.length)
           })
@@ -259,6 +278,21 @@ export default class TimetableWeek extends Vue {
     this.contentSeparator = this.currentEntity?.type !== EntityType.EmptyClassrooms ? '/&#8203;' : ' - '
 
     return data
+  }
+
+  handleDetailsClick (
+    event: InputEvent,
+    day: number,
+    time: number,
+    entity: SelectedEntity
+  ): void {
+    if (!this.showDetails || this.currentEntity?.type === EntityType.EmptyClassrooms) return
+    if ((event.target as HTMLElement)?.tagName === 'A') return
+
+    this.selectedLessonDay = day
+    this.selectedLessonTime = time
+    this.selectedLessonEntity = entity
+    this.lessonDetailsDialog = true
   }
 }
 </script>

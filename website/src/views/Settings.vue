@@ -20,7 +20,8 @@
     <settings-switch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
-    <settings-switch v-model="enablePullToRefresh" label="Poteg za posodobitev" />
+    <settings-switch v-model="enableShowingDetails" label="Klikni za podrobnosti" />
+    <settings-switch v-model="enablePullToRefresh" label="Potegni za posodobitev" />
     <settings-switch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
 
     <v-divider class="my-6" />
@@ -47,11 +48,12 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
-    <v-dialog v-model="entitySelectionDialog" width="35rem">
+    <v-dialog v-model="entitySelectionDialog" v-bind:persistent="entitySelectionPersistent" width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
         is-dialog="1"
-        @closeDialog=closeEntityDialog />
+        @closeDialog=closeEntityDialog
+        @persistDialog=persistEntityDialog />
     </v-dialog>
 
     <v-dialog v-model="snackSelectionDialog" width="35rem">
@@ -203,6 +205,8 @@ export default class Settings extends Vue {
   dataCollectionDialog = false
   themeSelectionDialog = false
 
+  entitySelectionPersistent = false
+
   // Sync toggles with Vuex state
   get showSubstitutions (): boolean {
     return SettingsModule.showSubstitutions
@@ -226,6 +230,14 @@ export default class Settings extends Vue {
 
   set showHoursInTimetable (showHoursInTimetable: boolean) {
     SettingsModule.setShowHoursInTimetable(showHoursInTimetable)
+  }
+
+  get enableShowingDetails (): boolean {
+    return SettingsModule.enableShowingDetails
+  }
+
+  set enableShowingDetails (enableShowingDetails: boolean) {
+    SettingsModule.setEnableShowingDetails(enableShowingDetails)
   }
 
   get enablePullToRefresh (): boolean {
@@ -292,6 +304,10 @@ export default class Settings extends Vue {
 
   closeThemeDialog (): void {
     this.themeSelectionDialog = false
+  }
+
+  persistEntityDialog (persistent: boolean): void {
+    this.entitySelectionPersistent = persistent
   }
 }
 </script>

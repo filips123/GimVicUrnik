@@ -1,12 +1,15 @@
 import { EntityType, SelectedEntity, SettingsModule } from '@/store/modules/settings'
 import { DisplayedLesson, getLessonId, StorageModule } from '@/store/modules/storage'
 
+// We should rewrite how lessons and substitution are processed and displayed in the future
+// Different storage formats, deduplicating and other stuff have become "a bit" too messy
+
 export function getTimetableData (entity: SelectedEntity | null, days: number[]): Map<number, Map<number, DisplayedLesson>> {
   const dataSource = entity?.type !== EntityType.EmptyClassrooms ? StorageModule.timetable : StorageModule.emptyClassrooms
   const substitutionsSource = new Map(StorageModule.substitutions)
 
   // Note: Substitutions may not work correctly for classroom because source data are not always complete
-  // This can't be fixed unless we get better source of substitutions (like official API)
+  // This can't be fixed unless we get better source of substitutions (like an official API)
 
   const displayedLessons: Map<number, Map<number, DisplayedLesson>> = new Map()
   for (const lesson of dataSource || []) {
@@ -119,6 +122,33 @@ export function getTimetableData (entity: SelectedEntity | null, days: number[])
         displayedLessons.get(substitution.day)?.get(substitution.time)?.teachers.push(substitution.teacher)
         displayedLessons.get(substitution.day)?.get(substitution.time)?.classrooms.push(substitution.classroom)
         /* eslint-enable */
+      }
+    }
+  }
+
+  // Deduplicate lessons with the same displayed data
+  // We only need to deduplicate based on displayed data
+  // But because JS is JS, deduplicating lists of lists is hard
+  for (const times of displayedLessons.values()) {
+    for (const displayed of times.values()) {
+      const zip = (rows: string[][]) => rows[0].map((_, c) => rows.map(row => row[c]))
+      const combined = zip([displayed.subjects, displayed.classes, displayed.teachers, displayed.classrooms])
+
+      // Magic JS from https://stackoverflow.com/a/53453045
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const t = {}; const deduplicated = combined.filter(a => !(t[a] = a in t))
+
+      displayed.subjects = []
+      displayed.classes = []
+      displayed.teachers = []
+      displayed.classrooms = []
+
+      for (const [subject, class_, teacher, classroom] of deduplicated) {
+        displayed.subjects.push(subject)
+        displayed.classes.push(class_)
+        displayed.teachers.push(teacher)
+        displayed.classrooms.push(classroom)
       }
     }
   }

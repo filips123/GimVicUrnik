@@ -13,7 +13,7 @@ module.exports = defineConfig({
 
     workboxOptions: {
       navigateFallback: '/index.html',
-      navigateFallbackDenylist: [/\./]
+      navigateFallbackDenylist: [/\./, /\/api(?:[/?].*)?$/]
     },
 
     manifestOptions: {

@@ -58,6 +58,7 @@ class Settings extends VuexModule {
   showSubstitutions = true
   showLinksInTimetable = true
   showHoursInTimetable = true
+  enableShowingDetails = true
   enablePullToRefresh = true
   enableUpdateOnLoad = true
 
@@ -80,13 +81,13 @@ class Settings extends VuexModule {
 
   @Mutation
   setSelectedMenuSnack (snack: SnackType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack: snack, lunch: LunchType.Normal }
+    if (this.selectedMenu === null) this.selectedMenu = { snack, lunch: LunchType.Normal }
     else this.selectedMenu.snack = snack
   }
 
   @Mutation
   setSelectedMenuLunch (lunch: LunchType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch: lunch }
+    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch }
     else this.selectedMenu.lunch = lunch
   }
 
@@ -103,6 +104,11 @@ class Settings extends VuexModule {
   @Mutation
   setShowHoursInTimetable (showHoursInTimetable: boolean): void {
     this.showHoursInTimetable = showHoursInTimetable
+  }
+
+  @Mutation
+  setEnableShowingDetails (enableShowingDetails: boolean): void {
+    this.enableShowingDetails = enableShowingDetails
   }
 
   @Mutation
