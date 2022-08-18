@@ -49,6 +49,10 @@
       </v-container>
     </v-main>
 
+    <v-dialog v-model="migrationNoticeDialog" width="35rem">
+      <migration-notice v-if="migrationNoticeDialog" @closeDialog=closeMigrationNoticeDialog />
+    </v-dialog>
+
     <v-snackbar v-model="isSnackbarDisplayed">
       {{ snackbarMessage }}
 
@@ -112,12 +116,14 @@ import { mdiCog, mdiRss } from '@mdi/js'
 import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
+import MigrationNotice from '@/components/base/MigrationNotice.vue'
 import { SettingsModule, ThemeType } from '@/store/modules/settings'
 import { updateAllData } from '@/store/modules/storage'
 import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 
 @Component({
   components: {
+    MigrationNotice,
     ViewNavigationDesktop: () => import(/* webpackChunkName: "desktop" */ '@/components/navigation/ViewNavigationDesktop.vue'),
     ViewNavigationMobile: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/ViewNavigationMobile.vue'),
     DayNavigation: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/DayNavigation.vue')
@@ -131,6 +137,8 @@ export default class App extends Vue {
   isPullToRefreshAllowed = true
   isNavigationDisplayed = true
   isDayMenuDisplayed = false
+
+  migrationNoticeDialog = process.env.VUE_APP_MIGRATION_DISPLAY
 
   isSnackbarDisplayed = false
   snackbarMessage = ''
@@ -257,6 +265,10 @@ export default class App extends Vue {
 
   setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
     this.isDayMenuDisplayed = isDayMenuDisplayed
+  }
+
+  closeMigrationNoticeDialog (): void {
+    this.migrationNoticeDialog = false
   }
 }
 </script>
