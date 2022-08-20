@@ -7,10 +7,33 @@
       <v-expansion-panel-content>
         <v-list>
           <v-item-group>
-            <v-list-item v-for="(document, id) in documents" :key="id" :href="document.url" two-line>
+            <v-list-item v-for="(document, id) in documents" :key="id"  two-line>
               <v-list-item-content>
-                <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
-                <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
+                  <a :href="document.url" style="display: block; text-decoration: none; color: white;"><div><v-list-item-title  class="pl-1">{{ document.title }}</v-list-item-title></div></a>
+                  <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
+                  <v-dialog
+                    v-model="dialog"
+                    width="600px"
+                    v-if="document.content"
+                  >
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        Odpri okrožnico
+                      </v-btn>
+                    </template>
+                    <v-card>
+                      <v-card-title>
+                        <span class="text-h5">{{ document.title }}</span>
+                      </v-card-title >
+                      <v-card-text >
+                      <div class="con" v-html="document.content"></div>
+                      </v-card-text>
+                    </v-card>
+                  </v-dialog>
               </v-list-item-content>
             </v-list-item>
           </v-item-group>

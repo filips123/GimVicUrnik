@@ -66,6 +66,7 @@ class Document(Base):
     title = Column(Text, nullable=True)
     hash = Column(Text, nullable=True)
     parsed = Column(Boolean, nullable=True)
+    content = Column(Text, nullable=True)
 
 
 class Entity:

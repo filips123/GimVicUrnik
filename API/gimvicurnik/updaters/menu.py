@@ -381,3 +381,9 @@ class MenuUpdater(BaseMultiUpdater):
 
         else:
             raise MenuFormatError("Unknown lunch menu document format: " + docformat)
+    
+    def document_has_content(self, document: DocumentInfo) -> bool:
+        return False
+
+    def get_content(self, document: DocumentInfo) -> str:
+        return ""
