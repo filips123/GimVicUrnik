@@ -9,7 +9,7 @@ This repository contains a system for a Progressive Web App to show the timetabl
 
 It uses Python API built with Flask and SQLAlchemy to download and parse the data from the official sources (e-classroom, website) using pdf2docx and bs4. The website is built using Vue.js framework and Vuetify theme. The source code can be found in [`API`](API) and [`website`](website) subdirectories.
 
-The website is currently deployed at [gimvicurnik.filips.si](https://gimvicurnik.filips.si).
+The website is currently deployed at [urnik.gimvic.org](https://urnik.gimvic.org).
 
 **Warning:** This project is unofficial and may contain incomplete or incorrect information. To view the official data, use the official e-classroom of Gimnazija Vič.
 
