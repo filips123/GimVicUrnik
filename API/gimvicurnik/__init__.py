@@ -139,7 +139,7 @@ class GimVicUrnik:
     def configure_database(self) -> None:
         """Configure database session."""
 
-        self.engine = create_engine(self.config.database)
+        self.engine = create_engine(self.config.database, pool_recycle=3600)
         SessionFactory.configure(bind=self.engine)
 
     def create_error_hooks(self) -> None:
