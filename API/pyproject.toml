@@ -5,7 +5,7 @@ readme = "README.md"
 license = "GPL-3.0-or-later"
 version = "0.0.0"
 
-homepage = "https://gimvicurnik.filips.si/"
+homepage = "https://urnik.gimvic.org/"
 repository = "https://github.com/filips123/GimVicUrnik"
 documentation = "https://github.com/filips123/GimVicUrnik/blob/main/README.md"
 
