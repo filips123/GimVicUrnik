@@ -7,34 +7,35 @@
       <v-expansion-panel-content>
         <v-list>
           <v-item-group>
-            <v-list-item v-for="(document, id) in documents" :key="id"  two-line>
+            <v-list-item v-for="(document, id) in documents" :key="id" :href="document.url" two-line>
               <v-list-item-content>
-                  <a :href="document.url" style="display: block; text-decoration: none; color: white;"><div><v-list-item-title  class="pl-1">{{ document.title }}</v-list-item-title></div></a>
-                  <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
-                  <v-dialog
-                    v-model="dialog"
-                    width="600px"
-                    v-if="document.content"
-                  >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                        dark
-                        v-bind="attrs"
-                        v-on="on"
-                      >
-                        Odpri okrožnico
+                <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
+                <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-dialog v-model="documentDialog" v-if="document.content" scrollable width="42rem">
+                <template #activator="{ on: dialog }">
+                  <v-tooltip top>
+                    <template #activator="{ on: tooltip }">
+                      <v-btn icon v-on="{ ...tooltip, ...dialog }" @click.prevent>
+                        <v-icon dark>{{ mdiTextBoxOutline }}</v-icon>
                       </v-btn>
                     </template>
-                    <v-card>
-                      <v-card-title>
-                        <span class="text-h5">{{ document.title }}</span>
-                      </v-card-title >
-                      <v-card-text >
-                      <div class="con" v-html="document.content"></div>
-                      </v-card-text>
-                    </v-card>
-                  </v-dialog>
-              </v-list-item-content>
+                    <span>Odpri besedilo dokumenta</span>
+                  </v-tooltip>
+                </template>
+                <v-card>
+                  <v-card-title>
+                    <span class="text-h5 word-wrap">{{ document.title }}</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <div class="con" v-html="document.content"></div>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="green" text @click="documentDialog = false">Zapri</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-list-item>
           </v-item-group>
         </v-list>
@@ -61,6 +62,11 @@
   font-weight: 400 !important;
 }
 
+// Wrap text by words
+.word-wrap {
+  word-break: break-word;
+}
+
 // Fix padding of title and subtitle
 .v-list-item__title, .v-list-item__subtitle {
   padding-left: 4px !important;
@@ -68,6 +74,7 @@
 </style>
 
 <script lang="ts">
+import { mdiTextBoxOutline } from '@mdi/js'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { Document } from '@/store/modules/storage'
@@ -75,11 +82,15 @@ import { getWeekDays } from '@/utils/days'
 
 @Component
 export default class DocumentList extends Vue {
+  mdiTextBoxOutline = mdiTextBoxOutline
+
   @Prop() title!: string
   @Prop() documents!: Document[]
 
   @Prop() displayedDate!: string
   @Prop() displayDateAsWeek!: boolean
+
+  documentDialog = false
 
   displayDate (document: Document): string {
     let date
