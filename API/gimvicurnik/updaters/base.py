@@ -309,6 +309,8 @@ class BaseMultiUpdater(ABC):
             if has_content:
                 record.hash = new_hash
                 record.content = doc_content
+                record.parsed = True
+
             if crashed:
                 record.parsed = False
                 action = "crashed"
@@ -324,11 +326,16 @@ class BaseMultiUpdater(ABC):
         span.set_tag("document.action", action)
 
         # Log the document status
-        if parsable or has_content:
+        if parsable:
             if action == "created":
                 self.logger.info("Created a new %s document for %s", document.type.value, effective)
             elif action == "updated":
                 self.logger.info("Updated the %s document for %s", document.type.value, effective)
+        elif has_content:
+            if action == "created":
+                self.logger.info("Created a new %s document from %s", document.type.value, created)
+            elif action == "updated":
+                self.logger.info("Updated the %s document from %s", document.type.value, created)
         else:
             if action == "created":
                 self.logger.info("Created a new %s document", document.type.value)
