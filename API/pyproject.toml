@@ -49,6 +49,7 @@ SQLAlchemy = "^1.4.40"
 PyMuPDF = "~1.18.19"
 pdf2docx = "~0.4.6"
 openpyxl = "^3.0.10"
+mammoth = "^1.4.19"
 icalendar = "^4.1.0"
 beautifulsoup4 = { version = "^4.11.1", extras = ["lxml"] }
 
@@ -59,7 +60,6 @@ sentry-sdk = { version = "^1.9.5", extras = ["flask", "sqlalchemy", "pure_eval"]
 PyMySQL = { version = "^1.0.2", optional = true }
 mysqlclient = { version = "^2.1.1", optional = true }
 psycopg2 = { version = "^2.9.3", optional = true }
-mammoth = "^1.4.19"
 
 [tool.poetry.dev-dependencies]
 flakeheaven = "^3.0.0"

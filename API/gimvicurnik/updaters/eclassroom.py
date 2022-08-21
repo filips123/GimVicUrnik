@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import io
 import logging
 import os
 import re
@@ -8,9 +9,9 @@ import tempfile
 import typing
 from datetime import date, datetime, timezone
 from itertools import product
-import io
 
 import requests
+from mammoth import convert_to_html  # type: ignore
 from pdf2docx import extract_tables  # type: ignore
 
 from .base import BaseMultiUpdater, DocumentInfo
@@ -19,7 +20,6 @@ from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
 
-from mammoth import convert_to_html
 if typing.TYPE_CHECKING:
     from typing import Any, Dict, Iterator, List, Optional
     from sqlalchemy.orm import Session
@@ -91,7 +91,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     title=module["name"],
                     created=datetime.fromtimestamp(module["contents"][0]["timecreated"], tz=timezone.utc),
                     modified=datetime.fromtimestamp(module["contents"][0]["timemodified"], tz=timezone.utc),
-                    file_extension=self.normalize_url(module["contents"][0]["fileurl"]).split(".")[-1]
+                    file_extension=self.normalize_url(module["contents"][0]["fileurl"]).split(".")[-1],
                 )
 
     def _get_external_urls(self) -> Iterator[DocumentInfo]:
@@ -203,19 +203,19 @@ class EClassroomUpdater(BaseMultiUpdater):
         return False
 
     def document_has_content(self, document: DocumentInfo) -> bool:
-        """ Return wether the document has content"""
+        """Return whether the document has content."""
 
         if document.file_extension == "docx":
             return True
-        
+
         return False
 
-    
-    def get_content(self, document: DocumentInfo, content: bytes) -> str:
-        """ Get file content of docx circulars """
+    def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
+        """Get file content of docx circulars."""
+
         result = convert_to_html(io.BytesIO(content))
-        return result.value # The generated HTML
-    
+        return typing.cast(str, result.value)  # The generated HTML
+
     @with_span(op="parse", pass_span=True)
     def parse_document(self, document: DocumentInfo, content: bytes, effective: date, span: Span) -> None:  # type: ignore[override]
         """Parse the document and store extracted data."""

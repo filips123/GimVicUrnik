@@ -12,7 +12,7 @@ from ..database import Document
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar, Iterator, Optional, Type
+    from typing import ClassVar, Iterator, Optional, Type, Tuple
     from logging import Logger
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -44,6 +44,7 @@ class DocumentInfo:
     The document's modified datetime in UTC.
     May be `None` if cannot be determined.
     """
+
     file_extension: Optional[str] = None
     """
     The document file extension.
@@ -154,28 +155,22 @@ class BaseMultiUpdater(ABC):
 
         # == DOCUMENT PROCESSING
 
-        #store of value for content of circulars
-        doc_content = ""
+        # Store of value for content of circulars
+        doc_content = None
+
         # Get the modified time if it is set, otherwise use the current time
         created = document.created or datetime.datetime.utcnow()
         modified = document.modified or created
 
         if self.document_needs_parsing(document):
             parsable = True
-            hasContent = False
+            has_content = False
             crashed = False
             action = "updated"
 
             # Download the document and get its content and hash
             # If this fails, we can't do anything other than to skip the document
-            try:
-                response = requests.get(self.tokenize_url(document.url))
-                response.raise_for_status()
-
-                content = response.content
-                new_hash = sha256(content).hexdigest()
-            except IOError as error:
-                raise self.error(f"Error while downloading a {document.type.value} document") from error
+            content, new_hash = self.download_document(document)
 
             # Skip parsing if the document is unchanged
             if record and record.parsed and record.hash == new_hash:
@@ -227,47 +222,39 @@ class BaseMultiUpdater(ABC):
 
                 self.logger.exception(error)
                 crashed = True
+
         elif self.document_has_content(document):
             parsable = False
-            hasContent = True
+            has_content = True
             crashed = False
             action = "updated"
+            effective = None
 
             # Download the document and get its content and hash
             # If this fails, we can't do anything other than to skip the document
-            try:
-                response = requests.get(self.tokenize_url(document.url))
-                response.raise_for_status()
-
-                content = response.content
-                new_hash = sha256(content).hexdigest()
-            except IOError as error:
-                raise self.error(f"Error while downloading a {document.type.value} document") from error
+            content, new_hash = self.download_document(document)
 
             # Skip parsing if the document is unchanged
             if record and record.parsed and record.hash == new_hash:
                 self.logger.info(
-                    "Skipped because the %s document for %s is unchanged",
+                    "Skipped because the %s document from %s is unchanged",
                     document.type.value,
-                    record.effective,
+                    record.created,
                 )
 
                 self.logger.debug("URL: %s", record.url)
                 self.logger.debug("Hash: %s", record.hash)
                 self.logger.debug("Created date: %s", record.created)
                 self.logger.debug("Modified date: %s", record.modified)
-                self.logger.debug("Effective date: %s", record.effective)
 
-                _effective = record.effective.isoformat() if record.effective else None
                 span.set_tag("document.hash", record.hash)
                 span.set_tag("document.created", record.created)
                 span.set_tag("document.modified", record.modified)
-                span.set_tag("document.effective", _effective)
                 span.set_tag("document.action", "skipped")
 
                 return
 
-            # Get the conntent from the document using subclassed method and handle any errors
+            # Get the document content from the subclassed method and handle any errors
             # If this fails, we store the record but mark it for later parsing
             try:
                 doc_content = self.get_content(document, content)
@@ -280,7 +267,6 @@ class BaseMultiUpdater(ABC):
                         "URL": document.url,
                         "created": record.created if record else created,
                         "modified": modified,
-                        "effective": effective.isoformat(),
                         "type​": document.type.value,
                     })
                     # fmt: on
@@ -291,9 +277,10 @@ class BaseMultiUpdater(ABC):
                 self.logger.exception(error)
                 crashed = True
             pass
+
         else:
             parsable = False
-            hasContent = False
+            has_content = False
             crashed = False
             action = "skipped"
             effective = None
@@ -319,7 +306,7 @@ class BaseMultiUpdater(ABC):
                 record.hash = new_hash
                 record.parsed = True
 
-            if hasContent:
+            if has_content:
                 record.hash = new_hash
                 record.content = doc_content
             if crashed:
@@ -337,7 +324,7 @@ class BaseMultiUpdater(ABC):
         span.set_tag("document.action", action)
 
         # Log the document status
-        if parsable:
+        if parsable or has_content:
             if action == "created":
                 self.logger.info("Created a new %s document for %s", document.type.value, effective)
             elif action == "updated":
@@ -347,6 +334,20 @@ class BaseMultiUpdater(ABC):
                 self.logger.info("Created a new %s document", document.type.value)
             elif action == "skipped":
                 self.logger.info("Skipped because the %s document is already stored", document.type.value)
+
+    def download_document(self, document: DocumentInfo) -> Tuple[bytes, str]:
+        """Download a document and return its content and hash"""
+
+        try:
+            response = requests.get(self.tokenize_url(document.url))
+            response.raise_for_status()
+
+            content = response.content
+            sha = sha256(content).hexdigest()
+            return content, sha
+
+        except IOError as error:
+            raise self.error(f"Error while downloading a {document.type.value} document") from error
 
     # noinspection PyMethodMayBeStatic
     def tokenize_url(self, url: str) -> str:
@@ -373,11 +374,11 @@ class BaseMultiUpdater(ABC):
     @abstractmethod
     def parse_document(self, document: DocumentInfo, content: bytes, effective: datetime.date) -> None:
         """Parse the document and store extracted data. Must be set by subclasses."""
-    
-    @abstractmethod
-    def document_has_content(self, document: DocumentInfo) -> bool:
-        """Return whether the document has conntent. Conntent is the conntent of word files on circulars. Must be set by subclasses."""
 
     @abstractmethod
-    def get_content(self, document: DocumentInfo) -> str:
-        """HTML string of conntent of type circular"""
+    def document_has_content(self, document: DocumentInfo) -> bool:
+        """Return whether the document has content. Must be set by subclasses."""
+
+    @abstractmethod
+    def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
+        """Get the HTML string of content of document type circular"""
