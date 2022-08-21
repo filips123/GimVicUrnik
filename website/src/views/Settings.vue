@@ -53,7 +53,10 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
-    <v-dialog v-model="entitySelectionDialog" v-bind:persistent="entitySelectionPersistent" width="35rem">
+    <v-dialog v-model="entitySelectionDialog"
+      v-bind:persistent="entitySelectionPersistent"
+      content-class="settings-dialog"
+      width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
         is-dialog="1"
@@ -61,19 +64,19 @@
         @persistDialog=persistEntityDialog />
     </v-dialog>
 
-    <v-dialog v-model="snackSelectionDialog" width="35rem">
+    <v-dialog v-model="snackSelectionDialog" content-class="settings-dialog" width="35rem">
       <snack-selection v-if="snackSelectionDialog" @closeDialog=closeSnackDialog />
     </v-dialog>
 
-    <v-dialog v-model="lunchSelectionDialog" width="35rem">
+    <v-dialog v-model="lunchSelectionDialog" content-class="settings-dialog" width="35rem">
       <lunch-selection v-if="lunchSelectionDialog" @closeDialog=closeLunchDialog />
     </v-dialog>
 
-    <v-dialog v-model="dataCollectionDialog" width="35rem">
+    <v-dialog v-model="dataCollectionDialog" content-class="settings-dialog" width="35rem">
       <data-collection-selection v-if="dataCollectionDialog" @closeDialog=closeDataCollectionDialog />
     </v-dialog>
 
-    <v-dialog v-model="themeSelectionDialog" width="35rem">
+    <v-dialog v-model="themeSelectionDialog" content-class="settings-dialog" width="35rem">
       <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
     </v-dialog>
 
@@ -85,7 +88,7 @@
 
 <style lang="scss">
 // Add back top padding that is removed by a dialog
-.v-dialog > .v-card > .v-card__text {
+.settings-dialog.v-dialog > .v-card > .v-card__text {
   padding: 16px 24px 20px !important;
 }
 
