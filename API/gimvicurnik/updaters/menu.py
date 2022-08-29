@@ -18,7 +18,7 @@ from ..errors import MenuApiError, MenuDateError, MenuFormatError
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Iterator
+    from typing import Iterator, Optional
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesMenu
@@ -381,3 +381,13 @@ class MenuUpdater(BaseMultiUpdater):
 
         else:
             raise MenuFormatError("Unknown lunch menu document format: " + docformat)
+
+    def document_has_content(self, document: DocumentInfo) -> bool:
+        """Menu documents do not have content."""
+
+        return False
+
+    def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
+        """Menu documents do not have content."""
+
+        return None

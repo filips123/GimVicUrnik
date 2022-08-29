@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:webfeeds="http://webfeeds.org/rss/1.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:webfeeds="http://webfeeds.org/rss/1.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>{{ name }} - Gimnazija Vič</title>
     <description>{{ name }} - Gimnazija Vič</description>
@@ -30,6 +30,7 @@
         <pubDate>{{ entry.created.strftime("%a, %d %b %Y %H:%M:%S GMT") }}</pubDate>
         <atom:published>{{ entry.created.strftime("%Y-%m-%dT%H:%M:%SZ") }}</atom:published>
         <atom:updated>{{ entry.modified.strftime("%Y-%m-%dT%H:%M:%SZ") }}</atom:updated>
+        {% if entry.content %}<content:encoded><![CDATA[{{ entry.content | safe }}]]></content:encoded>{% endif %}
       </item>
     {% endfor %}
   </channel>

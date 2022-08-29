@@ -27,6 +27,7 @@ class DocumentsHandler(BaseHandler):
                     Document.effective,
                     Document.url,
                     Document.title,
+                    Document.content,
                 )
                 .order_by(
                     Document.created,
@@ -43,6 +44,7 @@ class DocumentsHandler(BaseHandler):
                     "effective": document.effective.isoformat() if document.effective else None,
                     "url": document.url,
                     "title": document.title,
+                    "content": document.content,
                 }
                 for document in query
             ]

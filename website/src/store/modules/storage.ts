@@ -63,6 +63,7 @@ export interface Document {
   effective: string;
   url: string;
   title: string;
+  content: string;
 }
 
 export function getLessonId (substitution: Lesson): string {
