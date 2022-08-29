@@ -80,7 +80,7 @@
       <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
     </v-dialog>
 
-    <v-dialog v-model="moodleTokenDialog" width="35rem">
+    <v-dialog v-model="moodleTokenDialog" content-class="settings-dialog" width="35rem">
       <moodle-token v-if="moodleTokenDialog" @closeDialog=closeMoodleTokenDialog />
     </v-dialog>
   </div>
