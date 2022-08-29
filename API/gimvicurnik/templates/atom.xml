@@ -25,10 +25,12 @@
       {% else %}<title>{{ entry.title }}</title>
       {% endif %}
       <id>{{ entry.url }}</id>
+      <link href="{{ entry.url }}" />
       <link rel="alternate" href="{{ entry.url }}" type="{{ get_mime_type(entry.url) }}" />
       <link rel="enclosure" href="{{ entry.url }}" type="{{ get_mime_type(entry.url) }}" />
       <published>{{ entry.created.strftime("%Y-%m-%dT%H:%M:%SZ") }}</published>
       <updated>{{ entry.modified.strftime("%Y-%m-%dT%H:%M:%SZ") }}</updated>
+      {% if entry.content %}<content type="html">{{ entry.content }}</content>{% endif %}
     </entry>
   {% endfor %}
 </feed>

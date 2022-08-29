@@ -71,6 +71,7 @@ class FeedHandler(BaseHandler):
                     Document.effective,
                     Document.url,
                     Document.title,
+                    Document.content,
                 )
                 .filter(query_filter)
                 .order_by(Document.created, Document.modified)
