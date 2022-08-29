@@ -36,6 +36,11 @@
       :message="themeStatus"
       label="Barvna tema" />
 
+    <settings-action v-model="moodleTokenDialog"
+      :icon="mdiKey"
+      :message="moodleTokenStatus"
+      label="Moodle žeton" />
+
     <v-divider class="my-6" />
 
     <settings-action :icon="mdiUpdate"
@@ -48,7 +53,10 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
-    <v-dialog v-model="entitySelectionDialog" v-bind:persistent="entitySelectionPersistent" width="35rem">
+    <v-dialog v-model="entitySelectionDialog"
+      v-bind:persistent="entitySelectionPersistent"
+      content-class="settings-dialog"
+      width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
         is-dialog="1"
@@ -56,27 +64,31 @@
         @persistDialog=persistEntityDialog />
     </v-dialog>
 
-    <v-dialog v-model="snackSelectionDialog" width="35rem">
+    <v-dialog v-model="snackSelectionDialog" content-class="settings-dialog" width="35rem">
       <snack-selection v-if="snackSelectionDialog" @closeDialog=closeSnackDialog />
     </v-dialog>
 
-    <v-dialog v-model="lunchSelectionDialog" width="35rem">
+    <v-dialog v-model="lunchSelectionDialog" content-class="settings-dialog" width="35rem">
       <lunch-selection v-if="lunchSelectionDialog" @closeDialog=closeLunchDialog />
     </v-dialog>
 
-    <v-dialog v-model="dataCollectionDialog" width="35rem">
+    <v-dialog v-model="dataCollectionDialog" content-class="settings-dialog" width="35rem">
       <data-collection-selection v-if="dataCollectionDialog" @closeDialog=closeDataCollectionDialog />
     </v-dialog>
 
-    <v-dialog v-model="themeSelectionDialog" width="35rem">
+    <v-dialog v-model="themeSelectionDialog" content-class="settings-dialog" width="35rem">
       <theme-selection v-if="themeSelectionDialog" @closeDialog=closeThemeDialog />
+    </v-dialog>
+
+    <v-dialog v-model="moodleTokenDialog" width="35rem">
+      <moodle-token v-if="moodleTokenDialog" @closeDialog=closeMoodleTokenDialog />
     </v-dialog>
   </div>
 </template>
 
 <style lang="scss">
 // Add back top padding that is removed by a dialog
-.v-dialog > .v-card > .v-card__text {
+.settings-dialog.v-dialog > .v-card > .v-card__text {
   padding: 16px 24px 20px !important;
 }
 
@@ -88,12 +100,13 @@
 </style>
 
 <script lang="ts">
-import { mdiDatabaseImportOutline, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import LunchSelection from '@/components/settings/LunchSelection.vue'
+import MoodleToken from '@/components/settings/MoodleToken.vue'
 import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import SnackSelection from '@/components/settings/SnackSelection.vue'
@@ -103,6 +116,7 @@ import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
   components: {
+    MoodleToken,
     DataCollectionSelection,
     ThemeSelection,
     SnackSelection,
@@ -117,6 +131,7 @@ export default class Settings extends Vue {
   mdiDatabaseImportOutline = mdiDatabaseImportOutline
   mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
+  mdiKey = mdiKey
 
   // Get app version
   get appVersion (): string {
@@ -198,12 +213,18 @@ export default class Settings extends Vue {
     }
   }
 
+  // Get Moodle token status as string
+  get moodleTokenStatus (): string {
+    return SettingsModule.moodleToken ? 'Nastavljen' : 'Ni nastavljen'
+  }
+
   // Dialog states
   entitySelectionDialog = false
   snackSelectionDialog = false
   lunchSelectionDialog = false
   dataCollectionDialog = false
   themeSelectionDialog = false
+  moodleTokenDialog = false
 
   entitySelectionPersistent = false
 
@@ -304,6 +325,10 @@ export default class Settings extends Vue {
 
   closeThemeDialog (): void {
     this.themeSelectionDialog = false
+  }
+
+  closeMoodleTokenDialog (): void {
+    this.moodleTokenDialog = false
   }
 
   persistEntityDialog (persistent: boolean): void {

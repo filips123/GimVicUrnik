@@ -7,7 +7,7 @@
       <v-expansion-panel-content>
         <v-list>
           <v-item-group>
-            <v-list-item v-for="(document, id) in documents" :key="id" :href="document.url" two-line>
+            <v-list-item v-for="(document, id) in documents" :key="id" :href="tokenizeUrl(document.url)" two-line>
               <v-list-item-content>
                 <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
                 <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
@@ -77,6 +77,7 @@
 import { mdiTextBoxOutline } from '@mdi/js'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
+import { SettingsModule } from '@/store/modules/settings'
 import { Document } from '@/store/modules/storage'
 import { getWeekDays } from '@/utils/days'
 
@@ -119,6 +120,20 @@ export default class DocumentList extends Vue {
 
   formatEndDate (date: string): string {
     return getWeekDays(new Date(date))[4].toLocaleDateString('sl')
+  }
+
+  tokenizeUrl (url: string): string {
+    const pluginFileWebserviceUrl = process.env.VUE_APP_ECLASSROOM_WEBSERVICE
+    const pluginFileNormalUrl = process.env.VUE_APP_ECLASSROOM_NORMAL
+    const moodleToken = SettingsModule.moodleToken
+
+    if (moodleToken && url.includes(pluginFileNormalUrl)) {
+      return url
+        .replace(pluginFileNormalUrl, pluginFileWebserviceUrl) +
+        `?token=${moodleToken}`
+    }
+
+    return url
   }
 }
 </script>
