@@ -16,7 +16,15 @@
                 <template #activator="{ on: dialog }">
                   <v-tooltip top>
                     <template #activator="{ on: tooltip }">
-                      <v-btn icon v-on="{ ...tooltip, ...dialog }" aria-label="Odpri besedilo dokumenta" @click.prevent>
+                      <v-btn icon
+                        v-on="{ ...tooltip, ...dialog }"
+                        aria-label="Odpri besedilo dokumenta"
+                        @click.prevent
+                        @click.stop
+                        @mousedown.stop
+                        @mouseup.stop
+                        @touchstart.stop
+                        @touchend.stop>
                         <v-icon dark>{{ mdiTextBoxOutline }}</v-icon>
                       </v-btn>
                     </template>
