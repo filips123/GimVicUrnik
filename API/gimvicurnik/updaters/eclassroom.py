@@ -127,7 +127,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 url=self.normalize_url(content["externalurl"]),
                 type=self._get_document_type(content["externalurl"]),
                 title=content["name"],
-                created=datetime.fromtimestamp(content["timecreated"], tz=timezone.utc),
+                created=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
                 modified=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
             )
 

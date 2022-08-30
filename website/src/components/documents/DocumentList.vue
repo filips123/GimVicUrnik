@@ -12,11 +12,19 @@
                 <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
                 <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
               </v-list-item-content>
-              <v-dialog v-model="documentDialog" v-if="document.content" scrollable width="42rem">
+              <v-dialog v-model="documentDialogs[id]" v-if="document.content" @input="handlePTR" scrollable width="42rem">
                 <template #activator="{ on: dialog }">
                   <v-tooltip top>
                     <template #activator="{ on: tooltip }">
-                      <v-btn icon v-on="{ ...tooltip, ...dialog }" @click.prevent>
+                      <v-btn icon
+                        v-on="{ ...tooltip, ...dialog }"
+                        aria-label="Odpri besedilo dokumenta"
+                        @click.prevent
+                        @click.stop
+                        @mousedown.stop
+                        @mouseup.stop
+                        @touchstart.stop
+                        @touchend.stop>
                         <v-icon dark>{{ mdiTextBoxOutline }}</v-icon>
                       </v-btn>
                     </template>
@@ -32,7 +40,7 @@
                   </v-card-text>
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="green" text @click="documentDialog = false">Zapri</v-btn>
+                    <v-btn color="green" text @click="$set(documentDialogs, id, false); handlePTR()">Zapri</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-dialog>
@@ -91,7 +99,8 @@ export default class DocumentList extends Vue {
   @Prop() displayedDate!: string
   @Prop() displayDateAsWeek!: boolean
 
-  documentDialog = false
+  documentDialogs = {}
+  pullToRefresh = true
 
   displayDate (document: Document): string {
     let date
@@ -134,6 +143,11 @@ export default class DocumentList extends Vue {
     }
 
     return url
+  }
+
+  handlePTR (): void {
+    this.pullToRefresh = !this.pullToRefresh
+    this.$root.$children[0].isPullToRefreshAllowed = this.pullToRefresh
   }
 }
 </script>
