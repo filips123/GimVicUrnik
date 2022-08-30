@@ -3,7 +3,7 @@
 <template>
   <v-navigation-drawer :mini-variant="!isNavigationExpanded" app clipped mini-variant-width="72" permanent>
     <v-list rounded class="pt-6">
-      <v-list-item link :to="{ name: 'timetable' }">
+      <v-list-item link :to="{ name: 'timetable' }" aria-label="Urnik">
         <v-list-item-icon>
           <v-icon>{{ mdiTimetable }}</v-icon>
         </v-list-item-icon>
@@ -11,7 +11,7 @@
           <v-list-item-title>Urnik</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link :to="{ name: 'menus' }">
+      <v-list-item link :to="{ name: 'menus' }" aria-label="Jedilnik">
         <v-list-item-icon>
           <v-icon>{{ mdiFood }}</v-icon>
         </v-list-item-icon>
@@ -19,7 +19,7 @@
           <v-list-item-title>Jedilnik</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link :to="{ name: 'documents' }">
+      <v-list-item link :to="{ name: 'documents' }" aria-label="Okrožnice">
         <v-list-item-icon>
           <v-icon>{{ mdiNewspaper }}</v-icon>
         </v-list-item-icon>

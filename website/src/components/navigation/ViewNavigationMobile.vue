@@ -2,17 +2,17 @@
 
 <template>
   <v-bottom-navigation fixed grow>
-    <v-btn :to="{ name: 'timetable' }">
+    <v-btn :to="{ name: 'timetable' }" aria-label="Urnik">
       <span>Urnik</span>
       <v-icon>{{ mdiTimetable }}</v-icon>
     </v-btn>
 
-    <v-btn :to="{ name: 'menus' }">
+    <v-btn :to="{ name: 'menus' }" aria-label="Jedilnik">
       <span>Jedilnik</span>
       <v-icon>{{ mdiFood }}</v-icon>
     </v-btn>
 
-    <v-btn :to="{ name: 'documents' }">
+    <v-btn :to="{ name: 'documents' }" aria-label="Okrožnice">
       <span>Okrožnice</span>
       <v-icon>{{ mdiNewspaper }}</v-icon>
     </v-btn>
