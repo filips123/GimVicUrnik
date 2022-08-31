@@ -167,6 +167,9 @@ class Classroom(Entity, Base):
         days = (1, 5)
         times = Session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
 
+        if times[0] is None or times[1] is None:
+            return []
+
         classrooms = list(Session.query(Classroom).order_by(Classroom.name))
         lessons = list(Session.query(Lesson).join(Classroom))
 
