@@ -13,7 +13,6 @@ from sqlalchemy import (
     Index,
     Integer,
     SmallInteger,
-    String,
     Text,
     Time,
     func,
@@ -67,7 +66,7 @@ class Document(Base):
     title = Column(Text, nullable=True)
     hash = Column(Text, nullable=True)
     parsed = Column(Boolean, nullable=True)
-    content = Column(String(70000), nullable=True)
+    content = Column(Text(70000), nullable=True)
 
 
 class Entity:
