@@ -22,6 +22,7 @@ from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
     from typing import Any, Dict, Iterator, List, Optional
+    from mammoth.documents import Image  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
@@ -213,7 +214,10 @@ class EClassroomUpdater(BaseMultiUpdater):
     def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
         """Get file content of docx circulars."""
 
-        result = convert_to_html(io.BytesIO(content))
+        def ignore_images(_image: Image) -> Dict:
+            return {}
+
+        result = convert_to_html(io.BytesIO(content), convert_image=ignore_images)
         return typing.cast(str, result.value)  # The generated HTML
 
     @with_span(op="parse", pass_span=True)
