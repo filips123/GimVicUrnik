@@ -13,6 +13,7 @@ from sqlalchemy import (
     Index,
     Integer,
     SmallInteger,
+    String,
     Text,
     Time,
     func,
@@ -66,7 +67,7 @@ class Document(Base):
     title = Column(Text, nullable=True)
     hash = Column(Text, nullable=True)
     parsed = Column(Boolean, nullable=True)
-    content = Column(Text, nullable=True)
+    content = Column(String(70000), nullable=True)
 
 
 class Entity:
@@ -166,6 +167,9 @@ class Classroom(Entity, Base):
     def get_empty(cls) -> Iterator[Dict[str, Any]]:
         days = (1, 5)
         times = Session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
+
+        if times[0] is None or times[1] is None:
+            return []
 
         classrooms = list(Session.query(Classroom).order_by(Classroom.name))
         lessons = list(Session.query(Lesson).join(Classroom))
