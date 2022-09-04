@@ -132,8 +132,10 @@ class MenuUpdater(BaseMultiUpdater):
         # Example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
         # Example: 01-splet-september-4-teden-02-M-popravek.pdf
         # Example: 01-splet-januar1-teden-02-K.pdf
+        # Example: 01-splet-september-2-teden-02.pdf
+        # Example: 01-splet-september-2-teden-M-02.pdf
         ""
-        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
+        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden(?:-[MK])?-?\d*(?:-[MK])?-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
 
         if date:
             today = datetime.date.today()
