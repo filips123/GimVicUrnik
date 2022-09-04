@@ -299,10 +299,10 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Special case: Classroom aliases
         # Maybe these mappings aren't correct, but who knows...
-        if name == "Mala dvorana" or name == "Mala telovadnica":
-            return "TV2"
         if name == "Velika dvorana" or name == "Velika telovadnica":
             return "TV1"
+        if name == "Mala dvorana" or name == "Mala telovadnica":
+            return "TV3"
 
         # Return the normal name
         return name
