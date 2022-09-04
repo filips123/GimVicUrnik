@@ -109,14 +109,9 @@ class MenuUpdater(BaseMultiUpdater):
 
         url = document.url
 
-        # Some empty strings are needed here because of a Black bug that removed our comments
-        # TODO: Remove them once the project updates to Black 22.7 (or a version with the fix)
-        # SEE: https://github.com/psf/black/issues/2646
-
         # == FORMAT TYPE 1
         # Example: KOSILO-4jan-8jan-2021.pdf
         # Example: KOSILO-25jan-29jan-2021-PDF.pdf
-        ""
         date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)  # fmt: skip
 
         if date:
@@ -132,8 +127,9 @@ class MenuUpdater(BaseMultiUpdater):
         # Example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
         # Example: 01-splet-september-4-teden-02-M-popravek.pdf
         # Example: 01-splet-januar1-teden-02-K.pdf
-        ""
-        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden-?\d*-[MK]-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
+        # Example: 01-splet-september-2-teden-02.pdf
+        # Example: 01-splet-september-2-teden-M-02.pdf
+        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden(?:-[MK])?-?\d*(?:-[MK])?-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
 
         if date:
             today = datetime.date.today()
