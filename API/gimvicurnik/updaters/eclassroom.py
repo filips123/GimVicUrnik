@@ -581,7 +581,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     row[0], row[1] = row[0].split(" ", 1)
 
                 # Handle different time formats
-                row[0] = row[0].strip().replace(".", ":")
+                row[0] = row[0].replace("cca", "").replace(".", ":").strip()
 
                 # Get the new time if it is specified
                 is_time_valid = row[0] and row[0].strip() != "do"
