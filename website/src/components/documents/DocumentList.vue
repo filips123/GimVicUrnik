@@ -85,6 +85,7 @@
 import { mdiTextBoxOutline } from '@mdi/js'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
+import App from '@/App.vue'
 import { SettingsModule } from '@/store/modules/settings'
 import { Document } from '@/store/modules/storage'
 import { getWeekDays } from '@/utils/days'
@@ -146,8 +147,8 @@ export default class DocumentList extends Vue {
   }
 
   handlePTR (): void {
-    this.pullToRefresh = !this.pullToRefresh
-    this.$root.$children[0].isPullToRefreshAllowed = this.pullToRefresh
+    this.pullToRefresh = !this.pullToRefresh;
+    (this.$root.$children[0] as App).isPullToRefreshAllowed = this.pullToRefresh
   }
 }
 </script>
