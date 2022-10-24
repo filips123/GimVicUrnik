@@ -570,6 +570,10 @@ class EClassroomUpdater(BaseMultiUpdater):
                 if len(row) != 5 or not row[0]:
                     continue
 
+                # Skip invalid time formats
+                if "odj." in row[0]:
+                    continue
+
                 # Handle multiple times in the same cell
                 times = row[0].split("\n", 1)
                 if len(times) == 2:
