@@ -246,6 +246,20 @@ class EClassroomUpdater(BaseMultiUpdater):
             # This cannot happen because only menus are provided by the API
             raise KeyError("Unknown parsable document type from the e-classroom")
 
+    def _normalize_subject_name(self, name: str) -> Optional[str]:
+        """Normalize the subject name."""
+
+        # Special case: Unknown subject
+        if self._is_name_empty(name):
+            return None
+
+        # Special case: Subject aliases
+        if name == "ŠVZS":
+            return "ŠVZ"
+
+        # Return the normal name
+        return name
+
     def _normalize_teacher_name(self, name: str) -> Optional[str]:
         """Normalize the teacher name."""
 
@@ -401,7 +415,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 if parser_type == ParserType.SUBSTITUTUONS:
                     # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
-                    subject = self._normalize_other_names(row[5])
+                    subject = self._normalize_subject_name(row[5])
                     notes = self._normalize_other_names(row[6])
 
                     # Get the original teacher if it is specified
@@ -435,7 +449,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif parser_type == ParserType.LESSON_CHANGE:
                     # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
-                    subject = self._normalize_other_names(row[3].split(" → ")[1])
+                    subject = self._normalize_subject_name(row[3].split(" → ")[1])
                     notes = self._normalize_other_names(row[5])
 
                     # Get the original and the new teacher
@@ -480,7 +494,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif parser_type == ParserType.SUBJECT_CHANGE:
                     # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
-                    subject = self._normalize_other_names(row[3].split(" → ")[1])
+                    subject = self._normalize_subject_name(row[3].split(" → ")[1])
                     notes = self._normalize_other_names(row[5])
 
                     # Get the teacher (which stays the same)
@@ -508,7 +522,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif parser_type == ParserType.CLASSROOM_CHANGE:
                     # Get basic substitution properties
                     time = row[1][:-1] if row[1] != "PU" else 0
-                    subject = self._normalize_other_names(row[3])
+                    subject = self._normalize_subject_name(row[3])
                     notes = self._normalize_other_names(row[6])
 
                     # Get the teacher (which stays the same)
