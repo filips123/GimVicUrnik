@@ -22,7 +22,7 @@ class ScheduleHandler(BaseHandler):
             return [
                 {
                     "class": model.class_.name,
-                    "date": model.date.strftime("%H:%M"),
+                    "date": model.date.strftime("%Y-%m-%d"),
                     "time": model.time.strftime("%H:%M"),
                     "location": model.location,
                     "notes": model.notes,
