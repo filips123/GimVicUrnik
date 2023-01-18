@@ -84,10 +84,11 @@ class BaseMultiUpdater(ABC):
 
         for document in self.get_documents():
             try:
-                # Decorators that add keyword arguments currently cannot be typed correctly
-                # This seems to be a limitation of Python's typing system and cannot be resolved
-                # Until Python/mypy add support for this, we have to ignore call argument types
-                self.handle_document(document)  # type: ignore[call-arg]
+                with self.session.begin_nested():
+                    # Decorators that add keyword arguments currently cannot be typed correctly
+                    # This seems to be a limitation of Python's typing system and cannot be resolved
+                    # Until Python/mypy add support for this, we have to ignore call argument types
+                    self.handle_document(document)  # type: ignore[call-arg]
             except Exception as error:
                 if sentry_available:
                     import sentry_sdk
