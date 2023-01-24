@@ -282,6 +282,10 @@ class EClassroomUpdater(BaseMultiUpdater):
             elif "Marjetka" in name:
                 return "KrapežM"
 
+        # Special case: Multiple Šajn teachers
+        if "Šajn" in name and "Eva" in name:
+            return "ŠajnE"
+
         # Special case: Teachers with multiple surnames
         teachers = {
             "Crnoja": "Legan",
