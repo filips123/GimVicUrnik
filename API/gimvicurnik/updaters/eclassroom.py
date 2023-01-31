@@ -562,6 +562,12 @@ class EClassroomUpdater(BaseMultiUpdater):
                     row[0] = time
                     row.insert(1, notes)
 
+                # Handle incorrectly connected cells
+                if row[0] and " " in row[0] and len(row) == 4:
+                    time, notes = row[0].split(" ", 1)
+                    row[0] = time
+                    row.insert(1, notes)
+
                 # Skip the header
                 if row[0] and "ura" in row[0]:
                     continue
