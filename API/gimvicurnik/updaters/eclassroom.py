@@ -562,12 +562,22 @@ class EClassroomUpdater(BaseMultiUpdater):
                     row[0] = time
                     row.insert(1, notes)
 
+                # Handle incorrectly connected cells
+                if row[0] and " " in row[0] and len(row) == 4:
+                    time, notes = row[0].split(" ", 1)
+                    row[0] = time
+                    row.insert(1, notes)
+
                 # Skip the header
                 if row[0] and "ura" in row[0]:
                     continue
 
                 # Skip empty rows
                 if len(row) != 5 or not row[0]:
+                    continue
+
+                # Skip invalid time formats
+                if "odj." in row[0]:
                     continue
 
                 # Handle multiple times in the same cell
@@ -601,7 +611,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 # Handle special format for multiple classes
                 if len(classes) == 1 and isinstance(classes[0], str):
-                    if search := re.search(r"(\d)\. ?[lL]\.", classes[0]):
+                    if search := re.search(r"(\d)\.? ?[lL](?:\.|$)", classes[0]):
                         class_letters = ["A", "B", "C", "D", "E", "F"]
                         classes = [search.group(1) + class_ for class_ in class_letters]
 
