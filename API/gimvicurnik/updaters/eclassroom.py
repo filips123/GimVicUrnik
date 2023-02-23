@@ -611,7 +611,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 # Handle special format for multiple classes
                 if len(classes) == 1 and isinstance(classes[0], str):
-                    if search := re.search(r"(\d)\. ?[lL]\.", classes[0]):
+                    if search := re.search(r"(\d)\.? ?[lL](?:\.|$)", classes[0]):
                         class_letters = ["A", "B", "C", "D", "E", "F"]
                         classes = [search.group(1) + class_ for class_ in class_letters]
 
