@@ -21,7 +21,7 @@ from ..utils.database import get_or_create
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Dict, Iterator, List, Optional
+    from typing import Any, Iterator
     from mammoth.documents import Image  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -242,10 +242,10 @@ class EClassroomUpdater(BaseMultiUpdater):
             raise KeyError("Unknown parsable document type from the e-classroom")
 
     @with_span(op="parse", pass_span=True)
-    def get_content(self, document: DocumentInfo, content: bytes, span: Span) -> Optional[str]:  # type: ignore[override]
+    def get_content(self, document: DocumentInfo, content: bytes, span: Span) -> str | None:  # type: ignore[override]
         """Convert content of DOCX circulars to HTML."""
 
-        def ignore_images(_image: Image) -> Dict:
+        def ignore_images(_image: Image) -> dict:
             return {}
 
         # Set basic Sentry span info
@@ -256,7 +256,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         result = convert_to_html(io.BytesIO(content), convert_image=ignore_images)
         return typing.cast(str, result.value)
 
-    def _normalize_subject_name(self, name: str) -> Optional[str]:
+    def _normalize_subject_name(self, name: str) -> str | None:
         """Normalize the subject name."""
 
         # Special case: Unknown subject
@@ -270,7 +270,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Return the normal name
         return name
 
-    def _normalize_teacher_name(self, name: str) -> Optional[str]:
+    def _normalize_teacher_name(self, name: str) -> str | None:
         """Normalize the teacher name."""
 
         # Special case: Additional lesson
@@ -318,7 +318,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Use only surname and replace ć with č
         return name.split()[0].replace("ć", "č")
 
-    def _normalize_classroom_name(self, name: str) -> Optional[str]:
+    def _normalize_classroom_name(self, name: str) -> str | None:
         """Normalize the classroom name."""
 
         # Special case: Unknown classroom
@@ -335,7 +335,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Return the normal name
         return name
 
-    def _normalize_other_names(self, name: str) -> Optional[str]:
+    def _normalize_other_names(self, name: str) -> str | None:
         """Normalize other types of names."""
 
         return name if not self._is_name_empty(name) else None
@@ -351,14 +351,14 @@ class EClassroomUpdater(BaseMultiUpdater):
         effective: date,
         day: int,
         time: int,
-        subject: Optional[str],
-        notes: Optional[str],
-        original_teacher: Optional[str],
-        original_classroom: Optional[str],
-        class_: Optional[str],
-        teacher: Optional[str],
-        classroom: Optional[str],
-    ) -> Dict[str, Any]:
+        subject: str | None,
+        notes: str | None,
+        original_teacher: str | None,
+        original_classroom: str | None,
+        class_: str | None,
+        teacher: str | None,
+        classroom: str | None,
+    ) -> dict[str, Any]:
         """Format the substitution into a dict that can be stored to a database."""
 
         # fmt: off
@@ -376,7 +376,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
         # fmt: on
 
-    def _parse_substitutions(self, tables: List[Any], effective: date) -> None:
+    def _parse_substitutions(self, tables: list[Any], effective: date) -> None:
         """Parse the substitutions document."""
 
         # fmt: off
@@ -570,7 +570,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         self.session.query(Substitution).filter(Substitution.date == effective).delete()
         self.session.bulk_insert_mappings(Substitution, substitutions)
 
-    def _parse_lunch_schedule(self, tables: List[Any], effective: date) -> None:
+    def _parse_lunch_schedule(self, tables: list[Any], effective: date) -> None:
         """Parse the lunch schedule document."""
 
         schedule = []
@@ -632,8 +632,8 @@ class EClassroomUpdater(BaseMultiUpdater):
                 last_notes = notes
 
                 # Get classes and location if they are specified
-                classes: List[Optional[str]]
-                location: Optional[str]
+                classes: list[str | None]
+                location: str | None
                 classes = row[2].replace("(", "").replace(")", "").split(",") if row[2] else [None]
                 location = row[4].strip() if row[4] else None
 

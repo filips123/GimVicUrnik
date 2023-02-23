@@ -12,7 +12,7 @@ from .base import BaseHandler
 from ..database import Document, DocumentType, Session
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Dict, Tuple
+    from typing import Any
     from flask import Blueprint
     from ..config import Config
 
@@ -59,7 +59,7 @@ class FeedHandler(BaseHandler):
             feed_type: FeedType,
             feed_format: FeedFormat,
             date_display: DateDisplay = DateDisplay.NONE,
-        ) -> Tuple[str, int, Dict[str, str]]:
+        ) -> tuple[str, int, dict[str, str]]:
             """Generate a feed from template for all documents that match the filter."""
 
             # Get all documents that match the filter
@@ -98,7 +98,7 @@ class FeedHandler(BaseHandler):
 
         @bp.route("/feed/circulars.atom", defaults={"feed_format": FeedFormat.ATOM})
         @bp.route("/feed/circulars.rss", defaults={"feed_format": FeedFormat.RSS})
-        def get_circulars_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
+        def get_circulars_feed(feed_format: FeedFormat) -> tuple[str, int, dict[str, str]]:
             return _create_feed(
                 query_filter=or_(
                     Document.type == DocumentType.CIRCULAR,
@@ -111,7 +111,7 @@ class FeedHandler(BaseHandler):
 
         @bp.route("/feed/substitutions.atom", defaults={"feed_format": FeedFormat.ATOM})
         @bp.route("/feed/substitutions.rss", defaults={"feed_format": FeedFormat.RSS})
-        def get_substitutions_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
+        def get_substitutions_feed(feed_format: FeedFormat) -> tuple[str, int, dict[str, str]]:
             return _create_feed(
                 query_filter=Document.type == DocumentType.SUBSTITUTIONS,
                 feed_name="Nadomeščanja",
@@ -122,7 +122,7 @@ class FeedHandler(BaseHandler):
 
         @bp.route("/feed/schedules.atom", defaults={"feed_format": FeedFormat.ATOM})
         @bp.route("/feed/schedules.rss", defaults={"feed_format": FeedFormat.RSS})
-        def get_schedules_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
+        def get_schedules_feed(feed_format: FeedFormat) -> tuple[str, int, dict[str, str]]:
             return _create_feed(
                 query_filter=Document.type == DocumentType.LUNCH_SCHEDULE,
                 feed_name="Razporedi kosila",
@@ -133,7 +133,7 @@ class FeedHandler(BaseHandler):
 
         @bp.route("/feed/menus.atom", defaults={"feed_format": FeedFormat.ATOM})
         @bp.route("/feed/menus.rss", defaults={"feed_format": FeedFormat.RSS})
-        def get_menus_feed(feed_format: FeedFormat) -> Tuple[str, int, Dict[str, str]]:
+        def get_menus_feed(feed_format: FeedFormat) -> tuple[str, int, dict[str, str]]:
             return _create_feed(
                 query_filter=or_(
                     Document.type == DocumentType.SNACK_MENU,

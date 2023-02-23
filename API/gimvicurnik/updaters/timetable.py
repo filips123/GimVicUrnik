@@ -15,7 +15,6 @@ from ..utils.database import get_or_create
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Tuple
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesTimetable
@@ -49,7 +48,7 @@ class TimetableUpdater:
 
             self.logger.exception(error)
 
-    def _download(self) -> Tuple[str, str]:
+    def _download(self) -> tuple[str, str]:
         """Download the timetable JS file."""
 
         try:

@@ -6,7 +6,7 @@ from .base import BaseHandler
 from ..database import Document, Session
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Dict, List
+    from typing import Any
     from flask import Blueprint
     from ..config import Config
 
@@ -17,7 +17,7 @@ class DocumentsHandler(BaseHandler):
     @classmethod
     def routes(cls, bp: Blueprint, config: Config) -> None:
         @bp.route("/documents")
-        def get_documents() -> List[Dict[str, Any]]:
+        def get_documents() -> list[dict[str, Any]]:
             # fmt: off
             query = (
                 Session.query(

@@ -12,7 +12,7 @@ from ..database import Document
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar, Iterator, Optional, Type, Tuple
+    from typing import ClassVar, Iterator
     from logging import Logger
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -27,25 +27,25 @@ class DocumentInfo:
     type: DocumentType
     """The document's type."""
 
-    title: Optional[str] = None
+    title: str | None = None
     """
     The document's title.
     May be `None` if cannot be determined.
     """
 
-    created: Optional[datetime.datetime] = None
+    created: datetime.datetime | None = None
     """
     The document's created datetime in UTC.
     May be `None` if cannot be determined.
     """
 
-    modified: Optional[datetime.datetime] = None
+    modified: datetime.datetime | None = None
     """
     The document's modified datetime in UTC.
     May be `None` if cannot be determined.
     """
 
-    extension: Optional[str] = None
+    extension: str | None = None
     """
     The document file extension.
     May be `None` if cannot be determined.
@@ -61,7 +61,7 @@ class BaseMultiUpdater(ABC):
     Must be set by subclasses.
     """
 
-    error: ClassVar[Type[BaseException]]
+    error: ClassVar[type[BaseException]]
     """
     An error that the updater should throw when it cannot access the API.
     Must be set by subclasses and used in its methods whenever needed.
@@ -148,7 +148,7 @@ class BaseMultiUpdater(ABC):
         # == DOCUMENT RECORD (GET)
 
         # Try to find an existing document record
-        record: Optional[Document] = (
+        record: Document | None = (
             self.session.query(Document)
             .filter(Document.type == document.type, Document.url == document.url)
             .first()
@@ -343,7 +343,7 @@ class BaseMultiUpdater(ABC):
             elif action == "skipped":
                 self.logger.info("Skipped because the %s document is already stored", document.type.value)
 
-    def download_document(self, document: DocumentInfo) -> Tuple[bytes, str]:
+    def download_document(self, document: DocumentInfo) -> tuple[bytes, str]:
         """Download a document and return its content and hash"""
 
         try:
@@ -388,5 +388,5 @@ class BaseMultiUpdater(ABC):
         """Return whether the document has content. Must be set by subclasses."""
 
     @abstractmethod
-    def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
+    def get_content(self, document: DocumentInfo, content: bytes) -> str | None:
         """Get the HTML string of content of document type circular"""

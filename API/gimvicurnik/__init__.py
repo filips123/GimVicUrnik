@@ -34,7 +34,7 @@ from .utils.errors import format_exception
 from .utils.flask import DateConverter, ListConverter
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Union
+    from typing import Any
     from sqlalchemy.engine import Engine
     from werkzeug import Response
     from flask.typing import ResponseReturnValue
@@ -114,7 +114,7 @@ class GimVicUrnik:
             release = sentry_config.releasePrefix + version + sentry_config.releaseSuffix
 
             # Create custom traces sampler so different traces can be configured separately
-            def _sentry_traces_sampler(context: Dict[str, Any]) -> Union[float, int, bool]:
+            def _sentry_traces_sampler(context: dict[str, Any]) -> float | int | bool:
                 if context["transaction_context"]["op"] == "command":
                     return sentry_config.sampleRate.commands
                 elif context["transaction_context"]["op"] == "http.server":
@@ -179,7 +179,7 @@ class GimVicUrnik:
         """Remove database session after request."""
 
         @self.app.teardown_appcontext
-        def _close_session(_error: Optional[BaseException] = None) -> None:
+        def _close_session(_error: BaseException | None = None) -> None:
             Session.remove()
 
     def create_cors_hooks(self) -> None:

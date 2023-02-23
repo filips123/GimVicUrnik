@@ -5,8 +5,7 @@ from unittest.mock import Mock
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
-    from typing import Any, Callable, Optional, Type, TypeVar
-    from typing_extensions import ParamSpec
+    from typing import Any, Callable, TypeVar, ParamSpec
 
     TP = ParamSpec("TP")
     TR = TypeVar("TR")
@@ -25,9 +24,9 @@ class WithMock(Mock):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         pass
 

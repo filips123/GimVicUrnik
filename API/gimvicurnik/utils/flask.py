@@ -8,7 +8,7 @@ from werkzeug.routing.converters import ValidationError
 
 if typing.TYPE_CHECKING:
     from datetime import date
-    from typing import Any, List
+    from typing import Any
 
 
 class DateConverter(BaseConverter):
@@ -29,8 +29,8 @@ class DateConverter(BaseConverter):
 class ListConverter(BaseConverter):
     """Extract a comma-separated list from the path."""
 
-    def to_python(self, value: str) -> List[str]:
+    def to_python(self, value: str) -> list[str]:
         return value.split(",")
 
-    def to_url(self, value: List[Any]) -> str:
+    def to_url(self, value: list[Any]) -> str:
         return ",".join(str(x) for x in value)

@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import os
 import traceback
-import typing
 
 import click
 from flask.cli import FlaskGroup, ScriptInfo
 
 from .errors import ConfigError
-
-if typing.TYPE_CHECKING:
-    from typing import List
 
 
 class GimVicUrnikGroup(FlaskGroup):
@@ -105,7 +101,7 @@ class GimVicUrnikGroup(FlaskGroup):
         os.environ["FLASK_APP"] = "gimvicurnik"
         super().main()
 
-    def list_commands(self, ctx: click.Context) -> List[str]:
+    def list_commands(self, ctx: click.Context) -> list[str]:
         """Prevent crashing on config errors when showing list of commands or help."""
 
         self._load_plugin_commands()
