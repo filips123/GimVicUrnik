@@ -46,19 +46,15 @@ Data need to be fetched and updated in separate commands from the web server. Mo
 * `gimvicurnik update-menu`: Update the menu data (snack and lunch menu)
 * `gimvicurnik cleanup-database`: Clean up the database (remove data older than 14 days and entities without lessons)
 
-### Starting server
+### Starting Server
 
-The development server can be started with `gimvicurnik run`. It is based on the default Flask's built-in server and will respect all of its environment variables (except `FLASK_APP` which is configured automatically).
+The development server can be started with `gimvicurnik run`. It is based on the default Flask's built-in server and will respect all of its environment variables (except `FLASK_APP`, which is configured automatically).
 
 In production, you should use any WSGI-compatible server. See [Flask Documentation](https://flask.palletsprojects.com/en/2.1.x/deploying/) for more details. GimVičUrnik API uses the app factory located at `gimvicurnik.create_app` to create the application.
 
 ### Using the API
 
 You can retrieve all API routes using the `gimvicurnik routes` commands. The official client can be found [in the `website` directory](../website).
-
-### Debugging
-
-If you enable `debug` in the config file, another command `gimvicurnik create-substitutions`. This commands can be used to generate random substitutions in the next 14 days.
 
 ## Contributing
 

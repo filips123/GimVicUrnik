@@ -12,38 +12,40 @@
                 <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
                 <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
               </v-list-item-content>
-              <v-dialog v-model="documentDialogs[id]" v-if="document.content" @input="handlePTR" scrollable width="42rem">
-                <template #activator="{ on: dialog }">
-                  <v-tooltip top>
-                    <template #activator="{ on: tooltip }">
-                      <v-btn icon
-                        v-on="{ ...tooltip, ...dialog }"
-                        aria-label="Odpri besedilo dokumenta"
-                        @click.prevent
-                        @click.stop
-                        @mousedown.stop
-                        @mouseup.stop
-                        @touchstart.stop
-                        @touchend.stop>
-                        <v-icon dark>{{ mdiTextBoxOutline }}</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Odpri besedilo dokumenta</span>
-                  </v-tooltip>
-                </template>
-                <v-card>
-                  <v-card-title>
-                    <span class="text-h5 word-wrap">{{ document.title }}</span>
-                  </v-card-title>
-                  <v-card-text>
-                    <div class="con" v-html="document.content"></div>
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="green" text @click="$set(documentDialogs, id, false); handlePTR()">Zapri</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
+              <v-lazy v-if="document.content">
+                <v-dialog v-model="documentDialogs[id]" @input="handlePTR" scrollable width="42rem">
+                  <template #activator="{ on: dialog }">
+                    <v-tooltip top>
+                      <template #activator="{ on: tooltip }">
+                        <v-btn icon
+                          v-on="{ ...tooltip, ...dialog }"
+                          aria-label="Odpri besedilo dokumenta"
+                          @click.prevent
+                          @click.stop
+                          @mousedown.stop
+                          @mouseup.stop
+                          @touchstart.stop
+                          @touchend.stop>
+                          <v-icon dark>{{ mdiTextBoxOutline }}</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Odpri besedilo dokumenta</span>
+                    </v-tooltip>
+                  </template>
+                  <v-card>
+                    <v-card-title>
+                      <span class="text-h5 word-wrap">{{ document.title }}</span>
+                    </v-card-title>
+                    <v-card-text>
+                      <div class="con" v-html="document.content"></div>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="green" text @click="$set(documentDialogs, id, false); handlePTR()">Zapri</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-lazy>
             </v-list-item>
           </v-item-group>
         </v-list>

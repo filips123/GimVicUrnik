@@ -27,7 +27,7 @@ GimVičUrnik website uses `.env` file for configuration. Example file can be fou
 
 You can also set configuration using your environment variables or in one of `.env` files [supported by Vue CLI](https://cli.vuejs.org/guide/mode-and-env.html).
 
-### Development server
+### Development Server
 
 Development server can be started using:
 
@@ -37,7 +37,7 @@ yarn serve
 
 This will automatically build the website and start the server. It includes automatic hot reloading, code linting and support for single page apps.
 
-### Building for production
+### Building for Production
 
 Website can be built for production using:
 
@@ -47,7 +47,7 @@ yarn build
 
 It will build whole website, optimized for production and save it into `dist` directory. This will also include all assets and service worker file.
 
-### Hosting for production
+### Hosting for Production
 
 The website uses Vue Router in `history` mode, so a simple static file server will fail. You will need to configure your web server to fallback to `index.html` for any non-file requests.
 
