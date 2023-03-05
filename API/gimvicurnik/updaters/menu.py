@@ -149,9 +149,7 @@ class MenuUpdater(BaseMultiUpdater):
 
             # Get start of nth week of the month
             first = datetime.date(year, month, 1)
-            diff = -first.weekday() if month == 9 else 7 - first.weekday()
-            diff = diff if diff < 7 else 0
-            new = first + datetime.timedelta(weeks=week - 1, days=diff)
+            new = first + datetime.timedelta(weeks=week - 1, days=-first.weekday())
 
             return new
 
