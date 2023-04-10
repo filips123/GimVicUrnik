@@ -75,86 +75,20 @@ class MenuUpdater(BaseMultiUpdater):
             raise KeyError("Unknown document type for menu")
 
     def get_document_effective(self, document: DocumentInfo) -> datetime.date:
-        """Parse and return custom date formats from the document URL."""
+        """Return the document effective date in a local timezone."""
 
-        short_month_to_number = {
-            "jan": 1,
-            "feb": 2,
-            "mar": 3,
-            "apr": 4,
-            "maj": 5,
-            "jun": 6,
-            "jul": 7,
-            "avg": 8,
-            "sep": 9,
-            "okt": 10,
-            "nov": 11,
-            "dec": 12,
-        }
-
-        long_month_to_number = {
-            "januar": 1,
-            "februar": 2,
-            "marec": 3,
-            "april": 4,
-            "maj": 5,
-            "junij": 6,
-            "julij": 7,
-            "avgust": 8,
-            "september": 9,
-            "oktober": 10,
-            "november": 11,
-            "december": 12,
-        }
-
-        url = document.url
-
-        # == FORMAT TYPE 1
-        # Example: KOSILO-4jan-8jan-2021.pdf
-        # Example: KOSILO-25jan-29jan-2021-PDF.pdf
-        date = re.search(r"(?:KOSILO|MALICA)-(\d+)([a-z]+)-\d+[a-z]+-(\d+)(?i:-PDF)?\.[a-z]+", url)  # fmt: skip
+        # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
+        # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
+        date = re.search(r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?.pdf", document.url)
 
         if date:
             return datetime.date(
-                year=int(date.group(3)),
-                month=short_month_to_number[date.group(2)],
-                day=int(date.group(1)),
+                year=int(date.group(1)),
+                month=int(date.group(2)),
+                day=int(date.group(3)),
             )
 
-        # == FORMAT TYPE 2
-        # Example: 09-splet-oktober-1-teden-09-M.pdf
-        # Example: 05-splet-februar-3-teden-M-PDF.pdf
-        # Example: 04-splet-marec-2-teden-04-M-PDF-0.pdf
-        # Example: 01-splet-september-4-teden-02-M-popravek.pdf
-        # Example: 01-splet-januar1-teden-02-K.pdf
-        # Example: 01-splet-september-2-teden-02.pdf
-        # Example: 01-splet-september-2-teden-M-02.pdf
-        date = re.search(r"\d+-splet-([a-z]+)-?(\d)-teden(?:-[MK])?-?\d*(?:-[MK])?-?\d?(?i:-PDF)?(?:-[a-z]+)?(?:-\d)?\.[a-z]+", url)  # fmt: skip
-
-        if date:
-            today = datetime.date.today()
-            year = today.year
-
-            # Get week and month from URL
-            week = int(date.group(2))
-            month = long_month_to_number[date.group(1)]
-
-            # In case the menu is provided for the next year
-            if today.month == 12 and month == 1:
-                year += 1
-
-            # In case the menu is provided for the last year
-            if today.month == 1 and month == 12:
-                year -= 1
-
-            # Get start of nth week of the month
-            first = datetime.date(year, month, 1)
-            new = first + datetime.timedelta(weeks=week - 1, days=-first.weekday())
-
-            return new
-
-        # == UNKNOWN FORMAT
-        raise MenuDateError("Unknown menu date URL format: " + url.rsplit("/", 1)[-1])
+        raise MenuDateError("Unknown menu date URL format: " + document.url.rsplit("/", 1)[1])
 
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
         """Return whether the document needs parsing."""

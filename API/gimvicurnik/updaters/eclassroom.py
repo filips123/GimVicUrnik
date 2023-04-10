@@ -86,13 +86,15 @@ class EClassroomUpdater(BaseMultiUpdater):
                 if "contents" not in module or len(module["contents"]) == 0:
                     continue
 
+                url = self.normalize_url(module["contents"][0]["fileurl"])
+
                 yield DocumentInfo(
-                    url=self.normalize_url(module["contents"][0]["fileurl"]),
-                    type=self._get_document_type(module["contents"][0]["fileurl"]),
+                    url=url,
+                    type=self._get_document_type(url),
                     title=module["name"],
                     created=datetime.fromtimestamp(module["contents"][0]["timecreated"], tz=timezone.utc),
                     modified=datetime.fromtimestamp(module["contents"][0]["timemodified"], tz=timezone.utc),
-                    file_extension=self.normalize_url(module["contents"][0]["fileurl"]).split(".")[-1],
+                    extension=url.rsplit(".", 1)[1],
                 )
 
     def _get_external_urls(self) -> Iterator[DocumentInfo]:
@@ -124,12 +126,15 @@ class EClassroomUpdater(BaseMultiUpdater):
             if content["course"] != self.config.course:
                 continue
 
+            url = self.normalize_url(content["externalurl"])
+
             yield DocumentInfo(
-                url=self.normalize_url(content["externalurl"]),
-                type=self._get_document_type(content["externalurl"]),
+                url=url,
+                type=self._get_document_type(url),
                 title=content["name"],
                 created=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
                 modified=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
+                extension=url.rsplit(".", 1)[1],
             )
 
     @staticmethod
@@ -206,19 +211,10 @@ class EClassroomUpdater(BaseMultiUpdater):
     def document_has_content(self, document: DocumentInfo) -> bool:
         """Return whether the document has content."""
 
-        if document.file_extension == "docx":
+        if document.extension == "docx":
             return True
 
         return False
-
-    def get_content(self, document: DocumentInfo, content: bytes) -> Optional[str]:
-        """Get file content of docx circulars."""
-
-        def ignore_images(_image: Image) -> Dict:
-            return {}
-
-        result = convert_to_html(io.BytesIO(content), convert_image=ignore_images)
-        return typing.cast(str, result.value)  # The generated HTML
 
     @with_span(op="parse", pass_span=True)
     def parse_document(self, document: DocumentInfo, content: bytes, effective: date, span: Span) -> None:  # type: ignore[override]
@@ -245,6 +241,21 @@ class EClassroomUpdater(BaseMultiUpdater):
         else:
             # This cannot happen because only menus are provided by the API
             raise KeyError("Unknown parsable document type from the e-classroom")
+
+    @with_span(op="parse", pass_span=True)
+    def get_content(self, document: DocumentInfo, content: bytes, span: Span) -> Optional[str]:  # type: ignore[override]
+        """Convert content of DOCX circulars to HTML."""
+
+        def ignore_images(_image: Image) -> Dict:
+            return {}
+
+        # Set basic Sentry span info
+        span.set_tag("document.format", "docx")
+        span.set_tag("document.type", document.type.value)
+
+        # Convert DOCX to HTML
+        result = convert_to_html(io.BytesIO(content), convert_image=ignore_images)
+        return typing.cast(str, result.value)
 
     def _normalize_subject_name(self, name: str) -> Optional[str]:
         """Normalize the subject name."""

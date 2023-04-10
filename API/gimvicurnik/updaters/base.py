@@ -45,7 +45,7 @@ class DocumentInfo:
     May be `None` if cannot be determined.
     """
 
-    file_extension: Optional[str] = None
+    extension: Optional[str] = None
     """
     The document file extension.
     May be `None` if cannot be determined.
