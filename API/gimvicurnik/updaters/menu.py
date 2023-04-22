@@ -132,7 +132,7 @@ class MenuUpdater(BaseMultiUpdater):
             # Parse tables into menus and store them
             for table in tables:
                 for row in table:
-                    if len(row) != 5 or "NV in N" in row[1]:
+                    if len(row) < 5 or "NV in N" in row[1]:
                         continue
 
                     current = effective + datetime.timedelta(days=days)
@@ -234,7 +234,7 @@ class MenuUpdater(BaseMultiUpdater):
             # Parse tables into menus and store them
             for table in tables:
                 for row in table:
-                    if len(row) != 3 or "N KOSILO" in row[1]:
+                    if len(row) < 3 or "N KOSILO" in row[1]:
                         continue
 
                     current = effective + datetime.timedelta(days=days)
