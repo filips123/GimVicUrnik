@@ -18,8 +18,8 @@ from .base import BaseMultiUpdater, DocumentInfo
 from ..database import Class, Classroom, DocumentType, LunchSchedule, Substitution, Teacher
 from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
 from ..utils.database import get_or_create
+from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
-from ..utils.pdf import Tables, extract_tables
 
 if typing.TYPE_CHECKING:
     from typing import Any, Iterator
@@ -27,6 +27,7 @@ if typing.TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
+    from ..utils.pdf import Tables
 
 
 class ParserType(enum.Enum):
@@ -398,7 +399,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Parse tables into substitutions
         for table in tables:
             for row in table:
-                row = [column.replace("\n", " ").strip() if column else None for column in row]
+                row = [column.replace("\n", " ").strip() if column else "" for column in row]
 
                 # Get parser type
                 if row == header_substitutions:
@@ -419,8 +420,9 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif row == header_reservations:
                     parser_type = ParserType.RESERVATIONS
                     continue
-                elif len(row) and row[0] == "Oddelek":
+                elif "Oddelek" in row[0] or "dijaki" in row[0]:
                     parser_type = ParserType.UNKNOWN
+                    continue
 
                 # Skip empty rows
                 if not any(row):
@@ -429,7 +431,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 # Parse substitutions
                 if parser_type == ParserType.SUBSTITUTUONS:
                     # Get basic substitution properties
-                    time = row[1][:-1] if row[1] != "PU" else 0
+                    time = int(row[1][:-1]) if row[1] != "PU" else 0
                     subject = self._normalize_subject_name(row[5])
                     notes = self._normalize_other_names(row[6])
 
@@ -463,7 +465,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 elif parser_type == ParserType.LESSON_CHANGE:
                     # Get basic substitution properties
-                    time = row[1][:-1] if row[1] != "PU" else 0
+                    time = int(row[1][:-1]) if row[1] != "PU" else 0
                     subject = self._normalize_subject_name(row[3].split(" → ")[1])
                     notes = self._normalize_other_names(row[5])
 
@@ -508,7 +510,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 elif parser_type == ParserType.SUBJECT_CHANGE:
                     # Get basic substitution properties
-                    time = row[1][:-1] if row[1] != "PU" else 0
+                    time = int(row[1][:-1]) if row[1] != "PU" else 0
                     subject = self._normalize_subject_name(row[3].split(" → ")[1])
                     notes = self._normalize_other_names(row[5])
 
@@ -536,7 +538,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 elif parser_type == ParserType.CLASSROOM_CHANGE:
                     # Get basic substitution properties
-                    time = row[1][:-1] if row[1] != "PU" else 0
+                    time = int(row[1][:-1]) if row[1] != "PU" else 0
                     subject = self._normalize_subject_name(row[3])
                     notes = self._normalize_other_names(row[6])
 
@@ -575,9 +577,6 @@ class EClassroomUpdater(BaseMultiUpdater):
         """Parse the lunch schedule document."""
 
         schedule = []
-
-        last_hour = None
-        last_notes = None
 
         for table in tables:
             # Skip instructions
@@ -619,36 +618,26 @@ class EClassroomUpdater(BaseMultiUpdater):
                 if row[1] is None and len(row[0].split(" ", 1)) == 2:
                     row[0], row[1] = row[0].split(" ", 1)
 
-                # Handle different time formats
-                row[0] = row[0].replace("cca", "").replace(".", ":").strip()
+                # Parse time format
+                time = re.sub("cca|do", "", row[0]).replace(".", ":").strip()
+                time = datetime.strptime(time, "%H:%M").time()
 
-                # Get the new time if it is specified
-                is_time_valid = row[0] and row[0].strip() != "do"
-                time = datetime.strptime(row[0], "%H:%M").time() if is_time_valid else last_hour
-                last_hour = time
-
-                # Get the new notes if they are specified
-                notes = row[1].strip() if row[0] else last_notes
-                notes = notes or None
-                last_notes = notes
-
-                # Get classes and location if they are specified
-                classes: list[str | None]
-                location: str | None
-                classes = row[2].replace("(", "").replace(")", "").split(",") if row[2] else [None]
+                # Get notes, classes and location if they are specified
+                notes = row[1].strip() if row[1] else None
+                classes = re.sub("[().]", "", row[2]).split(",") if row[2] else []
                 location = row[4].strip() if row[4] else None
 
                 # Handle special format for multiple classes
                 if len(classes) == 1 and isinstance(classes[0], str):
-                    if search := re.search(r"(\d)\.? ?[lL](?:\.|$)", classes[0]):
+                    if search := re.search(r"(\d)\.? ?[lL]?(?:\.|$)", classes[0]):
                         class_letters = ["A", "B", "C", "D", "E", "F"]
                         classes = [search.group(1) + class_ for class_ in class_letters]
 
                 for class_ in classes:
-                    # fmt: off
-                    class_name = class_.strip() if class_ else None
-                    class_id = get_or_create(self.session, model=Class, name=class_name)[0].id if class_name else None
-                    # fmt: on
+                    if not class_.strip():
+                        continue
+
+                    class_id = get_or_create(self.session, model=Class, name=class_.strip())[0].id
 
                     schedule.append(
                         {
