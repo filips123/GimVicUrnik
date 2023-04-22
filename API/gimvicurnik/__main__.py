@@ -40,8 +40,7 @@ class GimVicUrnikGroup(FlaskGroup):
             requests_version = metadata.version("requests")
             flask_version = metadata.version("flask")
             werkzeug_version = metadata.version("werkzeug")
-            pymupdf_version = metadata.version("pymupdf")
-            pdf2docx_version = metadata.version("pdf2docx")
+            pdfplumber_version = metadata.version("pdfplumber")
             openpyxl_version = metadata.version("openpyxl")
 
             try:
@@ -56,8 +55,7 @@ class GimVicUrnikGroup(FlaskGroup):
                 f"Requests: {requests_version}\n"
                 f"Flask: {flask_version}\n"
                 f"Werkzeug: {werkzeug_version}\n"
-                f"PyMuPDF: {pymupdf_version}\n"
-                f"pdf2docx: {pdf2docx_version}\n"
+                f"pdfplumber: {pdfplumber_version}\n"
                 f"openpyxl: {openpyxl_version}\n"
                 f"Sentry SDK: {sentry_version}",
                 color=ctx.color,

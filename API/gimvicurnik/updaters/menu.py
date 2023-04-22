@@ -10,12 +10,12 @@ import typing
 import requests
 from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
-from pdf2docx import extract_tables  # type: ignore
 
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import DocumentType, LunchMenu, SnackMenu
 from ..errors import MenuApiError, MenuDateError, MenuFormatError
 from ..utils.sentry import with_span
+from ..utils.pdf import extract_tables
 
 if typing.TYPE_CHECKING:
     from typing import Iterator

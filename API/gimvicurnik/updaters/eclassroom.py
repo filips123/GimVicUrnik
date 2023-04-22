@@ -12,7 +12,6 @@ from itertools import product
 
 import requests
 from mammoth import convert_to_html  # type: ignore
-from pdf2docx import extract_tables  # type: ignore
 from sqlalchemy import insert
 
 from .base import BaseMultiUpdater, DocumentInfo
@@ -20,6 +19,7 @@ from ..database import Class, Classroom, DocumentType, LunchSchedule, Substituti
 from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
 from ..utils.database import get_or_create
 from ..utils.sentry import with_span
+from ..utils.pdf import Tables, extract_tables
 
 if typing.TYPE_CHECKING:
     from typing import Any, Iterator
@@ -377,7 +377,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
         # fmt: on
 
-    def _parse_substitutions(self, tables: list[Any], effective: date) -> None:
+    def _parse_substitutions(self, tables: Tables, effective: date) -> None:
         """Parse the substitutions document."""
 
         # fmt: off
@@ -571,7 +571,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         self.session.query(Substitution).filter(Substitution.date == effective).delete()
         self.session.execute(insert(Substitution), substitutions)
 
-    def _parse_lunch_schedule(self, tables: list[Any], effective: date) -> None:
+    def _parse_lunch_schedule(self, tables: Tables, effective: date) -> None:
         """Parse the lunch schedule document."""
 
         schedule = []
