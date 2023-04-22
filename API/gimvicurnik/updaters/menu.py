@@ -269,6 +269,7 @@ class MenuUpdater(BaseMultiUpdater):
                     if not hasattr(wr[0].border, "bottom"):
                         continue
 
+                    # Store the menu after the end of table
                     if wr[0].border.bottom.color:
                         if menu and menu["date"]:
                             # fmt: off
