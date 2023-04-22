@@ -174,14 +174,13 @@ class EClassroomUpdater(BaseMultiUpdater):
     def get_document_title(self, document: DocumentInfo) -> str:
         """Return the normalized document title."""
 
-        assert document.title
-
         if document.type == DocumentType.SUBSTITUTIONS:
-            return document.title.split(",")[0]
+            return "Nadomeščanja in obvestila"
 
         if document.type == DocumentType.LUNCH_SCHEDULE:
-            return document.title.split(",")[0].split("-")[0].capitalize()
+            return "Razpored kosila"
 
+        assert document.title
         return document.title
 
     @typing.no_type_check  # Ignored because if regex fails, we cannot do anything
