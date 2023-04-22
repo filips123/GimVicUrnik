@@ -53,7 +53,7 @@ icalendar = "^5.0.0"
 beautifulsoup4 = { version = "^4.11.1", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { version = "^1.9.10", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+sentry-sdk = { version = "^1.21.0", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.0.3", optional = true }

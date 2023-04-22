@@ -21,10 +21,14 @@ sentry:
   enabled: true
   collectIPs: false
   maxBreadcrumbs: 100
-  sampleRate:
+  tracesSampleRate:
     commands: 1.0
     requests: 1.0
     other: 1.0
+  profilerSampleRate:
+      commands: false
+      requests: false
+      other: false
 
 logging:
   version: 1

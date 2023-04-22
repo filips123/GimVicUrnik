@@ -115,17 +115,27 @@ class GimVicUrnik:
             # Create custom traces sampler so different traces can be configured separately
             def _sentry_traces_sampler(context: dict[str, Any]) -> float | int | bool:
                 if context["transaction_context"]["op"] == "command":
-                    return sentry_config.sampleRate.commands
+                    return sentry_config.tracesSampleRate.commands
                 elif context["transaction_context"]["op"] == "http.server":
-                    return sentry_config.sampleRate.requests
+                    return sentry_config.tracesSampleRate.requests
                 else:
-                    return sentry_config.sampleRate.other
+                    return sentry_config.tracesSampleRate.other
+
+            # Create a custom profiler sampler so different traces can be configured separately
+            def _sentry_profiler_sampler(context: dict[str, Any]) -> float | int | bool:
+                if context["transaction_context"]["op"] == "command":
+                    return sentry_config.profilerSampleRate.commands
+                elif context["transaction_context"]["op"] == "http.server":
+                    return sentry_config.profilerSampleRate.requests
+                else:
+                    return sentry_config.profilerSampleRate.other
 
             # Init the Sentry SDK
             sentry_sdk.init(
                 dsn=sentry_config.dsn,
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
                 traces_sampler=_sentry_traces_sampler,
+                profiles_sampler=_sentry_profiler_sampler,
                 integrations=[
                     FlaskIntegration(transaction_style="url"),
                     SqlalchemyIntegration(),
