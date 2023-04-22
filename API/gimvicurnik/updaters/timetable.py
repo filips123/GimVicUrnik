@@ -8,6 +8,7 @@ from datetime import datetime
 from hashlib import sha256
 
 import requests
+from sqlalchemy import insert
 
 from ..database import Class, Classroom, Document, DocumentType, Lesson, Teacher
 from ..errors import TimetableApiError
@@ -114,7 +115,7 @@ class TimetableUpdater:
         # fmt: on
 
         self.session.query(Lesson).delete()
-        self.session.bulk_insert_mappings(Lesson, models)
+        self.session.execute(insert(Lesson), models)
 
         # Update or create a document
         if not document:

@@ -1,21 +1,10 @@
-import datetime
 import logging
 import typing
 
 import click
 from flask import current_app
 
-from ..database import (
-    Base,
-    Class,
-    Classroom,
-    LunchMenu,
-    LunchSchedule,
-    SessionFactory,
-    SnackMenu,
-    Substitution,
-    Teacher,
-)
+from ..database import Base, SessionFactory
 from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater
 from ..utils.sentry import with_transaction
 
@@ -70,34 +59,3 @@ def create_database_command() -> None:
     logging.getLogger(__name__).info("Creating the database")
     gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
     Base.metadata.create_all(gimvicurnik.engine)
-
-
-@click.command("cleanup-database", help="Clean up the database.")
-@with_transaction(name="cleanup-database", op="command")
-def cleanup_database_command() -> None:
-    """Clean up the database."""
-
-    logging.getLogger(__name__).info("Cleaning up the database")
-
-    with SessionFactory.begin() as session:
-        # Remove old (> 14 days) substitutions/menus/schedules
-        for entity in (Substitution, LunchSchedule, SnackMenu, LunchMenu):
-            for model in session.query(entity):
-                if (datetime.datetime.now().date() - model.date).days > 14:
-                    logging.getLogger(__name__).info(
-                        "Removing the %s from %s",
-                        model.__class__.__name__.lower(),
-                        model.date,
-                    )
-                    session.delete(model)
-
-        # Remove classes/teachers/classrooms without lessons/substitutions
-        for entity in (Class, Teacher, Classroom):
-            for model in session.query(entity):
-                if len(model.lessons) == 0 and len(model.substitutions) == 0:
-                    logging.getLogger(__name__).info(
-                        "Removing the unused %s %s",
-                        model.__class__.__name__.lower(),
-                        model.name,
-                    )
-                    session.delete(model)

@@ -21,7 +21,6 @@ from .blueprints import (
     TimetableHandler,
 )
 from .commands import (
-    cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
@@ -228,7 +227,6 @@ class GimVicUrnik:
         self.app.cli.add_command(update_eclassroom_command)
         self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(create_database_command)
-        self.app.cli.add_command(cleanup_database_command)
 
     def register_routes(self) -> None:
         """Register all application routes."""

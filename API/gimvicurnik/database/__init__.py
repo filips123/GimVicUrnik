@@ -1,33 +1,42 @@
 from __future__ import annotations
 
 import enum
-import typing
+from datetime import date as date_, datetime, time as time_
+from typing import Annotated, Any, Iterator
 
 from sqlalchemy import (
-    Boolean,
-    Column,
-    Date,
-    DateTime,
     Enum,
     ForeignKey,
     Index,
-    Integer,
     SmallInteger,
     Text,
-    Time,
     func,
     or_,
 )
-from sqlalchemy.orm import aliased, declarative_base, relationship, scoped_session, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    aliased,
+    mapped_column,
+    relationship,
+    scoped_session,
+    sessionmaker,
+)
 
-if typing.TYPE_CHECKING:
-    import datetime
-    from typing import Any, Dict, Iterator, List, Optional
-
-Base = declarative_base()
-
+# SQLAlchemy Session
 SessionFactory = sessionmaker()
 Session = scoped_session(SessionFactory)
+
+# SQLALChemy Types
+intpk = Annotated[int, mapped_column(primary_key=True)]
+smallint = Annotated[int, mapped_column(SmallInteger())]
+text = Annotated[str, mapped_column(Text())]
+longtext = Annotated[str, mapped_column(Text(70000))]
+
+# SQLAlchemy Relationships
+class_fk = Annotated[int, mapped_column(ForeignKey("classes.id"))]
+teacher_fk = Annotated[int, mapped_column(ForeignKey("teachers.id"))]
+classroom_fk = Annotated[int, mapped_column(ForeignKey("classrooms.id"))]
 
 
 @enum.unique
@@ -44,42 +53,50 @@ class DocumentType(enum.Enum):
     LUNCH_SCHEDULE = "lunch-schedule"
 
     @classmethod
-    def names(cls, _obj: Any = None) -> List[str]:
+    def names(cls, _obj: Any = None) -> list[str]:
         return [member.name for member in cls]
 
     @classmethod
-    def values(cls, _obj: Any = None) -> List[str]:
+    def values(cls, _obj: Any = None) -> list[str]:
         return [member.value for member in cls]
+
+    @classmethod
+    def column(cls) -> Enum:
+        return Enum(cls, values_callable=cls.values)
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Document(Base):
     __tablename__ = "documents"
 
-    id = Column(Integer, primary_key=True)
-    type = Column(Enum(DocumentType, values_callable=DocumentType.values), index=True)
+    id: Mapped[intpk]
+    type: Mapped[DocumentType] = mapped_column(DocumentType.column(), index=True)
 
-    created = Column(DateTime, nullable=True)
-    modified = Column(DateTime, nullable=True)
-    effective = Column(Date, nullable=True)
+    created: Mapped[datetime | None]
+    modified: Mapped[datetime | None]
+    effective: Mapped[date_ | None]
 
-    url = Column(Text)
-    title = Column(Text, nullable=True)
-    hash = Column(Text, nullable=True)
-    parsed = Column(Boolean, nullable=True)
-    content = Column(Text(70000), nullable=True)
+    url: Mapped[text]
+    title: Mapped[text | None]
+    hash: Mapped[text | None]
+    parsed: Mapped[bool | None]
+    content: Mapped[longtext | None]
 
 
 class Entity:
     __tablename__: str
 
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
+    id: Mapped[intpk]
+    name: Mapped[text]
 
     @classmethod
     def get_lessons(
         cls,
-        names: Optional[List[str]] = None,
-    ) -> Iterator[Dict[str, Any]]:
+        names: list[str] | None = None,
+    ) -> Iterator[dict[str, Any]]:
         query = (
             Session.query(Lesson, Class.name, Teacher.name, Classroom.name)
             .join(Class)
@@ -104,9 +121,9 @@ class Entity:
     @classmethod
     def get_substitutions(
         cls,
-        date: Optional[datetime.date] = None,
-        names: Optional[List[str]] = None,
-    ) -> Iterator[Dict[str, Any]]:
+        date: date_ | None = None,
+        names: list[str] | None = None,
+    ) -> Iterator[dict[str, Any]]:
         original_teacher = aliased(Teacher)
         teacher = aliased(Teacher)
 
@@ -163,7 +180,7 @@ class Classroom(Entity, Base):
     __tablename__ = "classrooms"
 
     @classmethod
-    def get_empty(cls) -> Iterator[Dict[str, Any]]:
+    def get_empty(cls) -> Iterator[dict[str, Any]]:
         days = (1, 5)
         times = Session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
 
@@ -198,82 +215,82 @@ class Lesson(Base):
     __tablename__ = "lessons"
     __table_args__ = (Index("ix_lessons_day_time", "day", "time"),)
 
-    id = Column(Integer, primary_key=True)
+    id: Mapped[intpk]
 
-    day = Column(SmallInteger)
-    time = Column(SmallInteger)
-    subject = Column(Text, nullable=True)
+    day: Mapped[smallint]
+    time: Mapped[smallint]
+    subject: Mapped[text | None]
 
-    class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_: Class = relationship("Class", backref="lessons")
+    class_id: Mapped[class_fk] = mapped_column(index=True)
+    class_: Mapped[Class] = relationship(backref="lessons")
 
-    teacher_id = Column(Integer, ForeignKey("teachers.id"), index=True)
-    teacher: Teacher = relationship("Teacher", backref="lessons")
+    teacher_id: Mapped[teacher_fk | None] = mapped_column(index=True)
+    teacher: Mapped[Teacher | None] = relationship(backref="lessons")
 
-    classroom_id = Column(Integer, ForeignKey("classrooms.id"), index=True)
-    classroom: Classroom = relationship("Classroom", backref="lessons")
+    classroom_id: Mapped[classroom_fk | None] = mapped_column(index=True)
+    classroom: Mapped[Classroom | None] = relationship(backref="lessons")
 
 
 class Substitution(Base):
     __tablename__ = "substitutions"
     __table_args__ = (Index("ix_substitutions_day_time", "day", "time"),)
 
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, index=True)
+    id: Mapped[intpk]
+    date: Mapped[date_] = mapped_column(index=True)
 
-    day = Column(SmallInteger)
-    time = Column(SmallInteger)
-    subject = Column(Text, nullable=True)
-    notes = Column(Text, nullable=True)
+    day: Mapped[smallint]
+    time: Mapped[smallint]
+    subject: Mapped[text | None]
+    notes: Mapped[text | None]
 
-    original_teacher_id = Column(Integer, ForeignKey("teachers.id"))
-    original_teacher: Teacher = relationship("Teacher", foreign_keys=[original_teacher_id])
+    original_teacher_id: Mapped[teacher_fk | None] = mapped_column()
+    original_teacher: Mapped[Teacher | None] = relationship(foreign_keys=[original_teacher_id])
 
-    original_classroom_id = Column(Integer, ForeignKey("classrooms.id"))
-    original_classroom: Classroom = relationship("Classroom", foreign_keys=[original_classroom_id])
+    original_classroom_id: Mapped[classroom_fk | None] = mapped_column()
+    original_classroom: Mapped[Classroom | None] = relationship(foreign_keys=[original_classroom_id])
 
-    class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_: Class = relationship("Class", backref="substitutions", foreign_keys=[class_id])
+    class_id: Mapped[class_fk] = mapped_column(index=True)
+    class_: Mapped[Class] = relationship(backref="substitutions", foreign_keys=[class_id])
 
-    teacher_id = Column(Integer, ForeignKey("teachers.id"), index=True)
-    teacher: Teacher = relationship("Teacher", backref="substitutions", foreign_keys=[teacher_id])
+    teacher_id: Mapped[teacher_fk | None] = mapped_column(index=True)
+    teacher: Mapped[Teacher | None] = relationship(backref="substitutions", foreign_keys=[teacher_id])
 
-    classroom_id = Column(Integer, ForeignKey("classrooms.id"), index=True)
-    classroom: Classroom = relationship("Classroom", backref="substitutions", foreign_keys=[classroom_id])
+    classroom_id: Mapped[classroom_fk | None] = mapped_column(index=True)
+    classroom: Mapped[Classroom | None] = relationship(backref="substitutions", foreign_keys=[classroom_id])
 
 
 class LunchSchedule(Base):
     __tablename__ = "lunch_schedule"
     __table_args__ = (Index("ix_lunch_schedule_date_time", "date", "time"),)
 
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, index=True)
-    time = Column(Time)
+    id: Mapped[intpk]
+    date: Mapped[date_] = mapped_column(index=True)
+    time: Mapped[time_]
 
-    class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    class_: Class = relationship("Class")
+    class_id: Mapped[class_fk] = mapped_column(index=True)
+    class_: Mapped[Class] = relationship()
 
-    location = Column(Text, nullable=True)
-    notes = Column(Text, nullable=True)
+    location: Mapped[text | None]
+    notes: Mapped[text | None]
 
 
 class SnackMenu(Base):
     __tablename__ = "snack_menu"
 
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, unique=True, index=True)
+    id: Mapped[intpk]
+    date: Mapped[date_] = mapped_column(unique=True, index=True)
 
-    normal = Column(Text, nullable=True)
-    poultry = Column(Text, nullable=True)
-    vegetarian = Column(Text, nullable=True)
-    fruitvegetable = Column(Text, nullable=True)
+    normal: Mapped[text | None]
+    poultry: Mapped[text | None]
+    vegetarian: Mapped[text | None]
+    fruitvegetable: Mapped[text | None]
 
 
 class LunchMenu(Base):
     __tablename__ = "lunch_menu"
 
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, unique=True, index=True)
+    id: Mapped[intpk]
+    date: Mapped[date_] = mapped_column(unique=True, index=True)
 
-    normal = Column(Text, nullable=True)
-    vegetarian = Column(Text, nullable=True)
+    normal: Mapped[text | None]
+    vegetarian: Mapped[text | None]

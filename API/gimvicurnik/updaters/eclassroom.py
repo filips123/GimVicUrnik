@@ -13,6 +13,7 @@ from itertools import product
 import requests
 from mammoth import convert_to_html  # type: ignore
 from pdf2docx import extract_tables  # type: ignore
+from sqlalchemy import insert
 
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import Class, Classroom, DocumentType, LunchSchedule, Substitution, Teacher
@@ -568,7 +569,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Store substitutions to a database
         self.session.query(Substitution).filter(Substitution.date == effective).delete()
-        self.session.bulk_insert_mappings(Substitution, substitutions)
+        self.session.execute(insert(Substitution), substitutions)
 
     def _parse_lunch_schedule(self, tables: list[Any], effective: date) -> None:
         """Parse the lunch schedule document."""
@@ -661,4 +662,4 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Store schedule to a database
         self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
-        self.session.bulk_insert_mappings(LunchSchedule, schedule)
+        self.session.execute(insert(LunchSchedule), schedule)

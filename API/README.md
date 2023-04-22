@@ -44,7 +44,6 @@ Data need to be fetched and updated in separate commands from the web server. Mo
 * `gimvicurnik update-timetable`: Update the timetable data
 * `gimvicurnik update-eclassroom`: Update the e-classroom data (substitutions, lunch schedule, circulars)
 * `gimvicurnik update-menu`: Update the menu data (snack and lunch menu)
-* `gimvicurnik cleanup-database`: Clean up the database (remove data older than 14 days and entities without lessons)
 
 ### Starting Server
 
