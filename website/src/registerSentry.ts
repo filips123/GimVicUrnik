@@ -3,11 +3,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import { init as sentryInit } from '@sentry/vue'
-import { VueRouterInstrumentation } from '@sentry/vue/types/router'
 import { captureException } from '@sentry/browser'
-import { Transaction, TransactionContext, TransactionSource } from '@sentry/types'
-import { Integrations } from '@sentry/tracing'
+import { ExtraErrorData, ReportingObserver } from '@sentry/integrations'
+import type { Integration, Transaction, TransactionContext, TransactionSource } from '@sentry/types'
+import { BrowserTracing, getActiveTransaction, init as sentryInit } from '@sentry/vue'
+import type { VueRouterInstrumentation } from '@sentry/vue/types/router'
 
 import router from '@/router'
 import { SettingsModule } from '@/store/modules/settings'
@@ -21,28 +21,47 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
       startTransactionOnPageLoad = true,
       startTransactionOnLocationChange = true
     ) => {
-      router.onError(error => captureException(error))
-
       const tags = { 'routing.instrumentation': 'vue-router' }
+
+      // We need to start transaction early, otherwise, some traces may be missing
+      if (startTransactionOnPageLoad && window && window.location) {
+        startTransaction({
+          name: window.location.pathname,
+          op: 'pageload',
+          tags,
+          metadata: {
+            source: 'url'
+          }
+        })
+      }
+
+      router.onError(error => captureException(error))
 
       router.beforeEach((to, from, next) => {
         const data = {
-          name: to.name,
-          path: to.path,
-          params: to.params,
-          query: to.query,
-          hash: to.hash
+          route: {
+            name: to.name,
+            path: to.path,
+            params: to.params,
+            query: to.query,
+            hash: to.hash
+          },
+          settings: {
+            entity: SettingsModule.selectedEntity,
+            menu: SettingsModule.selectedMenu
+          }
         }
 
         // Determine transaction name based on route's path
         let transactionName = to.path
-        let transactionSource: TransactionSource = 'url'
+        let transactionSource: TransactionSource = 'route'
 
         // Parametrize timetable transactions in the same style as backend
         if (to.name === 'timetable' && ['classes', 'teachers', 'classrooms'].includes(to.params.type) && to.params.value) {
           if (!(to.params.type === 'classrooms' && to.params.value === 'empty')) {
-            transactionName = to.matched[0].path.replace(':type?', to.params.type).replace(':value?', `<${to.params.type}>`)
-            transactionSource = 'route'
+            transactionName = to.matched[0].path
+              .replace(':type?', to.params.type)
+              .replace(':value?', `<${to.params.type}>`)
           }
 
         // Create 404 transaction when a valid entity hasn't been found
@@ -55,15 +74,12 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
         const isNotFoundNavigation = from.path === to.path && to.name === 'notfound'
 
         if (startTransactionOnPageLoad && isPageLoadNavigation) {
-          startTransaction({
-            name: transactionName,
-            op: 'pageload',
-            tags,
-            data,
-            metadata: {
-              source: transactionSource
-            }
-          })
+          const pageLoadTransaction = getActiveTransaction()
+
+          if (pageLoadTransaction) {
+            pageLoadTransaction.setName(transactionName, transactionSource)
+            pageLoadTransaction.data = { ...pageLoadTransaction.data, ...data }
+          }
         }
 
         if (startTransactionOnLocationChange && !isPageLoadNavigation && !isNotFoundNavigation) {
@@ -87,12 +103,17 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
   const releasePrefix = process.env.VUE_APP_SENTRY_RELEASE_PREFIX || ''
   const releaseSuffix = process.env.VUE_APP_SENTRY_RELEASE_SUFFIX || ''
 
-  // Don't add performance monitoring to users who don't want it
-  const integrations = []
+  // Include additional integrations
+  const integrations: Integration[] = [
+    new ExtraErrorData({ depth: 8 }),
+    new ReportingObserver()
+  ]
+
+  // Only add performance integration to users who enabled it
   if (SettingsModule.dataCollection.performance) {
     integrations.push(
-      new Integrations.BrowserTracing({
-        tracingOrigins: process.env.VUE_APP_SENTRY_TRACING_ORIGINS.split(','),
+      new BrowserTracing({
+        tracePropagationTargets: process.env.VUE_APP_SENTRY_TRACE_PROPAGATION_TARGETS.split(','),
         routingInstrumentation: vueRouterInstrumentation(router)
       })
     )
@@ -103,15 +124,16 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
     Vue,
 
     dsn: process.env.VUE_APP_SENTRY_DSN,
-    tracesSampleRate: parseFloat(process.env.VUE_APP_SENTRY_SAMPLE_RATE),
+    tracesSampleRate: parseFloat(process.env.VUE_APP_SENTRY_TRACE_SAMPLE_RATE),
     maxBreadcrumbs: parseInt(process.env.VUE_APP_SENTRY_MAX_BREADCRUMBS),
+    normalizeDepth: 8,
 
     environment: process.env.NODE_ENV,
     release: releasePrefix + process.env.VUE_APP_VERSION + releaseSuffix,
 
     logErrors: !(process.env.NODE_ENV === 'production'),
     autoSessionTracking: SettingsModule.dataCollection.performance,
-    tracingOptions: { trackComponents: true },
+    trackComponents: SettingsModule.dataCollection.performance,
 
     integrations
   })
