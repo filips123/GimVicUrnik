@@ -48,14 +48,16 @@ export default class SelectClass extends Vue {
       return
     }
 
+    const selectedClasses = this.selectedClasses.sort()
+
     if (this.saveSelection) {
       SettingsModule.setSelectedEntity({
         type: EntityType.Class,
-        data: this.selectedClasses
+        data: selectedClasses
       })
     }
 
-    this.$router.push({ name: 'timetable', params: { type: 'classes', value: this.selectedClasses.join(',') } })
+    this.$router.push({ name: 'timetable', params: { type: 'classes', value: selectedClasses.join(',') } })
   }
 }
 </script>
