@@ -9,7 +9,7 @@ This is the API part of the GimVičUrnik system. For more details see [the main 
 
 ## Installation
 
-GimVičUrnik API requires Python 3.8 or later, and [Poetry](https://python-poetry.org/) dependency manager with the [`poetry-dynamic-versioning`](https://pypi.org/project/poetry-dynamic-versioning/) plugin.
+GimVičUrnik API requires Python 3.10 or later, and [Poetry](https://python-poetry.org/) dependency manager with the [`poetry-dynamic-versioning`](https://pypi.org/project/poetry-dynamic-versioning/) plugin.
 
 You can clone this repository and install it using Poetry:
 
@@ -21,7 +21,7 @@ poetry install
 
 This will download and install all required dependencies and add `gimvicurnik` as command. Depending on your Poetry configuration, you might need to activate its virtual environment to use the command.
 
-You will also need to install [one of SQLAlchemy dialects](https://docs.sqlalchemy.org/en/13/dialects/index.html) to use databases other than SQLite. The `mysql-py` (pymysql), `mysql-c` (mysqlclient) and `pgsql` (psycopg2) dialects are already specified as package extras. Optional [Sentry](https://sentry.io/) is available as a `sentry` extra.
+You will also need to install [one of SQLAlchemy dialects](https://docs.sqlalchemy.org/en/20/dialects/index.html) to use databases other than SQLite. The `mysql-py` (pymysql), `mysql-c` (mysqlclient) and `pgsql` (psycopg2) dialects are already specified as package extras. Optional [Sentry](https://sentry.io/) is available as a `sentry` extra.
 
 ## Usage
 
@@ -49,7 +49,7 @@ Data need to be fetched and updated in separate commands from the web server. Mo
 
 The development server can be started with `gimvicurnik run`. It is based on the default Flask's built-in server and will respect all of its environment variables (except `FLASK_APP`, which is configured automatically).
 
-In production, you should use any WSGI-compatible server. See [Flask Documentation](https://flask.palletsprojects.com/en/2.1.x/deploying/) for more details. GimVičUrnik API uses the app factory located at `gimvicurnik.create_app` to create the application.
+In production, you should use any WSGI-compatible server. See [Flask Documentation](https://flask.palletsprojects.com/en/2.3.x/deploying/) for more details. GimVičUrnik API uses the app factory located at `gimvicurnik.create_app` to create the application.
 
 ### Using the API
 

@@ -49,7 +49,7 @@ It will build whole website, optimized for production and save it into `dist` di
 
 ### Hosting for Production
 
-The website uses Vue Router in `history` mode, so a simple static file server will fail. You will need to configure your web server to fallback to `index.html` for any non-file requests.
+The website uses Vue Router in `history` mode, so a simple static file server will fail. You will need to configure your web server to fall back to `index.html` for any non-file requests.
 
 See [Vue Documentation](https://cli.vuejs.org/guide/deployment.html) for more details.
 
