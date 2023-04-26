@@ -398,8 +398,8 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Parse tables into substitutions
         for table in tables:
-            for row in table:
-                row = [column.replace("\n", " ").strip() if column else "" for column in row]
+            for row0 in table:
+                row = [column.replace("\n", " ").strip() if column else "" for column in row0]
 
                 # Get parser type
                 if row == header_substitutions:
@@ -620,10 +620,10 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 # Parse time format
                 time = re.sub("cca|do", "", row[0]).replace(".", ":").strip()
-                time = datetime.strptime(time, "%H:%M").time()
+                time = datetime.strptime(time, "%H:%M").time()  # type: ignore[assignment]
 
                 # Get notes, classes and location if they are specified
-                notes = row[1].strip() if row[1] else None
+                notes = row[1].strip() if row[1] else None  # type: ignore[assignment]
                 classes = re.sub("[().]", "", row[2]).split(",") if row[2] else []
                 location = row[4].strip() if row[4] else None
 
