@@ -14,11 +14,11 @@ import typing
 from traceback import TracebackException as _TracebackException
 
 if typing.TYPE_CHECKING:
-    from typing import Iterable, Iterator, List, Optional, Union
+    from typing import Iterable, Iterator
 
 
 class TracebackException(_TracebackException):
-    exceptions: Optional[List[TracebackException]] = None
+    exceptions: list[TracebackException] | None = None
 
 
 class _ExceptionPrintContext:
@@ -28,7 +28,7 @@ class _ExceptionPrintContext:
     def indent(self) -> str:
         return " " * (2 * self.exception_group_depth)
 
-    def emit(self, text_gen: Union[str, Iterable]) -> Iterator[str]:
+    def emit(self, text_gen: str | Iterable) -> Iterator[str]:
         indent_str = self.indent()
 
         if isinstance(text_gen, str):
@@ -40,7 +40,7 @@ class _ExceptionPrintContext:
 
 def _format_traceback_exception(
     exc: TracebackException,
-    ctx: Optional[_ExceptionPrintContext] = None,
+    ctx: _ExceptionPrintContext | None = None,
 ) -> Iterator[str]:
     if ctx is None:
         ctx = _ExceptionPrintContext()

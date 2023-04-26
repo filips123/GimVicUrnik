@@ -13,7 +13,7 @@ from ..database import Class, LunchSchedule, Session
 from ..utils.sentry import start_span, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import List, Dict, Any, Optional, Iterator
+    from typing import Any, Iterator
     from flask import Blueprint, Response
     from sqlalchemy.orm.query import Query
     from ..config import Config, ConfigLessonTime
@@ -39,9 +39,9 @@ def create_calendar(name: str, url: str) -> Calendar:
 
 @with_span(op="generate")
 def create_school_calendar(
-    substitutions: Iterator[Dict[str, Any]],
-    lessons: Iterator[Dict[str, Any]],
-    times: List[ConfigLessonTime],
+    substitutions: Iterator[dict[str, Any]],
+    lessons: Iterator[dict[str, Any]],
+    times: list[ConfigLessonTime],
     name: str,
     url: str,
     include_timetable: bool = True,
@@ -56,7 +56,7 @@ def create_school_calendar(
     year = today.year if today >= date(today.year, 9, 1) else today.year - 1
 
     weekdays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
-    weektable: List[List[Optional[Event]]] = [[None for _ in range(11)] for _ in range(6)]
+    weektable: list[list[Event | None]] = [[None for _ in range(11)] for _ in range(6)]
 
     if include_timetable:
         for subject in lessons:
@@ -247,7 +247,7 @@ class CalendarHandler(BaseHandler):
     @classmethod
     def routes(cls, bp: Blueprint, config: Config) -> None:
         @bp.route("/calendar/combined/<list:classes>")
-        def get_combined_calendar_for_classes(classes: List[str]) -> Response:
+        def get_combined_calendar_for_classes(classes: list[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -257,7 +257,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/timetable/<list:classes>")
-        def get_timetable_calendar_for_classes(classes: List[str]) -> Response:
+        def get_timetable_calendar_for_classes(classes: list[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -268,7 +268,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/substitutions/<list:classes>")
-        def get_substitutions_calendar_for_classes(classes: List[str]) -> Response:
+        def get_substitutions_calendar_for_classes(classes: list[str]) -> Response:
             return create_school_calendar(
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
@@ -279,7 +279,7 @@ class CalendarHandler(BaseHandler):
             )
 
         @bp.route("/calendar/schedules/<list:classes>")
-        def get_schedules_calendar_for_classes(classes: List[str]) -> Response:
+        def get_schedules_calendar_for_classes(classes: list[str]) -> Response:
             return create_schedule_calendar(
                 Session.query(LunchSchedule)
                 .join(Class)

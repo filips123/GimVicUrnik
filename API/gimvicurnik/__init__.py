@@ -21,7 +21,6 @@ from .blueprints import (
     TimetableHandler,
 )
 from .commands import (
-    cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
@@ -34,7 +33,7 @@ from .utils.errors import format_exception
 from .utils.flask import DateConverter, ListConverter
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Union
+    from typing import Any
     from sqlalchemy.engine import Engine
     from werkzeug import Response
     from flask.typing import ResponseReturnValue
@@ -114,19 +113,29 @@ class GimVicUrnik:
             release = sentry_config.releasePrefix + version + sentry_config.releaseSuffix
 
             # Create custom traces sampler so different traces can be configured separately
-            def _sentry_traces_sampler(context: Dict[str, Any]) -> Union[float, int, bool]:
+            def _sentry_traces_sampler(context: dict[str, Any]) -> float | int | bool:
                 if context["transaction_context"]["op"] == "command":
-                    return sentry_config.sampleRate.commands
+                    return sentry_config.tracesSampleRate.commands
                 elif context["transaction_context"]["op"] == "http.server":
-                    return sentry_config.sampleRate.requests
+                    return sentry_config.tracesSampleRate.requests
                 else:
-                    return sentry_config.sampleRate.other
+                    return sentry_config.tracesSampleRate.other
+
+            # Create a custom profiler sampler so different traces can be configured separately
+            def _sentry_profiler_sampler(context: dict[str, Any]) -> float | int | bool:
+                if context["transaction_context"]["op"] == "command":
+                    return sentry_config.profilerSampleRate.commands
+                elif context["transaction_context"]["op"] == "http.server":
+                    return sentry_config.profilerSampleRate.requests
+                else:
+                    return sentry_config.profilerSampleRate.other
 
             # Init the Sentry SDK
             sentry_sdk.init(
                 dsn=sentry_config.dsn,
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
                 traces_sampler=_sentry_traces_sampler,
+                profiles_sampler=_sentry_profiler_sampler,
                 integrations=[
                     FlaskIntegration(transaction_style="url"),
                     SqlalchemyIntegration(),
@@ -179,7 +188,7 @@ class GimVicUrnik:
         """Remove database session after request."""
 
         @self.app.teardown_appcontext
-        def _close_session(_error: Optional[BaseException] = None) -> None:
+        def _close_session(_error: BaseException | None = None) -> None:
             Session.remove()
 
     def create_cors_hooks(self) -> None:
@@ -228,7 +237,6 @@ class GimVicUrnik:
         self.app.cli.add_command(update_eclassroom_command)
         self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(create_database_command)
-        self.app.cli.add_command(cleanup_database_command)
 
     def register_routes(self) -> None:
         """Register all application routes."""

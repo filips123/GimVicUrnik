@@ -8,6 +8,7 @@ from datetime import datetime
 from hashlib import sha256
 
 import requests
+from sqlalchemy import insert
 
 from ..database import Class, Classroom, Document, DocumentType, Lesson, Teacher
 from ..errors import TimetableApiError
@@ -15,7 +16,6 @@ from ..utils.database import get_or_create
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Tuple
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesTimetable
@@ -49,7 +49,7 @@ class TimetableUpdater:
 
             self.logger.exception(error)
 
-    def _download(self) -> Tuple[str, str]:
+    def _download(self) -> tuple[str, str]:
         """Download the timetable JS file."""
 
         try:
@@ -115,7 +115,7 @@ class TimetableUpdater:
         # fmt: on
 
         self.session.query(Lesson).delete()
-        self.session.bulk_insert_mappings(Lesson, models)
+        self.session.execute(insert(Lesson), models)
 
         # Update or create a document
         if not document:

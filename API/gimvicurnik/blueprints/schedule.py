@@ -7,7 +7,7 @@ from ..database import Class, LunchSchedule, Session
 
 if typing.TYPE_CHECKING:
     import datetime
-    from typing import Any, Dict, List
+    from typing import Any
     from flask import Blueprint
     from ..config import Config
 
@@ -18,7 +18,7 @@ class ScheduleHandler(BaseHandler):
     @classmethod
     def routes(cls, bp: Blueprint, config: Config) -> None:
         @bp.route("/schedule/date/<date:date>")
-        def get_lunch_schedule(date: datetime.date) -> List[Dict[str, Any]]:
+        def get_lunch_schedule(date: datetime.date) -> list[dict[str, Any]]:
             return [
                 {
                     "class": model.class_.name,
@@ -36,7 +36,7 @@ class ScheduleHandler(BaseHandler):
             ]
 
         @bp.route("/schedule/date/<date:date>/classes/<list:classes>")
-        def get_lunch_schedule_for_classes(date: datetime.date, classes: List[str]) -> List[Dict[str, Any]]:
+        def get_lunch_schedule_for_classes(date: datetime.date, classes: list[str]) -> list[dict[str, Any]]:
             return [
                 {
                     "class": model.class_.name,

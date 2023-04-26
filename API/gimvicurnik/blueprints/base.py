@@ -5,7 +5,7 @@ import typing
 from flask import Blueprint
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar, Optional
+    from typing import ClassVar
     from flask import Flask
     from ..config import Config
 
@@ -16,10 +16,10 @@ class BaseHandler:
     name: ClassVar[str]
     """Handler name. Must be set by subclasses.."""
 
-    static_folder: ClassVar[Optional[str]] = None
+    static_folder: ClassVar[str | None] = None
     """Path to a folder of static files. May be set by subclasses."""
 
-    template_folder: ClassVar[Optional[str]] = None
+    template_folder: ClassVar[str | None] = None
     """Path to a folder of template files. May be set by subclasses."""
 
     @classmethod

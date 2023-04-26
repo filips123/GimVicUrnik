@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, List, Optional, Union
+from typing import Any
 
 from attrs import Factory, define, field
 
@@ -63,10 +63,17 @@ class ConfigURLs:
 
 
 @define(kw_only=True)
-class ConfigSentrySampleRate:
-    commands: Union[float, int, bool] = field(default=1.0, converter=_identity_convertor)
-    requests: Union[float, int, bool] = field(default=0.5, converter=_identity_convertor)
-    other: Union[float, int, bool] = field(default=0.5, converter=_identity_convertor)
+class ConfigSentryTracesSampleRate:
+    commands: float | int | bool = field(default=1.0, converter=_identity_convertor)
+    requests: float | int | bool = field(default=1.0, converter=_identity_convertor)
+    other: float | int | bool = field(default=1.0, converter=_identity_convertor)
+
+
+@define(kw_only=True)
+class ConfigSentryProfilerSampleRate:
+    commands: float | int | bool = field(default=False, converter=_identity_convertor)
+    requests: float | int | bool = field(default=False, converter=_identity_convertor)
+    other: float | int | bool = field(default=False, converter=_identity_convertor)
 
 
 @define(kw_only=True)
@@ -77,7 +84,8 @@ class ConfigSentry:
     releasePrefix: str = ""
     releaseSuffix: str = ""
     maxBreadcrumbs: int = 100
-    sampleRate: ConfigSentrySampleRate = Factory(ConfigSentrySampleRate)
+    tracesSampleRate: ConfigSentryTracesSampleRate = Factory(ConfigSentryTracesSampleRate)
+    profilerSampleRate: ConfigSentryProfilerSampleRate = Factory(ConfigSentryProfilerSampleRate)
 
 
 # ------ LESSON TIME CONFIG ------
@@ -98,7 +106,7 @@ class Config:
     sources: ConfigSources
     urls: ConfigURLs
     database: str
-    cors: List[str] = Factory(list)
-    sentry: Optional[ConfigSentry] = None
-    logging: Optional[Union[dict, str]] = field(default=None, converter=_identity_convertor)
-    lessonTimes: List[ConfigLessonTime]
+    cors: list[str] = Factory(list)
+    sentry: ConfigSentry | None = None
+    logging: dict | str | None = field(default=None, converter=_identity_convertor)
+    lessonTimes: list[ConfigLessonTime]
