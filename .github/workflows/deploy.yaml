@@ -1,0 +1,126 @@
+name: Deployment
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  deploy:
+    name: Deployment
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+      url: https://urnik.gimvic.org/
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure Poetry cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pypoetry
+            ~/.local/share/pypoetry
+            ~/.local/bin/poetry
+            ./.flakeheaven_cache
+            ./.mypy_cache
+          key: ${{ runner.os }}-poetry-deploy-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-
+
+      - name: Configure Yarn cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/yarn
+            ./website/node_modules/.cache
+          key: ${{ runner.os }}-yarn-deploy-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+          ~/.local/bin/poetry config virtualenvs.create false
+          echo "~/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Sentry CLI
+        run: npm install -g @sentry/cli
+
+      - name: Prepare the SSH configuration
+        run: |
+          mkdir ~/.ssh
+          echo "${{ secrets.SERVER_SSH_CONFIG }}" > ~/.ssh/config
+          echo "${{ secrets.SERVER_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          sudo chmod 600 ~/.ssh/id_rsa
+          ssh urnik "whoami"
+
+      - name: Download the project configuration
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.CONFIG_REPOSITORY_NAME }}
+          ssh-key: ${{ secrets.CONFIG_REPOSITORY_PRIVATE_KEY }}
+          path: configuration
+
+      - name: Determine the project version
+        run: |
+          VERSION=${GITHUB_REF/refs\/tags\/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build the backend
+        run: |
+          cd API
+          cp -r ../configuration/backend/. .
+          poetry version "$VERSION"
+          poetry install --no-dev
+          poetry build --format wheel
+          poetry export -E sentry -E mysql-c --output dist/requirements.txt
+
+      - name: Build the frontend
+        run: |
+          cd website
+          cp -r ../configuration/frontend/. .
+          yarn version --no-git-tag-version --new-version "$VERSION"
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Deploy the backend
+        run: |
+          cd API
+          export GIMVICURNIK_ROOT=/var/www/urnik.gimvic.org
+          ssh urnik "rm -rf $GIMVICURNIK_ROOT/deps/*"
+          scp -r dist/* urnik:$GIMVICURNIK_ROOT/deps/
+          ssh urnik "sh -c '$GIMVICURNIK_ROOT/venv/bin/pip install -r $GIMVICURNIK_ROOT/deps/requirements.txt'"
+          ssh urnik "sh -c '$GIMVICURNIK_ROOT/venv/bin/pip install $GIMVICURNIK_ROOT/deps/gimvicurnik-*.whl'"
+
+      - name: Deploy the frontend
+        run: |
+          cd website
+          cp -r ../configuration/public/. dist/
+          scp -r dist/* urnik:/var/www/urnik.gimvic.org/html/
+
+      - name: Reload the server
+        run: ssh urnik "systemctl reload apache2.service"
+
+      - name: Create the Sentry release
+        run: |
+          sentry-cli releases new "$VERSION" -p "${{ secrets.SENTRY_BACKEND_PROJECT }}" -p "${{ secrets.SENTRY_FRONTEND_PROJECT }}"
+          sentry-cli releases -p "${{ secrets.SENTRY_FRONTEND_PROJECT }}" files "$VERSION" upload-sourcemaps website/dist/
+          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases finalize "$VERSION"
+          sentry-cli releases deploys "$VERSION" new -e "${{ secrets.SENTRY_ENVIRONMENT }}"
