@@ -124,3 +124,6 @@ jobs:
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases finalize "$VERSION"
           sentry-cli releases deploys "$VERSION" new -e "${{ secrets.SENTRY_ENVIRONMENT }}"
+        env:
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
