@@ -89,7 +89,7 @@ jobs:
           poetry version "$VERSION"
           poetry install --no-dev
           poetry build --format wheel
-          poetry export -E sentry -E mysql-c --output dist/requirements.txt
+          poetry export -E sentry -E mysql-c --without-hashes --output dist/requirements.txt
 
       - name: Build the frontend
         run: |
@@ -115,7 +115,7 @@ jobs:
           scp -r dist/* urnik:/var/www/urnik.gimvic.org/html/
 
       - name: Reload the server
-        run: ssh urnik "systemctl reload apache2.service"
+        run: ssh urnik "sudo systemctl reload apache2.service"
 
       - name: Create the Sentry release
         run: |
