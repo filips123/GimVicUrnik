@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "@mdi/js": "^7.2.96",
-    "@sentry/integrations": "^7.49.0",
-    "@sentry/tracing": "^7.49.0",
-    "@sentry/vue": "^7.49.0",
+    "@sentry/integrations": "^7.50.0",
+    "@sentry/tracing": "^7.50.0",
+    "@sentry/vue": "^7.50.0",
     "pulltorefreshjs": "^0.1.22",
     "register-service-worker": "^1.7.2",
     "vue": "^2.7.14",
