@@ -1,4 +1,4 @@
-name: API Checks
+name: Check Backend
 
 on:
   push:
@@ -32,13 +32,15 @@ jobs:
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
             ~/.local/bin/poetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: ${{ runner.os }}-poetry-
+            ./.flakeheaven_cache
+            ./.mypy_cache
+          key: ${{ runner.os }}-poetry-lint-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-lint-
 
       - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install Poetry
         run: |
@@ -47,7 +49,7 @@ jobs:
           echo "~/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: poetry install
+        run: poetry install --extras sentry
 
       - name: Lint the project
         run: flakeheaven lint
@@ -68,13 +70,15 @@ jobs:
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
             ~/.local/bin/poetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: ${{ runner.os }}-poetry-
+            ./.flakeheaven_cache
+            ./.mypy_cache
+          key: ${{ runner.os }}-poetry-typecheck-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-typecheck-
 
       - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install Poetry
         run: |
