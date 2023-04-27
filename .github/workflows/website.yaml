@@ -1,4 +1,4 @@
-name: Website Checks
+name: Check Frontend
 
 on:
   push:
@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Configure Yarn cache
         uses: actions/cache@v3
@@ -32,13 +30,13 @@ jobs:
           path: |
             ~/.cache/yarn
             ./node_modules/.cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-yarn-lint-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-lint-
 
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Copy configuration
         run: cp .env.sample .env
@@ -63,13 +61,13 @@ jobs:
           path: |
             ~/.cache/yarn
             ./node_modules/.cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-yarn-build-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-build-
 
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Copy configuration
         run: cp .env.sample .env
