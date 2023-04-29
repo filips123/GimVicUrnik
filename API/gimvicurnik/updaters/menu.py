@@ -81,12 +81,19 @@ class MenuUpdater(BaseMultiUpdater):
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
         date = re.search(r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?.pdf", document.url)
 
+        # The specified date is commonly Monday of the effective week
+        # However, in some cases, it may also be another day of that week
+        # We need to convert it to Monday, so it is stored correctly
+
         if date:
-            return datetime.date(
+            specified = datetime.date(
                 year=int(date.group(1)),
                 month=int(date.group(2)),
                 day=int(date.group(3)),
             )
+
+            effective = specified - datetime.timedelta(days=specified.weekday())
+            return effective
 
         raise MenuDateError("Unknown menu date URL format: " + document.url.rsplit("/", 1)[1])
 
