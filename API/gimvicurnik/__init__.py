@@ -176,9 +176,9 @@ class GimVicUrnik:
 
             @self.app.before_request
             def _add_user_ip() -> None:
-                # Add non-identifiable user ID to users with DNT or GPC headers
+                # Set an empty user for users with DNT or GPC headers
                 if request.headers.get("DNT") == "1" or request.headers.get("Sec-GPC") == "1":
-                    sentry_sdk.set_user({"id": "0000000000000000000000000000000000000000"})
+                    sentry_sdk.set_user({})
                     return
 
                 # Use Sentry helper to get user IP
