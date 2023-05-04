@@ -101,6 +101,7 @@ class GimVicUrnik:
             from sentry_sdk.integrations.flask import FlaskIntegration
             from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
             from sentry_sdk.integrations.pure_eval import PureEvalIntegration
+            from sentry_sdk.scrubber import EventScrubber, DEFAULT_DENYLIST
 
             sentry_config = self.config.sentry
 
@@ -111,6 +112,13 @@ class GimVicUrnik:
             # Get current environment and calculate release
             environment = os.environ.get("GIMVICURNIK_ENV", "production")
             release = sentry_config.releasePrefix + version + sentry_config.releaseSuffix
+
+            # Remove IP-related elements from the default denylist
+            if sentry_config.collectIPs:
+                allowlist = {"ip_address", "remote_addr", "x_forwarded_for", "x_real_ip"}
+                denylist = list(set(DEFAULT_DENYLIST) - allowlist)
+            else:
+                denylist = DEFAULT_DENYLIST
 
             # Create custom traces sampler so different traces can be configured separately
             def _sentry_traces_sampler(context: dict[str, Any]) -> float | int | bool:
@@ -136,6 +144,7 @@ class GimVicUrnik:
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
                 traces_sampler=_sentry_traces_sampler,
                 profiles_sampler=_sentry_profiler_sampler,
+                event_scrubber=EventScrubber(denylist=denylist),
                 integrations=[
                     FlaskIntegration(transaction_style="url"),
                     SqlalchemyIntegration(),
