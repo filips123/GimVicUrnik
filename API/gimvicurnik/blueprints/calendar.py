@@ -183,7 +183,11 @@ def create_school_calendar(
 
 
 @with_span(op="generate")
-def create_schedule_calendar(query: RowReturningQuery[tuple[LunchSchedule, str]], name: str, url: str) -> Response:
+def create_schedule_calendar(
+    query: RowReturningQuery[tuple[LunchSchedule, str]],
+    name: str,
+    url: str,
+) -> Response:
     logger = logging.getLogger(__name__)
     calendar = create_calendar(name, url)
 
