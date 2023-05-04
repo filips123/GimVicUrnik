@@ -66,7 +66,7 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info(
+                logger.debug(
                     "Preparing iCalendar event",
                     extra={"type": "timetable", "source": subject},
                 )
@@ -123,7 +123,7 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info(
+                logger.debug(
                     "Preparing iCalendar event",
                     extra={"type": "substitution", "source": subject},
                 )
@@ -194,7 +194,7 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
             span.set_tag("event.time", model.time)
             span.set_data("event.source", model)
 
-            logger.info(
+            logger.debug(
                 "Preparing iCalendar event",
                 extra={"type": "lunch-schedule", "source": model},
             )
