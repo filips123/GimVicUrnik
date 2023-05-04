@@ -570,9 +570,12 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Deduplicate substitutions
         substitutions = [dict(subs2) for subs2 in {tuple(subs1.items()) for subs1 in substitutions}]
 
-        # Store substitutions to a database
+        # Remove old substitutions from a database
         self.session.query(Substitution).filter(Substitution.date == effective).delete()
-        self.session.execute(insert(Substitution), substitutions)
+
+        # Store new substitutions to a database
+        if substitutions:
+            self.session.execute(insert(Substitution), substitutions)
 
     def _parse_lunch_schedule(self, tables: Tables, effective: date) -> None:
         """Parse the lunch schedule document."""

@@ -15,7 +15,7 @@ from ..utils.sentry import start_span, with_span
 if typing.TYPE_CHECKING:
     from typing import Any, Iterator
     from flask import Blueprint, Response
-    from sqlalchemy.orm.query import Query
+    from sqlalchemy.orm.query import RowReturningQuery
     from ..config import Config, ConfigLessonTime
 
 
@@ -183,11 +183,11 @@ def create_school_calendar(
 
 
 @with_span(op="generate")
-def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -> Response:
+def create_schedule_calendar(query: RowReturningQuery[tuple[LunchSchedule, str]], name: str, url: str) -> Response:
     logger = logging.getLogger(__name__)
     calendar = create_calendar(name, url)
 
-    for model in query:
+    for model, classname in query:
         with start_span(op="event") as span:
             span.set_tag("event.type", "lunch-schedule")
             span.set_tag("event.date", model.date)
@@ -215,7 +215,7 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
                     (
                         str(model.date)
                         + str(model.time)
-                        + str(model.class_.name)
+                        + str(classname)
                         + str(model.location)
                         + str(model.notes)
                     ).encode("utf-8")
