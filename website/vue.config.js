@@ -2,6 +2,7 @@ process.env.VUE_APP_VERSION = require('./package.json').version
 
 const path = require('path')
 
+const SentryWebpackPlugin = require('@sentry/webpack-plugin')
 const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin')
 const { defineConfig } = require('@vue/cli-service')
 
@@ -90,7 +91,6 @@ module.exports = defineConfig({
       const hasModuleId = info.moduleId !== ''
 
       const resourcePath = path.normalize(info.resourcePath).replaceAll('\\', '/')
-      console.log(resourcePath)
 
       if (isVue && (!isScript || hasModuleId)) {
         // Detect generated files, filter as webpack-generated
@@ -99,6 +99,22 @@ module.exports = defineConfig({
         // If not generated, filter as webpack
         return `webpack:///${resourcePath}`
       }
+    }
+
+    // Upload sourcemaps to Sentry if enabled
+    if (process.env.SENTRY_UPLOAD_SOURCEMAPS === 'true') {
+      const releasePrefix = process.env.VUE_APP_SENTRY_RELEASE_PREFIX || ''
+      const releaseSuffix = process.env.VUE_APP_SENTRY_RELEASE_SUFFIX || ''
+      const releaseVersion = releasePrefix + process.env.VUE_APP_VERSION + releaseSuffix
+
+      config.plugins.push(new SentryWebpackPlugin({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        release: releaseVersion,
+        include: './dist',
+        finalize: false
+      }))
     }
   }
 })
