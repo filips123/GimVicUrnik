@@ -58,9 +58,6 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install Sentry CLI
-        run: npm install -g @sentry/cli
-
       - name: Prepare the SSH configuration
         run: |
           mkdir ~/.ssh
@@ -98,6 +95,11 @@ jobs:
           yarn version --no-git-tag-version --new-version "$VERSION"
           yarn install --frozen-lockfile
           yarn build
+        env:
+          SENTRY_UPLOAD_SOURCEMAPS: true
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_FRONTEND_PROJECT }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Deploy the backend
         run: |
@@ -117,13 +119,12 @@ jobs:
       - name: Reload the server
         run: ssh urnik "sudo systemctl reload apache2.service"
 
-      - name: Create the Sentry release
-        run: |
-          sentry-cli releases new "$VERSION" -p "${{ secrets.SENTRY_BACKEND_PROJECT }}" -p "${{ secrets.SENTRY_FRONTEND_PROJECT }}"
-          sentry-cli releases -p "${{ secrets.SENTRY_FRONTEND_PROJECT }}" files "$VERSION" upload-sourcemaps website/dist/
-          sentry-cli releases set-commits "$VERSION" --auto
-          sentry-cli releases finalize "$VERSION"
-          sentry-cli releases deploys "$VERSION" new -e "${{ secrets.SENTRY_ENVIRONMENT }}"
+      - name: Create a Sentry release
+        uses: getsentry/action-release@v1
         env:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        with:
+          projects: ${{ secrets.SENTRY_BACKEND_PROJECT }} ${{ secrets.SENTRY_FRONTEND_PROJECT }}
+          version: ${{ env.VERSION }}
+          environment: production

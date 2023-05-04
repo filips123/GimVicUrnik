@@ -15,7 +15,7 @@ from ..utils.sentry import start_span, with_span
 if typing.TYPE_CHECKING:
     from typing import Any, Iterator
     from flask import Blueprint, Response
-    from sqlalchemy.orm.query import Query
+    from sqlalchemy.orm.query import RowReturningQuery
     from ..config import Config, ConfigLessonTime
 
 
@@ -66,7 +66,7 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info(
+                logger.debug(
                     "Preparing iCalendar event",
                     extra={"type": "timetable", "source": subject},
                 )
@@ -123,7 +123,7 @@ def create_school_calendar(
                 span.set_tag("event.time", subject["time"])
                 span.set_data("event.source", subject)
 
-                logger.info(
+                logger.debug(
                     "Preparing iCalendar event",
                     extra={"type": "substitution", "source": subject},
                 )
@@ -183,18 +183,22 @@ def create_school_calendar(
 
 
 @with_span(op="generate")
-def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -> Response:
+def create_schedule_calendar(
+    query: RowReturningQuery[tuple[LunchSchedule, str]],
+    name: str,
+    url: str,
+) -> Response:
     logger = logging.getLogger(__name__)
     calendar = create_calendar(name, url)
 
-    for model in query:
+    for model, classname in query:
         with start_span(op="event") as span:
             span.set_tag("event.type", "lunch-schedule")
             span.set_tag("event.date", model.date)
             span.set_tag("event.time", model.time)
             span.set_data("event.source", model)
 
-            logger.info(
+            logger.debug(
                 "Preparing iCalendar event",
                 extra={"type": "lunch-schedule", "source": model},
             )
@@ -215,7 +219,7 @@ def create_schedule_calendar(query: Query[LunchSchedule], name: str, url: str) -
                     (
                         str(model.date)
                         + str(model.time)
-                        + str(model.class_.name)
+                        + str(classname)
                         + str(model.location)
                         + str(model.notes)
                     ).encode("utf-8")
@@ -281,7 +285,7 @@ class CalendarHandler(BaseHandler):
         @bp.route("/calendar/schedules/<list:classes>")
         def get_schedules_calendar_for_classes(classes: list[str]) -> Response:
             return create_schedule_calendar(
-                Session.query(LunchSchedule)
+                Session.query(LunchSchedule, Class.name)
                 .join(Class)
                 .filter(Class.name.in_(classes))
                 .order_by(LunchSchedule.time, LunchSchedule.class_),

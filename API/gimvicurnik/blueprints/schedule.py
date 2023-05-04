@@ -21,14 +21,14 @@ class ScheduleHandler(BaseHandler):
         def get_lunch_schedule(date: datetime.date) -> list[dict[str, Any]]:
             return [
                 {
-                    "class": model.class_.name,
-                    "date": model.date.strftime("%Y-%m-%d"),
-                    "time": model.time.strftime("%H:%M"),
-                    "location": model.location,
-                    "notes": model.notes,
+                    "class": model[1],
+                    "date": model[0].date.strftime("%Y-%m-%d"),
+                    "time": model[0].time.strftime("%H:%M"),
+                    "location": model[0].location,
+                    "notes": model[0].notes,
                 }
                 for model in (
-                    Session.query(LunchSchedule)
+                    Session.query(LunchSchedule, Class.name)
                     .join(Class)
                     .filter(LunchSchedule.date == date)
                     .order_by(LunchSchedule.time, LunchSchedule.class_)
@@ -39,14 +39,14 @@ class ScheduleHandler(BaseHandler):
         def get_lunch_schedule_for_classes(date: datetime.date, classes: list[str]) -> list[dict[str, Any]]:
             return [
                 {
-                    "class": model.class_.name,
-                    "date": model.date.strftime("%Y-%m-%d"),
-                    "time": model.time.strftime("%H:%M"),
-                    "location": model.location,
-                    "notes": model.notes,
+                    "class": model[1],
+                    "date": model[0].date.strftime("%Y-%m-%d"),
+                    "time": model[0].time.strftime("%H:%M"),
+                    "location": model[0].location,
+                    "notes": model[0].notes,
                 }
                 for model in (
-                    Session.query(LunchSchedule)
+                    Session.query(LunchSchedule, Class.name)
                     .join(Class)
                     .filter(LunchSchedule.date == date, Class.name.in_(classes))
                     .order_by(LunchSchedule.time, LunchSchedule.class_)

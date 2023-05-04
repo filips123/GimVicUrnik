@@ -100,7 +100,7 @@ class Entity:
         query = (
             Session.query(Lesson, Class.name, Teacher.name, Classroom.name)
             .join(Class)
-            .join(Teacher)
+            .join(Teacher, isouter=True)
             .join(Classroom, isouter=True)
             .order_by(Lesson.day, Lesson.time)
         )

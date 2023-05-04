@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",
+    "@sentry/webpack-plugin": "^1.20.1",
     "@types/pulltorefreshjs": "^0.1.5",
     "@typescript-eslint/eslint-plugin": "^5.49.1",
     "@typescript-eslint/parser": "^5.49.1",
