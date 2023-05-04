@@ -1,5 +1,7 @@
 process.env.VUE_APP_VERSION = require('./package.json').version
 
+const path = require('path')
+
 const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin')
 const { defineConfig } = require('@vue/cli-service')
 
@@ -77,5 +79,26 @@ module.exports = defineConfig({
         return 'script'
       }
     }])
+  },
+
+  configureWebpack: (config) => {
+    config.output.devtoolFallbackModuleFilenameTemplate = 'webpack:///[resource-path]?[hash]'
+
+    config.output.devtoolModuleFilenameTemplate = info => {
+      const isVue = info.resourcePath.match(/\.vue$/)
+      const isScript = info.query.match(/type=script/)
+      const hasModuleId = info.moduleId !== ''
+
+      const resourcePath = path.normalize(info.resourcePath).replaceAll('\\', '/')
+      console.log(resourcePath)
+
+      if (isVue && (!isScript || hasModuleId)) {
+        // Detect generated files, filter as webpack-generated
+        return `webpack-generated:///${resourcePath}?${info.hash}`
+      } else {
+        // If not generated, filter as webpack
+        return `webpack:///${resourcePath}`
+      }
+    }
   }
 })
