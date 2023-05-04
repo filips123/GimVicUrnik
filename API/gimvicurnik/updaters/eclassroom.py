@@ -399,6 +399,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Parse tables into substitutions
         for table in tables:
             for row0 in table:
+                # We use different variable name here, otherwise mypy complains
                 row = [column.replace("\n", " ").strip() if column else "" for column in row0]
 
                 # Get parser type

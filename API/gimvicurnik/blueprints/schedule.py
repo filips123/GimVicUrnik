@@ -28,7 +28,7 @@ class ScheduleHandler(BaseHandler):
                     "notes": model.notes,
                 }
                 for model in (
-                    Session.query(LunchSchedule)
+                    Session.query(LunchSchedule, Class.name)
                     .join(Class)
                     .filter(LunchSchedule.date == date)
                     .order_by(LunchSchedule.time, LunchSchedule.class_)
@@ -46,7 +46,7 @@ class ScheduleHandler(BaseHandler):
                     "notes": model.notes,
                 }
                 for model in (
-                    Session.query(LunchSchedule)
+                    Session.query(LunchSchedule, Class.name)
                     .join(Class)
                     .filter(LunchSchedule.date == date, Class.name.in_(classes))
                     .order_by(LunchSchedule.time, LunchSchedule.class_)

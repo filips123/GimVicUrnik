@@ -281,7 +281,7 @@ class CalendarHandler(BaseHandler):
         @bp.route("/calendar/schedules/<list:classes>")
         def get_schedules_calendar_for_classes(classes: list[str]) -> Response:
             return create_schedule_calendar(
-                Session.query(LunchSchedule)
+                Session.query(LunchSchedule, Class.name)
                 .join(Class)
                 .filter(Class.name.in_(classes))
                 .order_by(LunchSchedule.time, LunchSchedule.class_),
