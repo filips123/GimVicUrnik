@@ -52,8 +52,28 @@ class EClassroomUpdater(BaseMultiUpdater):
     def get_documents(self) -> Iterator[DocumentInfo]:
         """Get all documents from the e-classroom."""
 
+        self._mark_course_viewed()
+
         yield from self._get_internal_urls()
         yield from self._get_external_urls()
+
+    def _mark_course_viewed(self) -> None:
+        """Mark the course as viewed, so we are not removed for inactivity."""
+
+        params = {
+            "moodlewsrestformat": "json",
+        }
+        data = {
+            "courseid": self.config.course,
+            "wstoken": self.config.token,
+            "wsfunction": "core_course_view_course",
+        }
+
+        try:
+            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response.raise_for_status()
+        except (IOError, ValueError) as error:
+            raise ClassroomApiError("Error while accessing e-classroom API") from error
 
     def _get_internal_urls(self) -> Iterator[DocumentInfo]:
         params = {
