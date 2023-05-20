@@ -7,21 +7,21 @@
       <v-card-subtitle class="pb-1">{{ formatDate(date) }}</v-card-subtitle>
     </div>
 
-    <v-card-text v-if="menu.snack"
-      :class="{ 'pb-0': menu.lunch, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+    <v-card-text v-if="currentSnackMenu"
+      :class="{ 'pb-0': currentLunchMenu, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
       class="grey--text">
       <h2 class="font-weight-regular pb-2">Malica</h2>
-      <p v-html=convertNewlines(menu.snack[getSnackType()]) />
+      <p v-html=currentSnackMenu />
     </v-card-text>
 
-    <v-card-text v-if="menu.lunch"
-      :class="{ 'pb-0': currentEntityValid && currentLunchSchedules, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
+    <v-card-text v-if="currentLunchMenu"
+      :class="{ 'pb-0': currentLunchSchedules, 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
       class="grey--text">
       <h2 class="font-weight-regular pb-2">Kosilo</h2>
-      <p v-html=convertNewlines(menu.lunch[getLunchType()]) />
+      <p v-html=currentLunchMenu />
     </v-card-text>
 
-    <v-card-text v-if="currentEntityValid && currentLunchSchedules"
+    <v-card-text v-if="currentLunchSchedules"
       :class="{ 'text--darken-4': !$vuetify.theme.dark, 'text--lighten-4': $vuetify.theme.dark }"
       class="grey--text pb-2">
       <h2 class="font-weight-regular pb-2">Razpored kosila</h2>
@@ -55,32 +55,7 @@ export default class MenuDisplay extends Vue {
   @Prop() lunchSchedule!: LunchSchedule[]
   @Prop() menu!: Menu
 
-  get currentEntity (): SelectedEntity | null {
-    return SettingsModule.selectedEntity
-  }
-
-  get currentEntityValid (): boolean {
-    return !!this.currentEntity && this.currentEntity.type === EntityType.Class
-  }
-
-  get currentLunchSchedules (): LunchSchedule[] | null {
-    const lunchSchedules = this.lunchSchedule.filter(schedule => this.currentEntity?.data.includes(schedule.class))
-    return lunchSchedules.length ? lunchSchedules : null
-  }
-
-  formatDay (date: string): string {
-    return new Date(date).toLocaleDateString('sl', { weekday: 'long' })
-  }
-
-  formatDate (date: string): string {
-    return new Date(date).toLocaleDateString('sl')
-  }
-
-  convertNewlines (text: string): string {
-    return text.replace(/\n/g, '<br />')
-  }
-
-  getSnackType (): string {
+  get snackType (): string {
     switch (SettingsModule.selectedMenu?.snack) {
       case SnackType.Vegetarian:
         return 'vegetarian'
@@ -93,13 +68,46 @@ export default class MenuDisplay extends Vue {
     }
   }
 
-  getLunchType (): string {
+  get lunchType (): string {
     switch (SettingsModule.selectedMenu?.lunch) {
       case LunchType.Vegetarian:
         return 'vegetarian'
       default:
         return 'normal'
     }
+  }
+
+  get currentEntity (): SelectedEntity | null {
+    return SettingsModule.selectedEntity
+  }
+
+  get currentSnackMenu (): string | null {
+    const currentMenu = this.menu?.snack[this.snackType as keyof typeof this.menu.snack]
+    return currentMenu ? this.convertNewlines(currentMenu) : null
+  }
+
+  get currentLunchMenu (): string | null {
+    const currentMenu = this.menu?.lunch[this.lunchType as keyof typeof this.menu.lunch]
+    return currentMenu ? this.convertNewlines(currentMenu) : null
+  }
+
+  get currentLunchSchedules (): LunchSchedule[] | null {
+    if (!this.currentEntity || this.currentEntity.type !== EntityType.Class) return null
+
+    const lunchSchedules = this.lunchSchedule?.filter(schedule => this.currentEntity?.data.includes(schedule.class))
+    return lunchSchedules?.length ? lunchSchedules : null
+  }
+
+  formatDay (date: string): string {
+    return new Date(date).toLocaleDateString('sl', { weekday: 'long' })
+  }
+
+  formatDate (date: string): string {
+    return new Date(date).toLocaleDateString('sl')
+  }
+
+  convertNewlines (text: string): string {
+    return text.replace(/\n/g, '<br />')
   }
 }
 </script>

@@ -45,14 +45,14 @@ export interface LunchSchedule {
 export interface Menu {
   date: string;
   snack: {
-    normal: string,
-    vegetarian: string,
-    poultry: string,
-    fruitvegetable: string
+    normal: string | null,
+    vegetarian: string | null,
+    poultry: string | null,
+    fruitvegetable: string | null
   };
   lunch: {
-    normal: string,
-    vegetarian: string
+    normal: string | null,
+    vegetarian: string | null
   }
 }
 
@@ -63,7 +63,7 @@ export interface Document {
   effective: string;
   url: string;
   title: string;
-  content: string;
+  content: string | null;
 }
 
 export function getLessonId (substitution: Lesson): string {
