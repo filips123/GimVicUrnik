@@ -441,12 +441,12 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif row == header_reservations:
                     parser_type = ParserType.RESERVATIONS
                     continue
-                elif "Oddelek" in row[0] or "dijaki" in row[0]:
+                elif "Oddelek" in row[0] or "Razred" in row[0] or "dijaki" in row[0]:
                     parser_type = ParserType.UNKNOWN
                     continue
 
                 # Skip empty rows
-                if not any(row):
+                if not any(row) or not row[1]:
                     continue
 
                 # Parse substitutions
