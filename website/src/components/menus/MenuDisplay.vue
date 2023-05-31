@@ -82,12 +82,12 @@ export default class MenuDisplay extends Vue {
   }
 
   get currentSnackMenu (): string | null {
-    const currentMenu = this.menu?.snack[this.snackType as keyof typeof this.menu.snack]
+    const currentMenu = this.menu?.snack?.[this.snackType as keyof typeof this.menu.snack]
     return currentMenu ? this.convertNewlines(currentMenu) : null
   }
 
   get currentLunchMenu (): string | null {
-    const currentMenu = this.menu?.lunch[this.lunchType as keyof typeof this.menu.lunch]
+    const currentMenu = this.menu?.lunch?.[this.lunchType as keyof typeof this.menu.lunch]
     return currentMenu ? this.convertNewlines(currentMenu) : null
   }
 
