@@ -52,10 +52,21 @@ def update_menu_command() -> None:
 
 
 @click.command("create-database", help="Create the database.")
-@with_transaction(name="create-database", op="command")
-def create_database_command() -> None:
+@click.option("--recreate", help="Remove existing tables before creating new ones.", is_flag=True)
+@click.pass_context
+def create_database_command(ctx: click.Context, recreate: bool) -> None:
     """Create a new database and all tables."""
 
-    logging.getLogger(__name__).info("Creating the database")
     gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
+
+    if recreate:
+        confirm = input("Do you really want to drop the database? This cannot be reverted! [y/N]: ")
+
+        if confirm.lower() == "y":
+            logging.getLogger(__name__).info("Dropping the database")
+            Base.metadata.drop_all(gimvicurnik.engine)
+        else:
+            ctx.abort()
+
+    logging.getLogger(__name__).info("Creating the database")
     Base.metadata.create_all(gimvicurnik.engine)
