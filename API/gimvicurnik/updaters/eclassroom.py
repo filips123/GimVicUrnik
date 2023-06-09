@@ -215,7 +215,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         if document.type == DocumentType.LUNCH_SCHEDULE:
             title = document.title.split(",")[-1].split("-")[-1].strip()
-            search = re.search(r"(\d+). ?(\d+). ?(\d+)", title)
+            search = re.search(r"(\d+) *\. *(\d+) *\. *(\d+)", title)
             return date(year=int(search.group(3)), month=int(search.group(2)), day=int(search.group(1)))
 
         # This cannot happen because only substitutions and schedules are provided
