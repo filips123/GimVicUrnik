@@ -57,10 +57,10 @@ You can retrieve all API routes using the `gimvicurnik routes` commands. The off
 
 ## Contributing
 
-The API uses FlakeHeaven, Black and mypy for linting the code. They are included in project's development dependencies.
+The API uses ruff, black and mypy for linting the code. They are included in project's development dependencies.
 
 Please make sure that your changes are formatted correctly according to the code style:
 
-* Linting: `flakeheaven lint`
+* Linting: `ruff gimvicurnik`
 * Typechecking: `mypy gimvicurnik`
 * Formatting: `black gimvicurnik`
