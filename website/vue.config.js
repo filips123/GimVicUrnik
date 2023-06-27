@@ -2,7 +2,7 @@ process.env.VUE_APP_VERSION = require('./package.json').version
 
 const path = require('path')
 
-const SentryWebpackPlugin = require('@sentry/webpack-plugin')
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
 const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin')
 const { defineConfig } = require('@vue/cli-service')
 
@@ -107,13 +107,12 @@ module.exports = defineConfig({
       const releaseSuffix = process.env.VUE_APP_SENTRY_RELEASE_SUFFIX || ''
       const releaseVersion = releasePrefix + process.env.VUE_APP_VERSION + releaseSuffix
 
-      config.plugins.push(new SentryWebpackPlugin({
+      config.plugins.push(sentryWebpackPlugin({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        release: releaseVersion,
-        include: './dist',
-        finalize: false
+        release: { name: releaseVersion, create: false, finalize: false },
+        sourcemaps: { assets: './dist/**' }
       }))
     }
   }
