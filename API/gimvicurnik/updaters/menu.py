@@ -7,7 +7,6 @@ import re
 import tempfile
 import typing
 
-import requests
 from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
 
@@ -33,11 +32,13 @@ class MenuUpdater(BaseMultiUpdater):
         self.config = config
         self.session = session
 
+        super().__init__()
+
     def get_documents(self) -> Iterator[DocumentInfo]:
         """Download and parse the website to retrieve all menu URLs."""
 
         try:
-            response = requests.get(self.config.url)
+            response = self.requests.get(self.config.url)
             response.raise_for_status()
 
             soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")

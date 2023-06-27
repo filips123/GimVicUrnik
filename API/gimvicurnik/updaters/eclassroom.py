@@ -10,7 +10,6 @@ import typing
 from datetime import date, datetime, timezone
 from itertools import product
 
-import requests
 from mammoth import convert_to_html  # type: ignore
 from sqlalchemy import insert
 
@@ -49,6 +48,8 @@ class EClassroomUpdater(BaseMultiUpdater):
         self.config = config
         self.session = session
 
+        super().__init__()
+
     def get_documents(self) -> Iterator[DocumentInfo]:
         """Get all documents from the e-classroom."""
 
@@ -70,7 +71,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             response.raise_for_status()
         except (IOError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
@@ -86,7 +87,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             contents = response.json()
 
             response.raise_for_status()
@@ -129,7 +130,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             contents = response.json()
 
             response.raise_for_status()

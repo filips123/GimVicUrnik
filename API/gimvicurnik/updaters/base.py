@@ -79,6 +79,15 @@ class BaseMultiUpdater(ABC):
     Must be set by subclasses before running `update`.
     """
 
+    requests: requests.Session
+    """
+    A requests session that the updater should use.
+    Will be set automatically by the base updater.
+    """
+
+    def __init__(self) -> None:
+        self.requests = requests.Session()
+
     def update(self) -> None:
         """Get all available documents and update them."""
 
@@ -347,7 +356,7 @@ class BaseMultiUpdater(ABC):
         """Download a document and return its content and hash"""
 
         try:
-            response = requests.get(self.tokenize_url(document.url))
+            response = self.requests.get(self.tokenize_url(document.url))
             response.raise_for_status()
 
             content = response.content
