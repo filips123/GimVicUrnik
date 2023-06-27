@@ -14,7 +14,7 @@ import typing
 from traceback import TracebackException as _TracebackException
 
 if typing.TYPE_CHECKING:
-    from typing import Iterable, Iterator
+    from collections.abc import Iterable, Iterator
 
 
 class TracebackException(_TracebackException):

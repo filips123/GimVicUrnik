@@ -28,8 +28,6 @@ jobs:
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
             ~/.local/bin/poetry
-            ./.flakeheaven_cache
-            ./.mypy_cache
           key: ${{ runner.os }}-poetry-deploy-${{ hashFiles('**/poetry.lock') }}
           restore-keys: ${{ runner.os }}-poetry-
 

@@ -10,7 +10,6 @@ import typing
 from datetime import date, datetime, timezone
 from itertools import product
 
-import requests
 from mammoth import convert_to_html  # type: ignore
 from sqlalchemy import insert
 
@@ -22,7 +21,8 @@ from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Iterator
+    from typing import Any
+    from collections.abc import Iterator
     from mammoth.documents import Image  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -49,6 +49,8 @@ class EClassroomUpdater(BaseMultiUpdater):
         self.config = config
         self.session = session
 
+        super().__init__()
+
     def get_documents(self) -> Iterator[DocumentInfo]:
         """Get all documents from the e-classroom."""
 
@@ -70,9 +72,9 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
     def _get_internal_urls(self) -> Iterator[DocumentInfo]:
@@ -86,11 +88,11 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             contents = response.json()
 
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
         # Handle API errors
@@ -129,11 +131,11 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
 
         try:
-            response = requests.post(self.config.webserviceUrl, params=params, data=data)
+            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             contents = response.json()
 
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
         # Handle API errors

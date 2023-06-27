@@ -12,7 +12,8 @@ from ..database import Document
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar, Iterator
+    from typing import ClassVar
+    from collections.abc import Iterator
     from logging import Logger
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -78,6 +79,15 @@ class BaseMultiUpdater(ABC):
     A logger that the updater should use.
     Must be set by subclasses before running `update`.
     """
+
+    requests: requests.Session
+    """
+    A requests session that the updater should use.
+    Will be set automatically by the base updater.
+    """
+
+    def __init__(self) -> None:
+        self.requests = requests.Session()
 
     def update(self) -> None:
         """Get all available documents and update them."""
@@ -347,14 +357,14 @@ class BaseMultiUpdater(ABC):
         """Download a document and return its content and hash"""
 
         try:
-            response = requests.get(self.tokenize_url(document.url))
+            response = self.requests.get(self.tokenize_url(document.url))
             response.raise_for_status()
 
             content = response.content
             sha = sha256(content).hexdigest()
             return content, sha
 
-        except IOError as error:
+        except OSError as error:
             raise self.error(f"Error while downloading a {document.type.value} document") from error
 
     # noinspection PyMethodMayBeStatic

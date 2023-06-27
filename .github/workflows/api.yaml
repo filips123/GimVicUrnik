@@ -5,6 +5,8 @@ on:
     paths:
       - .github/workflows/api.yaml
       - API/**
+    branches:
+      - main
   pull_request:
     paths:
       - .github/workflows/api.yaml
@@ -28,12 +30,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
+            ~/.cache/black
             ~/.cache/pip
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
             ~/.local/bin/poetry
-            ./.flakeheaven_cache
-            ./.mypy_cache
+            ./.ruff_cache
           key: ${{ runner.os }}-poetry-lint-${{ hashFiles('**/poetry.lock') }}
           restore-keys: ${{ runner.os }}-poetry-lint-
 
@@ -51,8 +53,11 @@ jobs:
       - name: Install dependencies
         run: poetry install --extras sentry
 
-      - name: Lint the project
-        run: flakeheaven lint
+      - name: Lint the project with ruff
+        run: ruff gimvicurnik
+
+      - name: Lint the project with black
+        run: black gimvicurnik --check
 
   typecheck:
     name: Typechecking
@@ -70,7 +75,6 @@ jobs:
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
             ~/.local/bin/poetry
-            ./.flakeheaven_cache
             ./.mypy_cache
           key: ${{ runner.os }}-poetry-typecheck-${{ hashFiles('**/poetry.lock') }}
           restore-keys: ${{ runner.os }}-poetry-typecheck-

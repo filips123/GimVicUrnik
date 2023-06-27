@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import enum
+from collections.abc import Iterator
 from datetime import date as date_, datetime, time as time_
-from typing import Annotated, Any, Iterator
+from typing import Annotated, Any
 
 from sqlalchemy import (
     Enum,
@@ -187,27 +188,20 @@ class Classroom(Entity, Base):
         if times[0] is None or times[1] is None:
             return []
 
-        classrooms = list(Session.query(Classroom).order_by(Classroom.name))
-        lessons = list(Session.query(Lesson).join(Classroom))
+        classrooms = Session.query(Classroom.name).order_by(Classroom.name).distinct().all()
+        occupied = set(Session.query(Lesson.day, Lesson.time, Classroom.name).join(Classroom).distinct())
 
         for day in range(days[0], days[1] + 1):
             for time in range(times[0], times[1] + 1):
-                for classroom in classrooms:
-                    is_classroom_empty = True
-
-                    for lesson in lessons:
-                        if lesson.day == day and lesson.time == time and lesson.classroom == classroom:
-                            is_classroom_empty = False
-                            break
-
-                    if is_classroom_empty:
+                for (classroom,) in classrooms:
+                    if (day, time, classroom) not in occupied:
                         yield {
                             "day": day,
                             "time": time,
                             "subject": None,
                             "class": None,
                             "teacher": None,
-                            "classroom": classroom.name,
+                            "classroom": classroom,
                         }
 
 

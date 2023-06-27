@@ -5,7 +5,8 @@ from unittest.mock import Mock
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
-    from typing import Any, Callable, TypeVar, ParamSpec
+    from typing import Any, TypeVar, ParamSpec
+    from collections.abc import Callable
 
     TP = ParamSpec("TP")
     TR = TypeVar("TR")

@@ -39,35 +39,33 @@ gimvicurnik = "gimvicurnik.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "^6.0.0"
-flask = "^2.3.1"
+flask = "^2.3.2"
 click = "^8.1.3"
 attrs = "~23.1.0"
-cattrs = "~22.2.0"
-requests = "^2.29.0"
-SQLAlchemy = "^2.0.11"
+cattrs = "~23.1.2"
+requests = "^2.31.0"
+SQLAlchemy = "^2.0.17"
 pdfplumber = "^0.9.0"
 openpyxl = "^3.1.2"
-mammoth = "^1.5.1"
-icalendar = "^5.0.5"
+mammoth = "^1.6.0"
+icalendar = "^5.0.7"
 beautifulsoup4 = { version = "^4.12.2", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { version = "^1.21.1", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+sentry-sdk = { version = "^1.26.0", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
 
 # Optional support for different databases
-PyMySQL = { version = "^1.0.3", optional = true }
-mysqlclient = { version = "^2.1.1", optional = true }
+PyMySQL = { version = "^1.1.0", optional = true }
+mysqlclient = { version = "^2.2.0", optional = true }
 psycopg2 = { version = "^2.9.6", optional = true }
 
 [tool.poetry.dev-dependencies]
-flakeheaven = "^3.3.0"
 black = "^23.3.0"
-flake8-black = "^0.3.6"
-flake8-bugbear = "^23.3.12"
-mypy = "^1.2.0"
+mypy = "^1.4.1"
+ruff = "^0.0.275"
 types-pyyaml = "^6.0.12"
 types-openpyxl = "^3.1.0"
-types-requests = "^2.29.0"
+types-requests = "^2.31.0"
 types-beautifulsoup4 = "^4.12.0"
 
 [tool.poetry.extras]
@@ -76,16 +74,10 @@ mysql-py = ["PyMySQL"]
 mysql-c = ["mysqlclient"]
 pgsql = ["psycopg2"]
 
-[tool.flakeheaven]
-max_line_length = 110
-format = "grouped"
-
-[tool.flakeheaven.plugins]
-"flake8-black" = ["+*"]
-"flake8-bugbear" = ["+*"]
-"mccabe" = ["+*"]
-"pycodestyle" = ["+*", "-E203", "-E501", "-W503"]
-"pyflakes" = ["+*", "-F401"]
+[tool.ruff]
+line-length = 110
+select = ["F", "E", "W", "UP", "B", "G", "RUF"]
+ignore = ["E203", "E501", "F401"]
 
 [tool.black]
 line-length = 110

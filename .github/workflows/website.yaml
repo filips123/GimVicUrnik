@@ -5,6 +5,8 @@ on:
     paths:
       - .github/workflows/website.yaml
       - website/**
+    branches:
+      - main
   pull_request:
     paths:
       - .github/workflows/website.yaml
