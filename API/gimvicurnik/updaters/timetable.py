@@ -56,7 +56,7 @@ class TimetableUpdater:
             response = requests.get(self.config.url)
             content = response.content
             response.raise_for_status()
-        except IOError as error:
+        except OSError as error:
             raise TimetableApiError("Error while downloading the timetable") from error
 
         return content.decode("utf8"), sha256(content).hexdigest()

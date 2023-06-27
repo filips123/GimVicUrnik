@@ -12,7 +12,8 @@ from ..database import Document
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar, Iterator
+    from typing import ClassVar
+    from collections.abc import Iterator
     from logging import Logger
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -363,7 +364,7 @@ class BaseMultiUpdater(ABC):
             sha = sha256(content).hexdigest()
             return content, sha
 
-        except IOError as error:
+        except OSError as error:
             raise self.error(f"Error while downloading a {document.type.value} document") from error
 
     # noinspection PyMethodMayBeStatic

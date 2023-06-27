@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import enum
+from collections.abc import Iterator
 from datetime import date as date_, datetime, time as time_
-from typing import Annotated, Any, Iterator
+from typing import Annotated, Any
 
 from sqlalchemy import (
     Enum,

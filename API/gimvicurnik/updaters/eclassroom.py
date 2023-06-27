@@ -21,7 +21,8 @@ from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Iterator
+    from typing import Any
+    from collections.abc import Iterator
     from mammoth.documents import Image  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -73,7 +74,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         try:
             response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
     def _get_internal_urls(self) -> Iterator[DocumentInfo]:
@@ -91,7 +92,7 @@ class EClassroomUpdater(BaseMultiUpdater):
             contents = response.json()
 
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
         # Handle API errors
@@ -134,7 +135,7 @@ class EClassroomUpdater(BaseMultiUpdater):
             contents = response.json()
 
             response.raise_for_status()
-        except (IOError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
         # Handle API errors

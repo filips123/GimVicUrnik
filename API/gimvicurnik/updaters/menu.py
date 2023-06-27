@@ -13,11 +13,12 @@ from openpyxl import load_workbook
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import DocumentType, LunchMenu, SnackMenu
 from ..errors import MenuApiError, MenuDateError, MenuFormatError
-from ..utils.sentry import with_span
 from ..utils.pdf import extract_tables
+from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Iterator, Any
+    from typing import Any
+    from collections.abc import Iterator
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesMenu
@@ -42,7 +43,7 @@ class MenuUpdater(BaseMultiUpdater):
             response.raise_for_status()
 
             soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")
-        except (IOError, ParserRejectedMarkup) as error:
+        except (OSError, ParserRejectedMarkup) as error:
             raise MenuApiError("Error while downloading or parsing menu index") from error
 
         menus = soup.find_all("li", {"class": "jedilnik"})

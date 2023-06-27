@@ -13,7 +13,8 @@ from ..database import Class, LunchSchedule, Session
 from ..utils.sentry import start_span, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Iterator
+    from typing import Any
+    from collections.abc import Iterator
     from flask import Blueprint, Response
     from sqlalchemy.orm.query import RowReturningQuery
     from ..config import Config, ConfigLessonTime
