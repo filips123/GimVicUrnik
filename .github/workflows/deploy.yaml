@@ -82,7 +82,7 @@ jobs:
           cd API
           cp -r ../configuration/backend/. .
           poetry version "$VERSION"
-          poetry install --no-dev
+          poetry install --only main
           poetry build --format wheel
           poetry export -E sentry -E mysql-c --without-hashes --output dist/requirements.txt
 
