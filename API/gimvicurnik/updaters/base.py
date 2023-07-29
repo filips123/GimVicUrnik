@@ -4,6 +4,7 @@ import datetime
 import typing
 from abc import ABC, abstractmethod
 from hashlib import sha256
+from io import BytesIO
 
 import attrs
 import requests
@@ -106,14 +107,17 @@ class BaseMultiUpdater(ABC):
                     # fmt: off
                     sentry_sdk.set_context("document", {
                         "URL": document.url,
+                        "source": self.source,
+                        "type​": document.type.value,
+                        "format": document.extension,
                         "created": document.created,
                         "modified": document.modified,
-                        "type​": document.type.value,
                     })
                     # fmt: on
 
                     sentry_sdk.set_tag("document_source", self.source)
                     sentry_sdk.set_tag("document_type", document.type.value)
+                    sentry_sdk.set_tag("document_format", document.extension)
 
                 self.logger.exception(error)
 
@@ -140,7 +144,9 @@ class BaseMultiUpdater(ABC):
             document.url,
             extra={
                 "url": document.url,
+                "source": self.source,
                 "type": document.type.value,
+                "format": document.extension,
                 "created​": document.created,
                 "modified​": document.modified,
             },
@@ -150,7 +156,9 @@ class BaseMultiUpdater(ABC):
         # We set action to crashed but override it later
         span.description = document.url
         span.set_tag("document.url", document.url)
+        span.set_tag("document.source", self.source)
         span.set_tag("document.type", document.type.value)
+        span.set_tag("document.format", document.extension)
         span.set_tag("document.created", document.created)
         span.set_tag("document.modified", document.modified)
         span.set_tag("document.action", "crashed")
@@ -166,30 +174,41 @@ class BaseMultiUpdater(ABC):
 
         # == DOCUMENT PROCESSING
 
-        # Store of value for content of circulars
-        doc_content = None
-
         # Get the modified time if it is set, otherwise use the current time
         created = document.created or datetime.datetime.utcnow()
         modified = document.modified or created
 
-        if self.document_needs_parsing(document):
-            parsable = True
-            has_content = False
-            crashed = False
-            action = "updated"
+        # Check if the document needs parsing or content extraction
+        parsable = self.document_needs_parsing(document)
+        extractable = self.document_needs_extraction(document)
 
+        action = "skipped"
+        effective = None
+        content = None
+        crashed = False
+        new_hash = None
+
+        if parsable or extractable:
             # Download the document and get its content and hash
             # If this fails, we can't do anything other than to skip the document
-            content, new_hash = self.download_document(document)
+            stream, new_hash = self.download_document(document)
+
+            action = "updated"
 
             # Skip parsing if the document is unchanged
             if record and record.parsed and record.hash == new_hash:
-                self.logger.info(
-                    "Skipped because the %s document for %s is unchanged",
-                    document.type.value,
-                    record.effective,
-                )
+                if record.effective:
+                    self.logger.info(
+                        "Skipped because the %s document for %s is unchanged",
+                        document.type.value,
+                        record.effective,
+                    )
+                else:
+                    self.logger.info(
+                        "Skipped because the %s document from %s is unchanged",
+                        document.type.value,
+                        record.created,
+                    )
 
                 self.logger.debug("URL: %s", record.url)
                 self.logger.debug("Hash: %s", record.hash)
@@ -206,6 +225,7 @@ class BaseMultiUpdater(ABC):
 
                 return
 
+        if parsable:
             # Get the document's effective date using subclassed method
             # If this fails, we can't do anything other than to skip the document
             effective = self.get_document_effective(document)
@@ -213,89 +233,21 @@ class BaseMultiUpdater(ABC):
             # Parse the document using subclassed method and handle any errors
             # If this fails, we store the record but mark it for later parsing
             try:
-                self.parse_document(document, content, effective)
+                self.parse_document(document, stream, effective)
+                stream.seek(0)
             except Exception as error:
-                if sentry_available:
-                    import sentry_sdk
-
-                    # fmt: off
-                    sentry_sdk.set_context("document", {
-                        "URL": document.url,
-                        "created": record.created if record else created,
-                        "modified": modified,
-                        "effective": effective.isoformat(),
-                        "type​": document.type.value,
-                    })
-                    # fmt: on
-
-                    sentry_sdk.set_tag("document_source", self.source)
-                    sentry_sdk.set_tag("document_type", document.type.value)
-
-                self.logger.exception(error)
+                self._handle_document_error(error, document, record, created, modified, effective)
                 crashed = True
 
-        elif self.document_has_content(document):
-            parsable = False
-            has_content = True
-            crashed = False
-            action = "updated"
-            effective = None
-
-            # Download the document and get its content and hash
-            # If this fails, we can't do anything other than to skip the document
-            content, new_hash = self.download_document(document)
-
-            # Skip parsing if the document is unchanged
-            if record and record.parsed and record.hash == new_hash:
-                self.logger.info(
-                    "Skipped because the %s document from %s is unchanged",
-                    document.type.value,
-                    record.created,
-                )
-
-                self.logger.debug("URL: %s", record.url)
-                self.logger.debug("Hash: %s", record.hash)
-                self.logger.debug("Created date: %s", record.created)
-                self.logger.debug("Modified date: %s", record.modified)
-
-                span.set_tag("document.hash", record.hash)
-                span.set_tag("document.created", record.created)
-                span.set_tag("document.modified", record.modified)
-                span.set_tag("document.action", "skipped")
-
-                return
-
+        if extractable:
             # Get the document content from the subclassed method and handle any errors
             # If this fails, we store the record but mark it for later parsing
             try:
-                doc_content = self.get_content(document, content)
+                content = self.extract_document(document, stream)
+                stream.seek(0)
             except Exception as error:
-                if sentry_available:
-                    import sentry_sdk
-
-                    # fmt: off
-                    sentry_sdk.set_context("document", {
-                        "URL": document.url,
-                        "created": record.created if record else created,
-                        "modified": modified,
-                        "type​": document.type.value,
-                    })
-                    # fmt: on
-
-                    sentry_sdk.set_tag("document_source", self.source)
-                    sentry_sdk.set_tag("document_type", document.type.value)
-
-                self.logger.exception(error)
+                self._handle_document_error(error, document, record, created, modified, None)
                 crashed = True
-            pass
-
-        else:
-            parsable = False
-            has_content = False
-            crashed = False
-            action = "skipped"
-            effective = None
-            new_hash = None
 
         # == DOCUMENT RECORD (SET)
 
@@ -317,9 +269,9 @@ class BaseMultiUpdater(ABC):
                 record.hash = new_hash
                 record.parsed = True
 
-            if has_content:
+            if extractable:
                 record.hash = new_hash
-                record.content = doc_content
+                record.content = content
                 record.parsed = True
 
             if crashed:
@@ -337,24 +289,27 @@ class BaseMultiUpdater(ABC):
         span.set_tag("document.action", action)
 
         # Log the document status
-        if parsable:
-            if action == "created":
-                self.logger.info("Created a new %s document for %s", document.type.value, effective)
-            elif action == "updated":
-                self.logger.info("Updated the %s document for %s", document.type.value, effective)
-        elif has_content:
-            if action == "created":
+        # fmt: off
+        match (action, effective):
+            case ("created", None):
                 self.logger.info("Created a new %s document from %s", document.type.value, created)
-            elif action == "updated":
-                self.logger.info("Updated the %s document from %s", document.type.value, created)
-        else:
-            if action == "created":
-                self.logger.info("Created a new %s document", document.type.value)
-            elif action == "skipped":
-                self.logger.info("Skipped because the %s document is already stored", document.type.value)
+            case ("created", effective):
+                self.logger.info("Created a new %s document for %s", document.type.value, effective)
 
-    def download_document(self, document: DocumentInfo) -> tuple[bytes, str]:
-        """Download a document and return its content and hash"""
+            case ("updated", None):
+                self.logger.info("Updated the %s document from %s", document.type.value, created)
+            case ("updated", _):
+                self.logger.info("Updated the %s document for %s", document.type.value, effective)
+
+            case ("skipped", None):
+                self.logger.info("Skipped because the %s document from %s is already stored", document.type.value, created)
+            case ("skipped", _):
+                self.logger.info("Skipped because the %s document for %s is already stored", document.type.value, effective)
+        # fmt: on
+
+    @with_span(op="download")
+    def download_document(self, document: DocumentInfo) -> tuple[BytesIO, str]:
+        """Download a document and return its content stream and hash"""
 
         try:
             response = self.requests.get(self.tokenize_url(document.url))
@@ -362,12 +317,48 @@ class BaseMultiUpdater(ABC):
 
             content = response.content
             sha = sha256(content).hexdigest()
-            return content, sha
+            return BytesIO(content), sha
 
         except OSError as error:
             raise self.error(f"Error while downloading a {document.type.value} document") from error
 
-    # noinspection PyMethodMayBeStatic
+    def _handle_document_error(
+        self,
+        error: Exception,
+        document: DocumentInfo,
+        record: Document | None,
+        created: datetime.datetime,
+        modified: datetime.datetime,
+        effective: datetime.date | None,
+    ) -> None:
+        """Set Sentry error details and logs the document error."""
+
+        if sentry_available:
+            import sentry_sdk
+
+            # fmt: off
+            sentry_sdk.set_context("document", {
+                "URL": document.url,
+                "source": self.source,
+                "type​": document.type.value,
+                "format": document.extension,
+                "created": record.created if record else created,
+                "modified": modified,
+                "effective": effective.isoformat() if effective else None,
+            })
+            # fmt: on
+
+            sentry_sdk.set_tag("document_source", self.source)
+            sentry_sdk.set_tag("document_type", document.type.value)
+            sentry_sdk.set_tag("document_format", document.extension)
+
+        self.logger.exception(error)
+
+    def normalize_url(self, url: str) -> str:
+        """Return the normalized document URL. May be set by subclasses."""
+
+        return url
+
     def tokenize_url(self, url: str) -> str:
         """Return the tokenized document URL. May be set by subclasses."""
 
@@ -390,13 +381,13 @@ class BaseMultiUpdater(ABC):
         """Return whether the document needs parsing. Must be set by subclasses."""
 
     @abstractmethod
-    def parse_document(self, document: DocumentInfo, content: bytes, effective: datetime.date) -> None:
+    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the document and store extracted data. Must be set by subclasses."""
 
     @abstractmethod
-    def document_has_content(self, document: DocumentInfo) -> bool:
-        """Return whether the document has content. Must be set by subclasses."""
+    def document_needs_extraction(self, document: DocumentInfo) -> bool:
+        """Return whether the document content needs to be extracted. Must be set by subclasses."""
 
     @abstractmethod
-    def get_content(self, document: DocumentInfo, content: bytes) -> str | None:
-        """Get the HTML string of content of document type circular"""
+    def extract_document(self, document: DocumentInfo, stream: BytesIO) -> str | None:
+        """Extract the document content and return it as HTML. Must be set by subclasses."""

@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import enum
-import io
 import logging
 import os
 import re
-import tempfile
 import typing
 from datetime import date, datetime, timezone
 from itertools import product
+from urllib.parse import urlparse
 
 from mammoth import convert_to_html  # type: ignore
 from sqlalchemy import insert
@@ -23,6 +22,7 @@ from ..utils.sentry import with_span
 if typing.TYPE_CHECKING:
     from typing import Any
     from collections.abc import Iterator
+    from io import BytesIO
     from mammoth.documents import Image  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -74,6 +74,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         try:
             response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
             response.raise_for_status()
+
         except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
@@ -89,9 +90,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         try:
             response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
+            response.raise_for_status()
             contents = response.json()
 
-            response.raise_for_status()
         except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
@@ -118,7 +119,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     title=module["name"],
                     created=datetime.fromtimestamp(module["contents"][0]["timecreated"], tz=timezone.utc),
                     modified=datetime.fromtimestamp(module["contents"][0]["timemodified"], tz=timezone.utc),
-                    extension=url.rsplit(".", 1)[1],
+                    extension=os.path.splitext(urlparse(url).path)[1][1:],
                 )
 
     def _get_external_urls(self) -> Iterator[DocumentInfo]:
@@ -132,9 +133,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         try:
             response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
+            response.raise_for_status()
             contents = response.json()
 
-            response.raise_for_status()
         except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
@@ -158,7 +159,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 title=content["name"],
                 created=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
                 modified=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
-                extension=url.rsplit(".", 1)[1],
+                extension=os.path.splitext(urlparse(url).path)[1][1:],
             )
 
     @staticmethod
@@ -231,31 +232,16 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         return False
 
-    def document_has_content(self, document: DocumentInfo) -> bool:
-        """Return whether the document has content."""
-
-        if document.extension == "docx":
-            return True
-
-        return False
-
     @with_span(op="parse", pass_span=True)
-    def parse_document(self, document: DocumentInfo, content: bytes, effective: date, span: Span) -> None:  # type: ignore[override]
+    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: date, span: Span) -> None:  # type: ignore[override]
         """Parse the document and store extracted data."""
 
-        # Set basic Sentry span info
-        span.set_tag("document.format", "pdf")
+        span.set_tag("document.source", self.source)
         span.set_tag("document.type", document.type.value)
+        span.set_tag("document.format", document.extension)
 
-        # Save the content to a temporary file
-        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-        file = open(filename, mode="w+b")
-        file.write(content)
-        file.close()
-
-        # Extract tables from the PDF file
-        tables = with_span(op="extract")(extract_tables)(filename)
-        os.remove(filename)
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
 
         if document.type == DocumentType.SUBSTITUTIONS:
             self._parse_substitutions(tables, effective)
@@ -265,19 +251,28 @@ class EClassroomUpdater(BaseMultiUpdater):
             # This cannot happen because only menus are provided by the API
             raise KeyError("Unknown parsable document type from the e-classroom")
 
-    @with_span(op="parse", pass_span=True)
-    def get_content(self, document: DocumentInfo, content: bytes, span: Span) -> str | None:  # type: ignore[override]
-        """Convert content of DOCX circulars to HTML."""
+    def document_needs_extraction(self, document: DocumentInfo) -> bool:
+        """Return whether the document content needs to be extracted."""
+
+        # Only DOCX documents (circulars) can have content extracted
+        if document.extension == "docx":
+            return True
+
+        return False
+
+    @with_span(op="content", pass_span=True)
+    def extract_document(self, document: DocumentInfo, content: bytes, span: Span) -> str | None:  # type: ignore[override]
+        """Extract the document content and return it as HTML."""
+
+        span.set_tag("document.source", self.source)
+        span.set_tag("document.type", document.type.value)
+        span.set_tag("document.format", document.extension)
 
         def ignore_images(_image: Image) -> dict:
             return {}
 
-        # Set basic Sentry span info
-        span.set_tag("document.format", "docx")
-        span.set_tag("document.type", document.type.value)
-
         # Convert DOCX to HTML
-        result = convert_to_html(io.BytesIO(content), convert_image=ignore_images)
+        result = convert_to_html(content, convert_image=ignore_images)
         return typing.cast(str, result.value)
 
     def _normalize_subject_name(self, name: str) -> str | None:
