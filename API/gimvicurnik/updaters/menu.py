@@ -4,8 +4,8 @@ import datetime
 import logging
 import os
 import re
-import tempfile
 import typing
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
@@ -19,6 +19,7 @@ from ..utils.sentry import with_span
 if typing.TYPE_CHECKING:
     from typing import Any
     from collections.abc import Iterator
+    from io import BytesIO
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesMenu
@@ -43,10 +44,12 @@ class MenuUpdater(BaseMultiUpdater):
             response.raise_for_status()
 
             soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")
+
         except (OSError, ParserRejectedMarkup) as error:
             raise MenuApiError("Error while downloading or parsing menu index") from error
 
         menus = soup.find_all("li", {"class": "jedilnik"})
+
         if not menus:
             self.logger.info("No menus found")
             return iter(())
@@ -63,10 +66,11 @@ class MenuUpdater(BaseMultiUpdater):
                     continue
 
                 menu_url = self.config.url + link["href"]
-                yield DocumentInfo(type=menu_type, url=menu_url)
+                menu_extension = os.path.splitext(urlparse(menu_url).path)[1][1:]
+                yield DocumentInfo(type=menu_type, url=menu_url, extension=menu_extension)
 
     def get_document_title(self, document: DocumentInfo) -> str:
-        """Return the document name from its type."""
+        """Return the normalized document title from its type."""
 
         if document.type == DocumentType.SNACK_MENU:
             return "Jedilnik za malico"
@@ -77,7 +81,7 @@ class MenuUpdater(BaseMultiUpdater):
             raise KeyError("Unknown document type for menu")
 
     def get_document_effective(self, document: DocumentInfo) -> datetime.date:
-        """Return the document effective date in a local timezone."""
+        """Return the document effective date in a local timezone from the URL."""
 
         # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
@@ -106,46 +110,34 @@ class MenuUpdater(BaseMultiUpdater):
         return True
 
     @with_span(op="parse", pass_span=True)
-    def parse_document(self, document: DocumentInfo, content: bytes, effective: datetime.date, span: Span) -> None:  # type: ignore[override]
+    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: datetime.date, span: Span) -> None:  # type: ignore[override]
         """Parse the document and store extracted data."""
 
-        # Get document format from its URL
-        docformat = document.url.rsplit(".", 1)[-1]
-        span.set_tag("document.format", docformat)
+        span.set_tag("document.source", self.source)
         span.set_tag("document.type", document.type.value)
+        span.set_tag("document.format", document.extension)
 
-        # Save the content to a temporary file
-        filename = os.path.join(tempfile.gettempdir(), os.urandom(24).hex() + ".pdf")
-        file = open(filename, mode="w+b")
-        file.write(content)
-        file.close()
+        match (document.type, document.extension):
+            case (DocumentType.SNACK_MENU, "pdf"):
+                self._parse_snack_menu_pdf(stream, effective)
+            case (DocumentType.LUNCH_MENU, "pdf"):
+                self._parse_lunch_menu_pdf(stream, effective)
+            case (DocumentType.SNACK_MENU, "xlsx"):
+                self._parse_snack_menu_xlsx(stream, effective)
+            case (DocumentType.LUNCH_MENU, "xlsx"):
+                self._parse_lunch_menu_xlsx(stream, effective)
+            case (DocumentType.SNACK_MENU, _):
+                raise MenuFormatError("Unknown snack menu document format: " + str(document.extension))
+            case (DocumentType.LUNCH_MENU, _):
+                raise MenuFormatError("Unknown lunch menu document format: " + str(document.extension))
+            case _:
+                raise KeyError("Unknown document type for menu")
 
-        if document.type == DocumentType.SNACK_MENU:
-            self._parse_snack_menu(docformat, filename, effective)
-        elif document.type == DocumentType.LUNCH_MENU:
-            self._parse_lunch_menu(docformat, filename, effective)
-        else:
-            # This cannot happen because only menus are provided by the API
-            raise KeyError("Unknown document type for menu")
-
-    def _parse_snack_menu(self, docformat: str, filename: str, effective: datetime.date) -> None:
-        """Parse the snack menu document."""
-
-        if docformat == "pdf":
-            self._parse_snack_menu_pdf(filename, effective)
-
-        elif docformat == "xlsx":
-            self._parse_snack_menu_xlsx(filename, effective)
-
-        else:
-            raise MenuFormatError("Unknown snack menu document format: " + docformat)
-
-    def _parse_snack_menu_pdf(self, filename: str, effective: datetime.date) -> None:
+    def _parse_snack_menu_pdf(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the snack menu PDF document."""
 
-        # Extract all tables from a PDF file
-        tables = with_span(op="extract")(extract_tables)(filename)
-        os.remove(filename)
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
 
         days = 0
 
@@ -176,11 +168,11 @@ class MenuUpdater(BaseMultiUpdater):
 
                 self.session.add(model)
 
-    def _parse_snack_menu_xlsx(self, filename: str, effective: datetime.date) -> None:
+    def _parse_snack_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the snack menu XLSX document."""
 
-        # Extract workbook from an XLSX file
-        wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
+        # Extract workbook from an XLSX stream
+        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
         menu: dict[str, Any] = {}
         days = 0
@@ -246,26 +238,12 @@ class MenuUpdater(BaseMultiUpdater):
                     menu["fruitvegetable"].append(wr[4].value.strip())
 
         wb.close()
-        os.remove(filename)
 
-    def _parse_lunch_menu(self, docformat: str, filename: str, effective: datetime.date) -> None:
-        """Parse the lunch menu document."""
-
-        if docformat == "pdf":
-            self._parse_lunch_menu_pdf(filename, effective)
-
-        elif format == "xlsx":
-            self._parse_lunch_menu_xlsx(filename, effective)
-
-        else:
-            raise MenuFormatError("Unknown lunch menu document format: " + docformat)
-
-    def _parse_lunch_menu_pdf(self, filename: str, effective: datetime.date) -> None:
+    def _parse_lunch_menu_pdf(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the lunch menu PDF document."""
 
-        # Extract all tables from a PDF file
-        tables = with_span(op="extract")(extract_tables)(filename)
-        os.remove(filename)
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
 
         days = 0
 
@@ -294,11 +272,11 @@ class MenuUpdater(BaseMultiUpdater):
 
                 self.session.add(model)
 
-    def _parse_lunch_menu_xlsx(self, filename: str, effective: datetime.date) -> None:
+    def _parse_lunch_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the lunch menu XLSX document."""
 
-        # Extract workbook from an XLSX file
-        wb = with_span(op="extract")(load_workbook)(filename, read_only=True, data_only=True)
+        # Extract workbook from an XLSX stream
+        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
         menu: dict[str, Any] = {}
         days = 0
@@ -352,14 +330,15 @@ class MenuUpdater(BaseMultiUpdater):
                     menu["vegetarian"].append(wr[2].value.strip())
 
         wb.close()
-        os.remove(filename)
 
-    def document_has_content(self, document: DocumentInfo) -> bool:
-        """Menu documents do not have content."""
+    def document_needs_extraction(self, document: DocumentInfo) -> bool:
+        """Return whether the document content needs to be extracted."""
 
+        # Menu documents do not have content
         return False
 
-    def get_content(self, document: DocumentInfo, content: bytes) -> str | None:
-        """Menu documents do not have content."""
+    def extract_document(self, document: DocumentInfo, stream: BytesIO) -> str | None:
+        """Extract the document content and return it as HTML."""
 
+        # Menu documents do not have content
         return None

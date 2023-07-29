@@ -31,7 +31,7 @@ class TimetableUpdater:
         """Update the timetable."""
 
         try:
-            self._parse()  # type: ignore[call-arg]
+            self._handle()  # type: ignore[call-arg]
 
         except Exception as error:
             if sentry_available:
@@ -40,33 +40,23 @@ class TimetableUpdater:
                 # fmt: off
                 sentry_sdk.set_context("document", {
                     "URL": self.config.url,
+                    "source": DocumentType.TIMETABLE.value,
                     "type​": DocumentType.TIMETABLE.value
                 })
                 # fmt: on
 
-                sentry_sdk.set_tag("document_source", "timetable")
+                sentry_sdk.set_tag("document_source", DocumentType.TIMETABLE.value)
                 sentry_sdk.set_tag("document_type", DocumentType.TIMETABLE.value)
 
             self.logger.exception(error)
 
-    def _download(self) -> tuple[str, str]:
-        """Download the timetable JS file."""
-
-        try:
-            response = requests.get(self.config.url)
-            content = response.content
-            response.raise_for_status()
-        except OSError as error:
-            raise TimetableApiError("Error while downloading the timetable") from error
-
-        return content.decode("utf8"), sha256(content).hexdigest()
-
     @with_span(op="document", pass_span=True)
-    def _parse(self, span: Span) -> None:
-        """Parse the timetable JS file and store lessons."""
+    def _handle(self, span: Span) -> None:
+        """Handle the timetable document."""
 
         span.description = self.config.url
         span.set_tag("document.url", self.config.url)
+        span.set_tag("document.source", DocumentType.TIMETABLE.value)
         span.set_tag("document.type", DocumentType.TIMETABLE.value)
         span.set_tag("document.action", "crashed")
 
@@ -91,6 +81,26 @@ class TimetableUpdater:
             span.set_tag("document.action", "skipped")
 
             return
+
+        self._parse(document, raw_data, new_hash, span)
+
+    @with_span(op="download")
+    def _download(self) -> tuple[str, str]:
+        """Download the timetable JS file."""
+
+        try:
+            response = requests.get(self.config.url)
+            response.raise_for_status()
+            content = response.content
+
+        except OSError as error:
+            raise TimetableApiError("Error while downloading the timetable") from error
+
+        return content.decode("utf8"), sha256(content).hexdigest()
+
+    @with_span(op="parse")
+    def _parse(self, document: Document | None, raw_data: str, new_hash: str, span: Span) -> None:
+        """Parse the timetable JS file and store lessons."""
 
         # Get raw data from timetable file
         data = re.findall(r"podatki\[(\d+)]\[\d] = \"?([^\"\n]*)\"?", raw_data, re.MULTILINE)
