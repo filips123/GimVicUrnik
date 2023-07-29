@@ -166,11 +166,7 @@ class BaseMultiUpdater(ABC):
         # == DOCUMENT RECORD (GET)
 
         # Try to find an existing document record
-        record: Document | None = (
-            self.session.query(Document)
-            .filter(Document.type == document.type, Document.url == document.url)
-            .first()
-        )
+        record = self.retrieve_document(document)
 
         # == DOCUMENT PROCESSING
 
@@ -306,6 +302,15 @@ class BaseMultiUpdater(ABC):
             case ("skipped", _):
                 self.logger.info("Skipped because the %s document for %s is already stored", document.type.value, effective)
         # fmt: on
+
+    def retrieve_document(self, document: DocumentInfo) -> Document | None:
+        """Get a document record from the database. May be set by subclasses."""
+
+        return (
+            self.session.query(Document)
+            .filter(Document.type == document.type, Document.url == document.url)
+            .first()
+        )
 
     @with_span(op="download")
     def download_document(self, document: DocumentInfo) -> tuple[BytesIO, str]:
