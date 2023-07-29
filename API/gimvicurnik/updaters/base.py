@@ -174,6 +174,11 @@ class BaseMultiUpdater(ABC):
         created = document.created or datetime.datetime.utcnow()
         modified = document.modified or created
 
+        # Check if the document has changed without downloading it and comparing hashes
+        # This may be done by comparing modified dates or other source-specific logic
+        # We still compare hashes and skip parsing if needed, even if this returns true
+        changed = self.document_has_changed(document, record) if record else True
+
         # Check if the document needs parsing or content extraction
         parsable = self.document_needs_parsing(document)
         extractable = self.document_needs_extraction(document)
@@ -184,42 +189,50 @@ class BaseMultiUpdater(ABC):
         crashed = False
         new_hash = None
 
-        if parsable or extractable:
+        if changed and (parsable or extractable):
             # Download the document and get its content and hash
             # If this fails, we can't do anything other than to skip the document
             stream, new_hash = self.download_document(document)
 
-            action = "updated"
-
-            # Skip parsing if the document is unchanged
+            # Check if the document hash has changed
             if record and record.parsed and record.hash == new_hash:
-                if record.effective:
-                    self.logger.info(
-                        "Skipped because the %s document for %s is unchanged",
-                        document.type.value,
-                        record.effective,
-                    )
-                else:
-                    self.logger.info(
-                        "Skipped because the %s document from %s is unchanged",
-                        document.type.value,
-                        record.created,
-                    )
+                changed = False
+            else:
+                action = "updated"
 
-                self.logger.debug("URL: %s", record.url)
-                self.logger.debug("Hash: %s", record.hash)
-                self.logger.debug("Created date: %s", record.created)
-                self.logger.debug("Modified date: %s", record.modified)
-                self.logger.debug("Effective date: %s", record.effective)
+        # Skip parsing if the document is unchanged
+        if not changed:
+            # Changed can only be false if there is an existing record
+            if typing.TYPE_CHECKING:
+                assert record
 
-                _effective = record.effective.isoformat() if record.effective else None
-                span.set_tag("document.hash", record.hash)
-                span.set_tag("document.created", record.created)
-                span.set_tag("document.modified", record.modified)
-                span.set_tag("document.effective", _effective)
-                span.set_tag("document.action", "skipped")
+            if record.effective:
+                self.logger.info(
+                    "Skipped because the %s document for %s is unchanged",
+                    document.type.value,
+                    record.effective,
+                )
+            else:
+                self.logger.info(
+                    "Skipped because the %s document from %s is unchanged",
+                    document.type.value,
+                    record.created,
+                )
 
-                return
+            self.logger.debug("URL: %s", record.url)
+            self.logger.debug("Hash: %s", record.hash)
+            self.logger.debug("Created date: %s", record.created)
+            self.logger.debug("Modified date: %s", record.modified)
+            self.logger.debug("Effective date: %s", record.effective)
+
+            _effective = record.effective.isoformat() if record.effective else None
+            span.set_tag("document.hash", record.hash)
+            span.set_tag("document.created", record.created)
+            span.set_tag("document.modified", record.modified)
+            span.set_tag("document.effective", _effective)
+            span.set_tag("document.action", "skipped")
+
+            return
 
         if parsable:
             # Get the document's effective date using subclassed method
@@ -380,6 +393,14 @@ class BaseMultiUpdater(ABC):
     @abstractmethod
     def get_document_effective(self, document: DocumentInfo) -> datetime.date:
         """Return the document effective date in a local timezone. Must be set by subclasses."""
+
+    # noinspection PyMethodMayBeStatic
+    def document_has_changed(self, document: DocumentInfo, existing: Document) -> bool:
+        """Return whether the document has changed. May be set by subclasses."""
+
+        # We treat all documents as changed by default
+        # We won't reparse documents with the same hash anyway
+        return True
 
     @abstractmethod
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
