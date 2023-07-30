@@ -82,9 +82,9 @@ jobs:
           cd API
           cp -r ../configuration/backend/. .
           poetry version "$VERSION"
-          poetry install --only main
-          poetry build --format wheel
-          poetry export -E sentry -E mysql-c --without-hashes --output dist/requirements.txt
+          mkdir dist
+          cp pyproject.toml poetry.lock README.md dist/
+          cp -r gimvicurnik/ dist/
 
       - name: Build the frontend
         run: |
@@ -103,10 +103,11 @@ jobs:
         run: |
           cd API
           export GIMVICURNIK_ROOT=/var/www/urnik.gimvic.org
-          ssh urnik "rm -rf $GIMVICURNIK_ROOT/deps/*"
-          scp -r dist/* urnik:$GIMVICURNIK_ROOT/deps/
-          ssh urnik "sh -c '$GIMVICURNIK_ROOT/venv/bin/pip install -r $GIMVICURNIK_ROOT/deps/requirements.txt'"
-          ssh urnik "sh -c '$GIMVICURNIK_ROOT/venv/bin/pip install $GIMVICURNIK_ROOT/deps/gimvicurnik-*.whl'"
+          ssh urnik "rm -rf $GIMVICURNIK_ROOT/app/*"
+          scp -r dist/* urnik:$GIMVICURNIK_ROOT/app/
+          export PREFIX="export VIRTUAL_ENV=$GIMVICURNIK_ROOT/venv PATH=$GIMVICURNIK_ROOT/venv/bin:\$PATH"
+          export SUFFIX="-C $GIMVICURNIK_ROOT/app --only main -E sentry -E mysql-c --sync"
+          ssh urnik "$PREFIX; sh -c '/opt/poetry/bin/poetry install $SUFFIX'"
 
       - name: Deploy the frontend
         run: |
