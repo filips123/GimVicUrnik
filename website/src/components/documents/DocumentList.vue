@@ -123,7 +123,7 @@ export default class DocumentList extends Vue {
     if (!date) return ''
 
     if (!this.displayDateAsWeek) return this.formatDate(date)
-    else return `${this.formatDate(date)} — ${this.formatEndDate(date)}`
+    else return `${this.formatDate(date)} – ${this.formatEndDate(date)}`
   }
 
   formatDate (date: string): string {

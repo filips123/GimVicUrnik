@@ -113,7 +113,6 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
   if (SettingsModule.dataCollection.performance) {
     integrations.push(
       new BrowserTracing({
-        tracePropagationTargets: process.env.VUE_APP_SENTRY_TRACE_PROPAGATION_TARGETS.split(','),
         routingInstrumentation: vueRouterInstrumentation(router)
       })
     )
@@ -126,6 +125,7 @@ if (process.env.VUE_APP_SENTRY_ENABLED === 'true' && (SettingsModule.dataCollect
     dsn: process.env.VUE_APP_SENTRY_DSN,
     tracesSampleRate: parseFloat(process.env.VUE_APP_SENTRY_TRACE_SAMPLE_RATE),
     maxBreadcrumbs: parseInt(process.env.VUE_APP_SENTRY_MAX_BREADCRUMBS),
+    tracePropagationTargets: process.env.VUE_APP_SENTRY_TRACE_PROPAGATION_TARGETS.split(','),
     normalizeDepth: 8,
 
     environment: process.env.NODE_ENV,
