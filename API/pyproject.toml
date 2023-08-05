@@ -52,17 +52,17 @@ icalendar = "^5.0.7"
 beautifulsoup4 = { version = "^4.12.2", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { version = "^1.28.1", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+sentry-sdk = { version = "^1.29.2", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.1.0", optional = true }
 mysqlclient = { version = "^2.2.0", optional = true }
-psycopg2 = { version = "^2.9.6", optional = true }
+psycopg2 = { version = "^2.9.7", optional = true }
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
 mypy = "^1.4.1"
-ruff = "^0.0.280"
+ruff = "^0.0.282"
 types-pyyaml = "^6.0.12"
 types-openpyxl = "^3.1.0"
 types-requests = "^2.31.0"
