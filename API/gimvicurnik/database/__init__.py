@@ -91,7 +91,7 @@ class Entity:
     __tablename__: str
 
     id: Mapped[intpk]
-    name: Mapped[text]
+    name: Mapped[text] = mapped_column(unique=True, index=True)
 
     @classmethod
     def get_lessons(
@@ -237,10 +237,10 @@ class Substitution(Base):
     subject: Mapped[text | None]
     notes: Mapped[text | None]
 
-    original_teacher_id: Mapped[teacher_fk | None] = mapped_column()
+    original_teacher_id: Mapped[teacher_fk | None] = mapped_column(index=True)
     original_teacher: Mapped[Teacher | None] = relationship(foreign_keys=[original_teacher_id])
 
-    original_classroom_id: Mapped[classroom_fk | None] = mapped_column()
+    original_classroom_id: Mapped[classroom_fk | None] = mapped_column(index=True)
     original_classroom: Mapped[Classroom | None] = relationship(foreign_keys=[original_classroom_id])
 
     class_id: Mapped[class_fk] = mapped_column(index=True)
