@@ -75,8 +75,8 @@ def create_school_calendar(
                 # Create event and add internal properties
                 event = Event()
                 event.add("DTSTAMP", datetime.now())
-                event.add("CATEGORIES", ["NORMAL"])
-                event.add("COLOR", "green")
+                event.add("CATEGORIES", ["Lesson", "Normal"])
+                event.add("COLOR", "darkgreen")
                 event.add(
                     "UID",
                     sha256(
@@ -93,6 +93,7 @@ def create_school_calendar(
 
                 # Add basic lesson properties
                 event.add("SUMMARY", subject["subject"])
+                event.add("ATTENDEE", subject["class"])
                 event.add("ORGANIZER", subject["teacher"])
                 event.add("LOCATION", subject["classroom"])
                 event.add("DURATION", timedelta(minutes=45))
@@ -132,7 +133,7 @@ def create_school_calendar(
                 # Create event and add internal properties
                 event = Event()
                 event.add("DTSTAMP", datetime.now())
-                event.add("CATEGORIES", ["SUBSTITUTION"])
+                event.add("CATEGORIES", ["Lesson", "Substitution"])
                 event.add("COLOR", "darkred")
                 event.add(
                     "UID",
@@ -154,6 +155,7 @@ def create_school_calendar(
                 # Add basic substitution properties
                 event.add("SUMMARY", subject["subject"])
                 event.add("DESCRIPTION", subject["notes"] or "")
+                event.add("ATTENDEE", subject["class"])
                 event.add("ORGANIZER", subject["teacher"])
                 event.add("LOCATION", subject["classroom"])
 
@@ -212,7 +214,7 @@ def create_schedule_calendar(
             # Create event and add internal properties
             event = Event()
             event.add("DTSTAMP", datetime.now())
-            event.add("CATEGORIES", ["LUNCH"])
+            event.add("CATEGORIES", ["Lunch"])
             event.add("COLOR", "darkblue")
             event.add(
                 "UID",
@@ -233,6 +235,7 @@ def create_schedule_calendar(
             event.add("SUMMARY", "Kosilo")
             event.add("DESCRIPTION", model.notes or "")
             event.add("LOCATION", model.location or "")
+            event.add("ATTENDEE", classname)
             event.add("DTSTART", start)
             event.add("DTEND", end)
 
