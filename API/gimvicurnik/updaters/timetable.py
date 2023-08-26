@@ -121,6 +121,7 @@ class TimetableUpdater:
                 "classroom_id": get_or_create(self.session, model=Classroom, name=lesson[4])[0].id if lesson[4] else None,
             }
             for _, lesson in lessons.items()
+            if lesson[1]
         ]
         # fmt: on
 
