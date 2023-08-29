@@ -13,12 +13,12 @@
         <a class="text-decoration-none" href="https://ucilnica.gimvic.org/">Spletno učilnico Gimnazije Vič</a>.
       </p>
       <p>
-        Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in izboljšanja učinkovitosti.
-        Podatki se ne uporabljajo za identfikacijo uporabnikov, oglaševanje ali druge namene.
-      </p>
-      <p>
         V <a class="text-decoration-none" href="https://github.com/filips123/GimVicUrnik/wiki">dokumentaciji projekta</a>
         so dostopna navodila za namestitev in uporabo.
+      </p>
+      <p>
+        Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in izboljšanja učinkovitosti.
+        Podatki se ne uporabljajo za identfikacijo uporabnikov, oglaševanje ali druge namene.
       </p>
     </v-card-text>
 
