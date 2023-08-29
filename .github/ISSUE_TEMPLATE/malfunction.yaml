@@ -1,0 +1,38 @@
+name: Napaka v delovanju
+description: Napišite poročilo o napaki v delovanju.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Hvala, ker ste si vzeli čas za izpolnitev tega poročila!
+  - type: textarea
+    id: description
+    attributes:
+      label: Opis napake
+      description: Kolikor vam je mogoče podrobno opisati napako.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operacijski sistem
+      description: V katerem operacijskem sistemu se pojavlja ta napaka (po možnosti z verzijo)?
+      placeholder: Android 13, iOS 16, Windows 11 itd.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Brskalnik
+      description: V katerem brskalniku se pojavlja ta napaka?
+      placeholder: Chrome, Safari, Firefox itd.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Posnetek zaslona telefona/računalnika
+      description: V primeru, če imate vizualne napake, lahko tu prilepite svoj posnetek zaslona.
+      placeholder: Kliknite v to besedilno polje in prilepite svoj posnetek zaslona.
+    validations:
+      required: false

@@ -1,0 +1,47 @@
+name: Napaka v podatkih
+description: Napišite poročilo o napaki v podatkih.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Hvala, ker ste si vzeli čas za izpolnitev tega poročila!
+  - type: dropdown
+    id: datatype
+    attributes:
+      label: Vrsta podatka
+      description: Pri katerem podatku, se je pojavila napaka?
+      options:
+        - Urnik
+        - Jedilniki
+        - Okrožnice
+        - Nadomeščanja
+        - Razporedi kosil
+    validations:
+      required: true
+  - type: dropdown
+    id: viewtype
+    attributes:
+      label: Vrsta pogleda
+      description: Pri katerem pogledu, se je pojavila napaka?
+      options:
+        - Razred
+        - Profesor
+        - Učilnica
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Opis napake
+      description: Kolikor vam je mogoče podrobno opisati napako.
+      placeholder: npr. Namesto geografije 3. uro je bila napisana 4. uro
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Datum
+      description: Vpišite datum, ko se je zgodila napaka (dd. mm. yyyy)
+      placeholder: npr. 29. 12. 2023
+    validations:
+      required: false
