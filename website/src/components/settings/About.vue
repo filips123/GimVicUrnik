@@ -1,7 +1,7 @@
 <template>
   <v-card width="35rem">
     <v-toolbar class="text-uppercase" color="#009300" dark>
-      O aplikaciji GimVič
+      O aplikaciji
     </v-toolbar>
 
     <v-card-text class="text--primary">

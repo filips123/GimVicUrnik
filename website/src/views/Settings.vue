@@ -58,7 +58,7 @@
     <settings-action v-model="aboutDialog"
       :icon="mdiInformationOutline"
       :message="`Trenutna različica: ${appVersion}`"
-      label="O aplikaciji GimVič" />
+      label="O aplikaciji" />
 
     <v-dialog v-model="entitySelectionDialog"
       v-bind:persistent="entitySelectionPersistent"
