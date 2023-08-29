@@ -52,7 +52,7 @@
       :message="`Trenutna različica: ${dataVersion}`"
       label="Posodobi podatke"
       @click.native="updateData" />
-    
+
     <v-divider class="my-6" />
 
     <settings-action v-model="aboutDialog"
@@ -111,7 +111,7 @@
 </style>
 
 <script lang="ts">
-import { mdiDatabaseImportOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight, mdiInformationOutline } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiInformationOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import About from '@/components/settings/About.vue'
