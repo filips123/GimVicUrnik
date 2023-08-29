@@ -31,7 +31,7 @@ if typing.TYPE_CHECKING:
 
 
 class ParserType(enum.Enum):
-    SUBSTITUTUONS = "substitutions"
+    SUBSTITUTIONS = "substitutions"
     LESSON_CHANGE = "lesson-change"
     SUBJECT_CHANGE = "subject-change"
     CLASSROOM_CHANGE = "classroom-change"
@@ -421,7 +421,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 # Get parser type
                 if row == header_substitutions:
-                    parser_type = ParserType.SUBSTITUTUONS
+                    parser_type = ParserType.SUBSTITUTIONS
                     continue
                 elif row == header_lesson_change:
                     parser_type = ParserType.LESSON_CHANGE
@@ -447,7 +447,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     continue
 
                 # Parse substitutions
-                if parser_type == ParserType.SUBSTITUTUONS:
+                if parser_type == ParserType.SUBSTITUTIONS:
                     # Get basic substitution properties
                     time = int(row[1][:-1]) if row[1] != "PU" else 0
                     subject = self._normalize_subject_name(row[5])
