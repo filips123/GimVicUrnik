@@ -125,8 +125,21 @@ class TimetableUpdater:
         ]
         # fmt: on
 
+        # Store timetable lessons
         self.session.query(Lesson).delete()
         self.session.execute(insert(Lesson), models)
+
+        # Store a list of all classes from timetable
+        for class_ in re.findall(r"razredi\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            get_or_create(self.session, model=Class, name=class_)
+
+        # Store a list of all teachers from timetable
+        for teacher in re.findall(r"ucitelji\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            get_or_create(self.session, model=Teacher, name=teacher)
+
+        # Store a list of all classrooms from timetable
+        for classroom in re.findall(r"ucilnice\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            get_or_create(self.session, model=Classroom, name=classroom)
 
         # Update or create a document
         if not document:
