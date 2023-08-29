@@ -53,6 +53,13 @@
       label="Posodobi podatke"
       @click.native="updateData" />
 
+    <v-divider class="my-6" />
+
+    <settings-action v-model="aboutDialog"
+      :icon="mdiInformationOutline"
+      :message="`Trenutna različica: ${appVersion}`"
+      label="O aplikaciji" />
+
     <v-dialog v-model="entitySelectionDialog"
       v-bind:persistent="entitySelectionPersistent"
       content-class="settings-dialog"
@@ -83,6 +90,10 @@
     <v-dialog v-model="moodleTokenDialog" content-class="settings-dialog" width="35rem">
       <moodle-token v-if="moodleTokenDialog" @closeDialog=closeMoodleTokenDialog />
     </v-dialog>
+
+    <v-dialog v-model="aboutDialog" content-class="settings-dialog" width="35rem">
+      <about v-if="aboutDialog" @closeDialog=closeAboutDialog />
+    </v-dialog>
   </div>
 </template>
 
@@ -100,9 +111,10 @@
 </style>
 
 <script lang="ts">
-import { mdiDatabaseImportOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
+import { mdiDatabaseImportOutline, mdiInformationOutline, mdiKey, mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
+import About from '@/components/settings/About.vue'
 import DataCollectionSelection from '@/components/settings/DataCollectionSelection.vue'
 import EntitySelection from '@/components/settings/EntitySelection.vue'
 import LunchSelection from '@/components/settings/LunchSelection.vue'
@@ -116,6 +128,7 @@ import { StorageModule, updateAllData } from '@/store/modules/storage'
 
 @Component({
   components: {
+    About,
     MoodleToken,
     DataCollectionSelection,
     ThemeSelection,
@@ -132,6 +145,7 @@ export default class Settings extends Vue {
   mdiWeatherNight = mdiWeatherNight
   mdiUpdate = mdiUpdate
   mdiKey = mdiKey
+  mdiInformationOutline = mdiInformationOutline
 
   // Get app version
   get appVersion (): string {
@@ -225,6 +239,7 @@ export default class Settings extends Vue {
   dataCollectionDialog = false
   themeSelectionDialog = false
   moodleTokenDialog = false
+  aboutDialog = false
 
   entitySelectionPersistent = false
 
@@ -329,6 +344,10 @@ export default class Settings extends Vue {
 
   closeMoodleTokenDialog (): void {
     this.moodleTokenDialog = false
+  }
+
+  closeAboutDialog (): void {
+    this.aboutDialog = false
   }
 
   persistEntityDialog (persistent: boolean): void {
