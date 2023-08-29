@@ -2,10 +2,12 @@
   <v-app>
     <v-app-bar app clipped-left color="#009300" dark extension-height="35">
       <div class="d-flex align-center overflow-x-hidden pr-1">
-        <v-img alt="GimVičUrnik Logo"
-          class="mr-2"
-          src="./assets/logo.svg"
-          width="40" />
+        <router-link title="Domov" :to="{ name: 'home' }">
+          <v-img alt="GimVičUrnik Logo"
+            class="mr-2"
+            src="./assets/logo.svg"
+            width="40" />
+        </router-link>
         <v-toolbar-title>{{ pageTitle }}</v-toolbar-title>
       </div>
 
