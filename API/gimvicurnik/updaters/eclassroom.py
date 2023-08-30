@@ -113,12 +113,24 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 url = self.normalize_url(module["contents"][0]["fileurl"])
 
+                modified = (
+                    datetime.fromtimestamp(module["contents"][0]["timemodified"], tz=timezone.utc)
+                    if module["contents"][0]["timemodified"]
+                    else None
+                )
+
+                created = (
+                    datetime.fromtimestamp(module["contents"][0]["timecreated"], tz=timezone.utc)
+                    if module["contents"][0]["timecreated"]
+                    else modified
+                )
+
                 yield DocumentInfo(
                     url=url,
                     type=self._get_document_type(url),
                     title=module["name"],
-                    created=datetime.fromtimestamp(module["contents"][0]["timecreated"], tz=timezone.utc),
-                    modified=datetime.fromtimestamp(module["contents"][0]["timemodified"], tz=timezone.utc),
+                    created=created,
+                    modified=modified,
                     extension=os.path.splitext(urlparse(url).path)[1][1:],
                 )
 
@@ -153,12 +165,18 @@ class EClassroomUpdater(BaseMultiUpdater):
 
             url = self.normalize_url(content["externalurl"])
 
+            modified = (
+                datetime.fromtimestamp(content["timemodified"], tz=timezone.utc)
+                if content["timemodified"]
+                else None
+            )
+
             yield DocumentInfo(
                 url=url,
                 type=self._get_document_type(url),
                 title=content["name"],
-                created=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
-                modified=datetime.fromtimestamp(content["timemodified"], tz=timezone.utc),
+                created=modified,
+                modified=modified,
                 extension=os.path.splitext(urlparse(url).path)[1][1:],
             )
 
@@ -182,6 +200,8 @@ class EClassroomUpdater(BaseMultiUpdater):
             url.replace(self.config.pluginFileWebserviceUrl, self.config.pluginFileNormalUrl)
             .replace("?forcedownload=1", "")
             .replace("?dl=0", "?raw=1")
+            .replace("&dl=0", "&raw=1")
+            .replace("?rlkey=", "?raw=1&rlkey=")
         )
 
     def tokenize_url(self, url: str) -> str:
@@ -438,7 +458,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif row == header_reservations:
                     parser_type = ParserType.RESERVATIONS
                     continue
-                elif "Oddelek" in row[0] or "Razred" in row[0] or "dijaki" in row[0]:
+                elif "Oddelek" in row[0] or "Razred" in row[0] or "dijaki" in row[0] or "RAZREDNIK" in row[1]:
                     parser_type = ParserType.UNKNOWN
                     continue
 
