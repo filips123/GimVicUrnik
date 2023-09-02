@@ -458,7 +458,13 @@ class EClassroomUpdater(BaseMultiUpdater):
                 elif row == header_reservations:
                     parser_type = ParserType.RESERVATIONS
                     continue
-                elif "Oddelek" in row[0] or "Razred" in row[0] or "dijaki" in row[0] or "RAZREDNIK" in row[1] or "Spoznavanje" in row[1]:
+                elif (
+                    "Oddelek" in row[0]
+                    or "Razred" in row[0]
+                    or "dijaki" in row[0]
+                    or "RAZREDNIK" in row[1]
+                    or "Spoznavanje" in row[1]
+                ):
                     parser_type = ParserType.UNKNOWN
                     continue
 
