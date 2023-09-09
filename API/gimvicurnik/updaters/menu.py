@@ -67,6 +67,11 @@ class MenuUpdater(BaseMultiUpdater):
 
                 menu_url = self.config.url + link["href"]
                 menu_extension = os.path.splitext(urlparse(menu_url).path)[1][1:]
+
+                # Only parse xlsx files
+                if menu_extension != "xlsx":
+                    continue
+
                 yield DocumentInfo(type=menu_type, url=menu_url, extension=menu_extension)
 
     def get_document_title(self, document: DocumentInfo) -> str:
@@ -85,7 +90,9 @@ class MenuUpdater(BaseMultiUpdater):
 
         # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
-        date = re.search(r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?.pdf", document.url)
+        date = re.search(
+            r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)", document.url
+        )
 
         # The specified date is commonly Monday of the effective week
         # However, in some cases, it may also be another day of that week
