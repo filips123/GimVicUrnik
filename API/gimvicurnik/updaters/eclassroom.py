@@ -267,6 +267,10 @@ class EClassroomUpdater(BaseMultiUpdater):
         span.set_tag("document.type", document.type.value)
         span.set_tag("document.format", document.extension)
 
+        # Only parse xlsx lunch schedules - a guard for now
+        if document.type == DocumentType.LUNCH_SCHEDULE and document.extension != "xlsx":
+            return
+
         match (document.type, document.extension):
             case (DocumentType.SUBSTITUTIONS, "pdf"):
                 self._parse_substitutions_pdf(stream, effective)
@@ -729,5 +733,69 @@ class EClassroomUpdater(BaseMultiUpdater):
         self.session.execute(insert(LunchSchedule), schedule)
 
     def _parse_lunch_schedule_xlsx(self, stream: BytesIO, effective: date) -> None:
-        """Parse the lunch schedule xlsx document."""
-        pass
+        """
+        Parse the lunch schedule xlsx document.
+
+        Columns should be:
+        - Time (Ura)
+        - Class (Razred)
+        - Location (Prostor)
+        - Notes (Opombe/Prilagoditev)
+        """
+
+        # Extract workbook from an XLSX stream
+        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
+
+        lunch_schedule = []
+
+        # Parse lunch schedule
+        for ws in wb:
+            for wr in ws.iter_rows(min_row=1, max_col=4):
+                if not hasattr(wr[0].border, "bottom"):
+                    continue
+
+                # Check for correct cell value type
+                if typing.TYPE_CHECKING:
+                    assert isinstance(wr[0].value, str)
+                    assert isinstance(wr[1].value, str)
+                    assert isinstance(wr[2].value, str)
+                    assert isinstance(wr[3].value, str)
+
+                # Ignore data description row
+                if wr[0].value.strip() == "ura":
+                    continue
+
+                # Schedule for specific class
+                class_schedule: dict[str, Any] = {}
+
+                # Time in format H:M
+                if wr[0].value:
+                    time = wr[0].value.strip()
+                    class_schedule["time"] = datetime.strptime(time, "%H:%M").time()
+                else:
+                    class_schedule["time"] = None
+
+                # Class name
+                if wr[1].value:
+                    # fmt: off
+                    class_name = wr[1].value.strip()
+                    class_schedule["class_id"] = get_or_create(self.session, model=Class, name=class_name)[0].id
+                    # fmt: on
+                else:
+                    class_schedule["class_id"] = None
+
+                # Location
+                class_schedule["location"] = wr[2].value.strip() if wr[2].value else None
+
+                # Notes
+                class_schedule["notes"] = wr[3].value.strip() if wr[3].value else None
+
+                # Add effective date
+                class_schedule["date"] = effective
+                lunch_schedule.append(class_schedule)
+
+        wb.close()
+
+        # Store schedule to a database
+        self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
+        self.session.execute(insert(LunchSchedule), lunch_schedule)
