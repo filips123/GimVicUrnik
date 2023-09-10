@@ -177,75 +177,69 @@ class MenuUpdater(BaseMultiUpdater):
                 self.session.add(model)
 
     def _parse_snack_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
-        """Parse the snack menu XLSX document."""
+        """
+        Parse the snack menu xlsx document.
+
+        Columns should be:
+         - Date (datum)
+         - Normal (navadna (velika))
+         - Poultry (vegetarijanska s perutnino in ribo)
+         - Vegetarian (vegetarijanska)
+         - Fruitvegetable (sadnozelenjavna)
+        """
 
         # Extract workbook from an XLSX stream
         wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
-        menu: dict[str, Any] = {}
+        snack_menu = []
+
+        # Days in week
         days = 0
 
-        # Parse tables into menus and store them
+        # Parse snack menu
         for ws in wb:
-            for wr in ws.iter_rows(min_row=1, max_col=3):
+            for wr in ws.iter_rows(min_row=1, max_col=4):
                 if not hasattr(wr[0].border, "bottom"):
                     continue
 
-                # Make mypy not complain about incorrect types for cell values
-                # If the cell has an incorrect type, we should fail anyway
+                # Check for correct cell value type
                 if typing.TYPE_CHECKING:
+                    assert isinstance(wr[0].value, str)
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[3].value, str)
                     assert isinstance(wr[4].value, str)
 
-                # Store the menu after the end of table
-                if wr[0].border.bottom.color:
-                    if menu and menu["date"]:
-                        # fmt: off
-                        model = (
-                            self.session.query(SnackMenu)
-                            .filter(SnackMenu.date == menu["date"])
-                            .first()
-                        )
-                        # fmt: on
+                # Ignore data description row
+                if wr[0].value.strip() == "datum":
+                    continue
 
-                        if not model:
-                            model = SnackMenu()
+                # Menu for specific day
+                day_menu: dict[str, Any] = {}
 
-                        model.date = menu["date"]
-                        model.normal = "\n".join(menu["normal"][1:])
-                        model.poultry = "\n".join(menu["poultry"][1:])
-                        model.vegetarian = "\n".join(menu["vegetarian"][1:])
-                        model.fruitvegetable = "\n".join(menu["fruitvegetable"][1:])
+                # Date
+                day_menu["date"] = effective + datetime.timedelta(days=days)
+                days += 1
 
-                        self.session.add(model)
-                        days += 1
+                # Normal
+                day_menu["normal"] = wr[1].value.strip() if wr[1].value else None
 
-                    menu = {
-                        "date": None,
-                        "normal": [],
-                        "poultry": [],
-                        "vegetarian": [],
-                        "fruitvegetable": [],
-                    }
+                # Poultry
+                day_menu["poultry"] = wr[2].value.strip() if wr[2].value else None
 
-                if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                    menu["date"] = effective + datetime.timedelta(days=days)
+                # Vegetarian
+                day_menu["vegetarian"] = wr[3].value.strip() if wr[3].value else None
 
-                if wr[1].value:
-                    menu["normal"].append(wr[1].value.strip())
+                # Fruitvegetable
+                day_menu["fruitvegetable"] = wr[4].value.strip() if wr[4].value else None
 
-                if wr[2].value:
-                    menu["poultry"].append(wr[2].value.strip())
-
-                if wr[3].value:
-                    menu["vegetarian"].append(wr[3].value.strip())
-
-                if wr[4].value:
-                    menu["fruitvegetable"].append(wr[4].value.strip())
+                snack_menu.append(day_menu)
 
         wb.close()
+
+        # Store snack menu to a database
+        self.session.query(SnackMenu).filter(SnackMenu.date == effective).delete()
+        self.session.execute(insert(SnackMenu), snack_menu)
 
     def _parse_lunch_menu_pdf(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the lunch menu PDF document."""
