@@ -8,6 +8,7 @@ import typing
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, ParserRejectedMarkup
+from sqlalchemy import insert
 from openpyxl import load_workbook
 
 from .base import BaseMultiUpdater, DocumentInfo
@@ -280,63 +281,68 @@ class MenuUpdater(BaseMultiUpdater):
                 self.session.add(model)
 
     def _parse_lunch_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
-        """Parse the lunch menu XLSX document."""
+        """
+        Parse the lunch menu xlsx document.
+
+        Columns should be:
+        - Date (datum)
+        - Lunch until (delitev kosila do)
+        - Normal (navadno)
+        - Vegetarian (vegetarijansko)
+        """
 
         # Extract workbook from an XLSX stream
         wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
-        menu: dict[str, Any] = {}
+        lunch_menu = []
+
+        # Days in week
         days = 0
 
-        # Parse tables into menus and store them
+        # Parse lunch menu
         for ws in wb:
-            for wr in ws.iter_rows(min_row=1, max_col=3):
+            for wr in ws.iter_rows(min_row=1, max_col=4):
                 if not hasattr(wr[0].border, "bottom"):
                     continue
 
-                # Make mypy not complain about incorrect types for cell values
-                # If the cell has an incorrect type, we should fail anyway
+                # Check for correct cell value type
                 if typing.TYPE_CHECKING:
+                    assert isinstance(wr[0].value, str)
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
+                    assert isinstance(wr[3].value, str)
 
-                # Store the menu after the end of table
-                if wr[0].border.bottom.color:
-                    if menu and menu["date"]:
-                        # fmt: off
-                        model = (
-                            self.session.query(LunchMenu)
-                            .filter(LunchMenu.date == menu["date"])
-                            .first()
-                        )
-                        # fmt: on
+                # Ignore data description row
+                if wr[0].value.strip() == "datum":
+                    continue
 
-                        if not model:
-                            model = LunchMenu()
+                # Menu for specific day
+                day_menu: dict[str, Any] = {}
 
-                        model.date = menu["date"]
-                        model.normal = "\n".join(menu["normal"][1:])
-                        model.vegetarian = "\n".join(menu["vegetarian"][1:])
+                # Date
+                day_menu["date"] = effective + datetime.timedelta(days=days)
+                days += 1
 
-                        self.session.add(model)
-                        days += 1
-
-                    menu = {
-                        "date": None,
-                        "normal": [],
-                        "vegetarian": [],
-                    }
-
-                if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                    menu["date"] = effective + datetime.timedelta(days=days)
-
+                # Lunch until in format H:M
                 if wr[1].value:
-                    menu["normal"].append(wr[1].value.strip())
+                    lunch_until = wr[1].value.strip()
+                    day_menu["lunch_until"] = datetime.datetime.strptime(lunch_until, "%H:%M").time()
+                else:
+                    day_menu["lunch_until"] = None
 
-                if wr[2].value:
-                    menu["vegetarian"].append(wr[2].value.strip())
+                # Normal
+                day_menu["normal"] = wr[2].value.strip() if wr[2].value else None
+
+                # Vegetarian
+                day_menu["vegetarian"] = wr[3].value.strip() if wr[3].value else None
+
+                lunch_menu.append(day_menu)
 
         wb.close()
+
+        # Store lunch menu to a database
+        self.session.query(LunchMenu).filter(LunchMenu.date == effective).delete()
+        self.session.execute(insert(LunchMenu), lunch_menu)
 
     def document_needs_extraction(self, document: DocumentInfo) -> bool:
         """Return whether the document content needs to be extracted."""
