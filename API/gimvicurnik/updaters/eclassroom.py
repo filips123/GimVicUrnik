@@ -11,10 +11,17 @@ from urllib.parse import urlparse
 
 from mammoth import convert_to_html  # type: ignore
 from sqlalchemy import insert
+from openpyxl import load_workbook
 
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import Class, Classroom, DocumentType, LunchSchedule, Substitution, Teacher
-from ..errors import ClassroomApiError, InvalidRecordError, InvalidTokenError
+from ..errors import (
+    ClassroomApiError,
+    InvalidRecordError,
+    InvalidTokenError,
+    SubstitutionsFormatError,
+    LunchScheduleFormatError,
+)
 from ..utils.database import get_or_create
 from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
@@ -186,7 +193,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         if "www.dropbox.com" in url:
             return DocumentType.SUBSTITUTIONS
-        elif "delitevKosila" in url:
+        elif "delitev-kosila" in url:
             return DocumentType.LUNCH_SCHEDULE
         elif "okroznica" in url.lower() or "okrožnica" in url.lower():
             return DocumentType.CIRCULAR
@@ -260,16 +267,30 @@ class EClassroomUpdater(BaseMultiUpdater):
         span.set_tag("document.type", document.type.value)
         span.set_tag("document.format", document.extension)
 
-        # Extract all tables from a PDF stream
-        tables = with_span(op="extract")(extract_tables)(stream)
+        # Only parse xlsx lunch schedules - a guard for now
+        if document.type == DocumentType.LUNCH_SCHEDULE and document.extension != "xlsx":
+            return
 
-        if document.type == DocumentType.SUBSTITUTIONS:
-            self._parse_substitutions(tables, effective)
-        elif document.type == DocumentType.LUNCH_SCHEDULE:
-            self._parse_lunch_schedule(tables, effective)
-        else:
-            # This cannot happen because only menus are provided by the API
-            raise KeyError("Unknown parsable document type from the e-classroom")
+        match (document.type, document.extension):
+            case (DocumentType.SUBSTITUTIONS, "pdf"):
+                self._parse_substitutions_pdf(stream, effective)
+            case (DocumentType.LUNCH_SCHEDULE, "pdf"):
+                self._parse_lunch_schedule_pdf(stream, effective)
+            case (DocumentType.SUBSTITUTIONS, "xlsx"):
+                self._parse_substitutions_xlsx(stream, effective)
+            case (DocumentType.LUNCH_SCHEDULE, "xlsx"):
+                self._parse_lunch_schedule_xlsx(stream, effective)
+            case (DocumentType.SUBSTITUTIONS, _):
+                raise SubstitutionsFormatError(
+                    "Unknown substitutions document format: " + str(document.extension)
+                )
+            case (DocumentType.LUNCH_SCHEDULE, _):
+                raise LunchScheduleFormatError(
+                    "Unknown lunch schedule document format: " + str(document.extension)
+                )
+            case _:
+                # This cannot happen because only menus are provided by the API
+                raise KeyError("Unknown parsable document type from the e-classroom")
 
     def document_needs_extraction(self, document: DocumentInfo) -> bool:
         """Return whether the document content needs to be extracted."""
@@ -415,8 +436,8 @@ class EClassroomUpdater(BaseMultiUpdater):
         }
         # fmt: on
 
-    def _parse_substitutions(self, tables: Tables, effective: date) -> None:
-        """Parse the substitutions document."""
+    def _parse_substitutions_pdf(self, stream: BytesIO, effective: date) -> None:
+        """Parse the substitutions pdf document."""
 
         # fmt: off
         header_substitutions = ["ODSOTNI UČITELJ/ICA", "URA", "RAZRED", "UČILNICA", "NADOMEŠČA", "PREDMET", "OPOMBA"]
@@ -432,6 +453,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         parser_type = None
         last_original_teacher = None
+
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
 
         # Parse tables into substitutions
         for table in tables:
@@ -620,10 +644,18 @@ class EClassroomUpdater(BaseMultiUpdater):
         if substitutions:
             self.session.execute(insert(Substitution), substitutions)
 
-    def _parse_lunch_schedule(self, tables: Tables, effective: date) -> None:
-        """Parse the lunch schedule document."""
+    def _parse_substitutions_xlsx(self, stream: BytesIO, effective: date) -> None:
+        """Parse the substitutions xlsx document."""
+        # Currently not useful.
+        pass
+
+    def _parse_lunch_schedule_pdf(self, stream: BytesIO, effective: date) -> None:
+        """Parse the lunch schedule pdf document."""
 
         schedule = []
+
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
 
         for table in tables:
             # Skip instructions
@@ -699,3 +731,64 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Store schedule to a database
         self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
         self.session.execute(insert(LunchSchedule), schedule)
+
+    def _parse_lunch_schedule_xlsx(self, stream: BytesIO, effective: date) -> None:
+        """
+        Parse the lunch schedule xlsx document.
+
+        Columns should be:
+        - Time (Ura)
+        - Notes (Opombe/Prilagoditev)
+        - Class (Razred)
+        * number of students (stevilo dijakov) [ignored]
+        - Location (Prostor)
+        """
+
+        # Extract workbook from an XLSX stream
+        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
+
+        lunch_schedule = []
+
+        # Parse lunch schedule
+        for ws in wb:
+            if ws.title != "kosilo":
+                continue
+
+            for wr in ws.iter_rows(min_row=3, max_col=5):
+                if not wr[0].value:
+                    break
+
+                # Check for correct cell value type
+                if typing.TYPE_CHECKING:
+                    assert isinstance(wr[0].value, datetime)
+                    assert isinstance(wr[1].value, str)
+                    assert isinstance(wr[2].value, str)
+                    assert isinstance(wr[4].value, str)
+
+                # Schedule for specific class
+                class_schedule: dict[str, Any] = {}
+
+                # Time in format H:M
+                class_schedule["time"] = wr[0].value
+
+                # Notes
+                class_schedule["notes"] = wr[1].value.strip() if wr[1].value else None
+
+                # Class name (class id)
+                if wr[2].value:
+                    class_schedule["class_id"] = get_or_create(
+                        self.session, model=Class, name=wr[2].value.strip()
+                    )[0].id
+
+                # Location
+                class_schedule["location"] = wr[4].value.strip() if wr[4].value else None
+
+                # Effective date
+                class_schedule["date"] = effective
+                lunch_schedule.append(class_schedule)
+
+        wb.close()
+
+        # Store schedule to a database
+        self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
+        self.session.execute(insert(LunchSchedule), lunch_schedule)

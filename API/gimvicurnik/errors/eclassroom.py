@@ -15,3 +15,11 @@ class InvalidTokenError(ClassroomApiError):
 
 class InvalidRecordError(ClassroomApiError):
     pass
+
+
+class SubstitutionsFormatError(ClassroomError):
+    pass
+
+
+class LunchScheduleFormatError(ClassroomError):
+    pass
