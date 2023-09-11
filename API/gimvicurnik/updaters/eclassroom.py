@@ -193,7 +193,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         if "www.dropbox.com" in url:
             return DocumentType.SUBSTITUTIONS
-        elif "delitevKosila" in url:
+        elif "delitev-kosila" in url:
             return DocumentType.LUNCH_SCHEDULE
         elif "okroznica" in url.lower() or "okrožnica" in url.lower():
             return DocumentType.CIRCULAR
@@ -738,9 +738,10 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         Columns should be:
         - Time (Ura)
-        - Class (Razred)
-        - Location (Prostor)
         - Notes (Opombe/Prilagoditev)
+        - Class (Razred)
+        * number of students (stevilo dijakov) [ignored]
+        - Location (Prostor)
         """
 
         # Extract workbook from an XLSX stream
@@ -750,47 +751,39 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Parse lunch schedule
         for ws in wb:
-            for wr in ws.iter_rows(min_row=1, max_col=4):
-                if not hasattr(wr[0].border, "bottom"):
-                    continue
+            if ws.title != "kosilo":
+                continue
+
+            for wr in ws.iter_rows(min_row=3, max_col=5):
+                if not wr[0].value:
+                    break
 
                 # Check for correct cell value type
                 if typing.TYPE_CHECKING:
-                    assert isinstance(wr[0].value, str)
+                    assert isinstance(wr[0].value, datetime)
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
-                    assert isinstance(wr[3].value, str)
-
-                # Ignore data description row
-                if wr[0].value.strip() == "ura":
-                    continue
+                    assert isinstance(wr[4].value, str)
 
                 # Schedule for specific class
                 class_schedule: dict[str, Any] = {}
 
                 # Time in format H:M
-                if wr[0].value:
-                    time = wr[0].value.strip()
-                    class_schedule["time"] = datetime.strptime(time, "%H:%M").time()
-                else:
-                    class_schedule["time"] = None
-
-                # Class name
-                if wr[1].value:
-                    # fmt: off
-                    class_name = wr[1].value.strip()
-                    class_schedule["class_id"] = get_or_create(self.session, model=Class, name=class_name)[0].id
-                    # fmt: on
-                else:
-                    class_schedule["class_id"] = None
-
-                # Location
-                class_schedule["location"] = wr[2].value.strip() if wr[2].value else None
+                class_schedule["time"] = wr[0].value
 
                 # Notes
-                class_schedule["notes"] = wr[3].value.strip() if wr[3].value else None
+                class_schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
-                # Add effective date
+                # Class name (class id)
+                if wr[2].value:
+                    class_schedule["class_id"] = get_or_create(
+                        self.session, model=Class, name=wr[2].value.strip()
+                    )[0].id
+
+                # Location
+                class_schedule["location"] = wr[4].value.strip() if wr[4].value else None
+
+                # Effective date
                 class_schedule["date"] = effective
                 lunch_schedule.append(class_schedule)
 
