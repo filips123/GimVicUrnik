@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, ParserRejectedMarkup
 from openpyxl import load_workbook
+from sqlalchemy import insert
 
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import DocumentType, LunchMenu, SnackMenu
@@ -85,7 +86,9 @@ class MenuUpdater(BaseMultiUpdater):
 
         # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
-        date = re.search(r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?.pdf", document.url)
+        date = re.search(
+            r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)", document.url
+        )
 
         # The specified date is commonly Monday of the effective week
         # However, in some cases, it may also be another day of that week
@@ -174,68 +177,67 @@ class MenuUpdater(BaseMultiUpdater):
         # Extract workbook from an XLSX stream
         wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
-        menu: dict[str, Any] = {}
+        snack_menu: dict[str, Any] = {
+            "normal": [],
+            "poultry": [],
+            "vegetarian": [],
+            "fruitvegetable": [],
+        }
         days = 0
 
-        # Parse tables into menus and store them
+        # Parse menus and store them
         for ws in wb:
-            for wr in ws.iter_rows(min_row=1, max_col=3):
-                if not hasattr(wr[0].border, "bottom"):
+            for wr in ws.iter_rows(min_row=2, max_col=5):
+                if days == 5:
+                    break
+
+                # Ignore blank cells
+                if not wr[1].value:
                     continue
 
-                # Make mypy not complain about incorrect types for cell values
-                # If the cell has an incorrect type, we should fail anyway
+                # Check for correct cell value type (else mypy complains)
                 if typing.TYPE_CHECKING:
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[3].value, str)
                     assert isinstance(wr[4].value, str)
 
-                # Store the menu after the end of table
+                # Ignore information cells
+                if "NV in N" in wr[1].value:
+                    continue
+
+                if wr[1].value:
+                    snack_menu["normal"].append(wr[1].value.strip())
+
+                if wr[2].value:
+                    snack_menu["poultry"].append(wr[2].value.strip())
+
+                if wr[3].value:
+                    snack_menu["vegetarian"].append(wr[3].value.strip())
+
+                if wr[4].value:
+                    snack_menu["fruitvegetable"].append(wr[4].value.strip())
+
+                # Store the menu after the end of day
                 if wr[0].border.bottom.color:
-                    if menu and menu["date"]:
-                        # fmt: off
-                        model = (
-                            self.session.query(SnackMenu)
-                            .filter(SnackMenu.date == menu["date"])
-                            .first()
-                        )
-                        # fmt: on
+                    snack_menu["date"] = effective + datetime.timedelta(days=days)
+                    self.session.query(SnackMenu).filter(SnackMenu.date == snack_menu["date"]).delete()
 
-                        if not model:
-                            model = SnackMenu()
+                    snack_menu["normal"] = "\n".join(snack_menu["normal"])
+                    snack_menu["poultry"] = "\n".join(snack_menu["poultry"])
+                    snack_menu["vegetarian"] = "\n".join(snack_menu["vegetarian"])
+                    snack_menu["fruitvegetable"] = "\n".join(snack_menu["fruitvegetable"])
 
-                        model.date = menu["date"]
-                        model.normal = "\n".join(menu["normal"][1:])
-                        model.poultry = "\n".join(menu["poultry"][1:])
-                        model.vegetarian = "\n".join(menu["vegetarian"][1:])
-                        model.fruitvegetable = "\n".join(menu["fruitvegetable"][1:])
+                    self.session.execute(insert(SnackMenu), snack_menu)
 
-                        self.session.add(model)
-                        days += 1
-
-                    menu = {
-                        "date": None,
+                    # Set for next day
+                    days += 1
+                    snack_menu = {
                         "normal": [],
                         "poultry": [],
                         "vegetarian": [],
                         "fruitvegetable": [],
                     }
-
-                if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                    menu["date"] = effective + datetime.timedelta(days=days)
-
-                if wr[1].value:
-                    menu["normal"].append(wr[1].value.strip())
-
-                if wr[2].value:
-                    menu["poultry"].append(wr[2].value.strip())
-
-                if wr[3].value:
-                    menu["vegetarian"].append(wr[3].value.strip())
-
-                if wr[4].value:
-                    menu["fruitvegetable"].append(wr[4].value.strip())
 
         wb.close()
 
@@ -278,56 +280,53 @@ class MenuUpdater(BaseMultiUpdater):
         # Extract workbook from an XLSX stream
         wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
 
-        menu: dict[str, Any] = {}
+        lunch_menu: dict[str, Any] = {
+            "normal": [],
+            "vegetarian": [],
+        }
         days = 0
 
-        # Parse tables into menus and store them
+        # Parse menus and store them
         for ws in wb:
-            for wr in ws.iter_rows(min_row=1, max_col=3):
-                if not hasattr(wr[0].border, "bottom"):
+            for wr in ws.iter_rows(min_row=2, max_col=3):
+                if days == 5:
+                    break
+
+                # Ignore blank cells
+                if not wr[1].value:
                     continue
 
-                # Make mypy not complain about incorrect types for cell values
-                # If the cell has an incorrect type, we should fail anyway
+                # Check for correct cell value type (else mypy complains)
                 if typing.TYPE_CHECKING:
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
 
-                # Store the menu after the end of table
+                # Ignore information cells
+                if "N KOSILO" in wr[1].value:
+                    continue
+
+                if wr[1].value:
+                    lunch_menu["normal"].append(wr[1].value.strip())
+
+                if wr[2].value:
+                    lunch_menu["vegetarian"].append(wr[2].value.strip())
+
+                # Store the menu after the end of day
                 if wr[0].border.bottom.color:
-                    if menu and menu["date"]:
-                        # fmt: off
-                        model = (
-                            self.session.query(LunchMenu)
-                            .filter(LunchMenu.date == menu["date"])
-                            .first()
-                        )
-                        # fmt: on
+                    lunch_menu["date"] = effective + datetime.timedelta(days=days)
+                    self.session.query(LunchMenu).filter(LunchMenu.date == lunch_menu["date"]).delete()
 
-                        if not model:
-                            model = LunchMenu()
+                    lunch_menu["normal"] = "\n".join(lunch_menu["normal"])
+                    lunch_menu["vegetarian"] = "\n".join(lunch_menu["vegetarian"])
 
-                        model.date = menu["date"]
-                        model.normal = "\n".join(menu["normal"][1:])
-                        model.vegetarian = "\n".join(menu["vegetarian"][1:])
+                    self.session.execute(insert(LunchMenu), lunch_menu)
 
-                        self.session.add(model)
-                        days += 1
-
-                    menu = {
-                        "date": None,
+                    # Set for next day
+                    days += 1
+                    lunch_menu = {
                         "normal": [],
                         "vegetarian": [],
                     }
-
-                if wr[0].value and isinstance(wr[0].value, datetime.datetime):
-                    menu["date"] = effective + datetime.timedelta(days=days)
-
-                if wr[1].value:
-                    menu["normal"].append(wr[1].value.strip())
-
-                if wr[2].value:
-                    menu["vegetarian"].append(wr[2].value.strip())
 
         wb.close()
 

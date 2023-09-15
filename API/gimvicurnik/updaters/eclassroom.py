@@ -267,10 +267,6 @@ class EClassroomUpdater(BaseMultiUpdater):
         span.set_tag("document.type", document.type.value)
         span.set_tag("document.format", document.extension)
 
-        # Only parse xlsx lunch schedules - a guard for now
-        if document.type == DocumentType.LUNCH_SCHEDULE and document.extension != "xlsx":
-            return
-
         match (document.type, document.extension):
             case (DocumentType.SUBSTITUTIONS, "pdf"):
                 self._parse_substitutions_pdf(stream, effective)
@@ -775,9 +771,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                 # Class name (class id)
                 if wr[2].value:
-                    schedule["class_id"] = get_or_create(
-                        self.session, model=Class, name=wr[2].value.strip()
-                    )[0].id
+                    schedule["class_id"] = get_or_create(self.session, model=Class, name=wr[2].value.strip())[
+                        0
+                    ].id
 
                 # Location
                 schedule["location"] = wr[4].value.strip() if wr[4].value else None
