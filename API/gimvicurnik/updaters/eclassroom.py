@@ -765,27 +765,26 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[4].value, str)
 
-                # Schedule for specific class
-                class_schedule: dict[str, Any] = {}
+                schedule: dict[str, Any] = {}
 
                 # Time in format H:M
-                class_schedule["time"] = wr[0].value
+                schedule["time"] = wr[0].value
 
                 # Notes
-                class_schedule["notes"] = wr[1].value.strip() if wr[1].value else None
+                schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
                 # Class name (class id)
                 if wr[2].value:
-                    class_schedule["class_id"] = get_or_create(
+                    schedule["class_id"] = get_or_create(
                         self.session, model=Class, name=wr[2].value.strip()
                     )[0].id
 
                 # Location
-                class_schedule["location"] = wr[4].value.strip() if wr[4].value else None
+                schedule["location"] = wr[4].value.strip() if wr[4].value else None
 
                 # Effective date
-                class_schedule["date"] = effective
-                lunch_schedule.append(class_schedule)
+                schedule["date"] = effective
+                lunch_schedule.append(schedule)
 
         wb.close()
 
