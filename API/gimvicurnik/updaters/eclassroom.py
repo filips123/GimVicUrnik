@@ -326,6 +326,10 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Special case: Subject aliases
         if name == "ŠVZS":
             return "ŠVZ"
+        elif name == "ŠPVF":
+            return "ŠVM"
+        elif name == "ŠPVD":
+            return "ŠVŽ"
 
         # Return the normal name
         return name
@@ -353,8 +357,11 @@ class EClassroomUpdater(BaseMultiUpdater):
                 return "KrapežM"
 
         # Special case: Multiple Šajn teachers
-        if "Šajn" in name and "Eva" in name:
-            return "ŠajnE"
+        if "Šajn" in name:
+            if "Eva" in name:
+                return "ŠajnE"
+            elif "Majda" in name:
+                return "ŠajnM"
 
         # Special case: Teachers with multiple surnames
         teachers = {
@@ -375,8 +382,8 @@ class EClassroomUpdater(BaseMultiUpdater):
         if name.split()[0] in teachers:
             return teachers[name.split()[0]]
 
-        # Use only surname and replace ć with č
-        return name.split()[0].replace("ć", "č")
+        # Use only surname
+        return name.split()[0]
 
     def _normalize_classroom_name(self, name: str) -> str | None:
         """Normalize the classroom name."""
