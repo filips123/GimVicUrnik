@@ -267,10 +267,6 @@ class EClassroomUpdater(BaseMultiUpdater):
         span.set_tag("document.type", document.type.value)
         span.set_tag("document.format", document.extension)
 
-        # Only parse xlsx lunch schedules - a guard for now
-        if document.type == DocumentType.LUNCH_SCHEDULE and document.extension != "xlsx":
-            return
-
         match (document.type, document.extension):
             case (DocumentType.SUBSTITUTIONS, "pdf"):
                 self._parse_substitutions_pdf(stream, effective)
@@ -772,27 +768,26 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[4].value, str)
 
-                # Schedule for specific class
-                class_schedule: dict[str, Any] = {}
+                schedule: dict[str, Any] = {}
 
                 # Time in format H:M
-                class_schedule["time"] = wr[0].value
+                schedule["time"] = wr[0].value
 
                 # Notes
-                class_schedule["notes"] = wr[1].value.strip() if wr[1].value else None
+                schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
                 # Class name (class id)
                 if wr[2].value:
-                    class_schedule["class_id"] = get_or_create(
-                        self.session, model=Class, name=wr[2].value.strip()
-                    )[0].id
+                    schedule["class_id"] = get_or_create(self.session, model=Class, name=wr[2].value.strip())[
+                        0
+                    ].id
 
                 # Location
-                class_schedule["location"] = wr[4].value.strip() if wr[4].value else None
+                schedule["location"] = wr[4].value.strip() if wr[4].value else None
 
                 # Effective date
-                class_schedule["date"] = effective
-                lunch_schedule.append(class_schedule)
+                schedule["date"] = effective
+                lunch_schedule.append(schedule)
 
         wb.close()
 
