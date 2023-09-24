@@ -754,9 +754,6 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Parse lunch schedule
         for ws in wb:
-            if ws.title != "kosilo":
-                continue
-
             for wr in ws.iter_rows(min_row=3, max_col=5):
                 if not wr[0].value:
                     break
@@ -768,24 +765,25 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[4].value, str)
 
+                if "prilagoditev" in wr[1].value:
+                    continue
+
                 schedule: dict[str, Any] = {}
 
                 # Time in format H:M
                 schedule["time"] = wr[0].value
 
-                # Notes
                 schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
-                # Class name (class id)
                 if wr[2].value:
-                    schedule["class_id"] = get_or_create(self.session, model=Class, name=wr[2].value.strip())[
-                        0
-                    ].id
+                    # fmt: off
+                    schedule["class_id"] = get_or_create(
+                        self.session, model=Class, name=wr[2].value.strip()
+                    )[0].id
+                    # fmt: on
 
-                # Location
                 schedule["location"] = wr[4].value.strip() if wr[4].value else None
 
-                # Effective date
                 schedule["date"] = effective
                 lunch_schedule.append(schedule)
 
