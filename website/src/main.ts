@@ -1,18 +1,30 @@
-import './registerSentry'
-import './registerServiceWorker'
+import './assets/main.css'
 
-import Vue from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 
 import App from './App.vue'
-import vuetify from './plugins/vuetify'
 import router from './router'
-import store from './store'
 
-Vue.config.productionTip = false
+// Vuetify - importing all for now
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import '@mdi/font/css/materialdesignicons.css'
 
-new Vue({
-  router,
-  store,
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+const vuetify = createVuetify({
+  components,
+  directives,
+  icons: {
+    defaultSet: 'mdi'
+  }
+})
+
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
+app.use(vuetify)
+
+app.mount('#app')

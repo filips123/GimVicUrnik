@@ -1,32 +1,61 @@
-import Vue from 'vue'
-import VueRouter, { RouteConfig } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
-Vue.use(VueRouter)
+const Home = () => import('../views/Home.vue')
+const Subscribe = () => import('../views/Subscribe.vue')
+const Settings = () => import('../views/Settings.vue')
+const Timetable = () => import('../views/Timetable.vue')
+const Menus = () => import('../views/Menus.vue')
+const Circulars = () => import('../views/Circulars.vue')
+const Sources = () => import('../views/Sources.vue')
 
-const Home = () => import(/* webpackChunkName: "home" */ '../views/Home.vue')
-const NotFound = () => import(/* webpackChunkName: "notfound" */ '../views/NotFound.vue')
-const Welcome = () => import(/* webpackChunkName: "welcome" */ '../views/Welcome.vue')
-const Subscribe = () => import(/* webpackChunkName: "subscribe" */ '../views/Subscribe.vue')
-const Settings = () => import(/* webpackChunkName: "settings" */ '../views/Settings.vue')
-const Timetable = () => import(/* webpackChunkName: "timetable" */ '../views/Timetable.vue')
-const Menus = () => import(/* webpackChunkName: "menus" */ '../views/Menus.vue')
-const Documents = () => import(/* webpackChunkName: "documents" */ '../views/Documents.vue')
-
-const routes: Array<RouteConfig> = [
-  { path: '/', name: 'home', component: Home },
-  { path: '*', name: 'notfound', component: NotFound },
-  { path: '/welcome', name: 'welcome', component: Welcome },
-  { path: '/subscribe', name: 'subscribe', component: Subscribe },
-  { path: '/settings', name: 'settings', component: Settings },
-  { path: '/timetable/:type?/:value?', name: 'timetable', component: Timetable },
-  { path: '/menus', name: 'menus', component: Menus },
-  { path: '/documents', name: 'documents', component: Documents }
-]
-
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
-  routes
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      meta: { title: 'Domov' },
+      component: Home
+    },
+    //{ path: '*', name: 'notfound', component: NotFound },
+    //{ path: '/welcome', name: 'welcome', component: Welcome },
+    {
+      path: '/subscribe',
+      name: 'subscribe',
+      meta: { title: 'Naročanje' },
+      component: Subscribe
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      meta: { title: 'Nastavitve' },
+      component: Settings
+    },
+    {
+      path: '/timetable/:type?/:value?',
+      name: 'timetable',
+      meta: { title: 'Urnik' },
+      component: Timetable
+    },
+    {
+      path: '/menus',
+      name: 'menus',
+      meta: { title: 'Jedilnik' },
+      component: Menus
+    },
+    {
+      path: '/circulars',
+      name: 'circulars',
+      meta: { title: 'Okrožnice' },
+      component: Circulars
+    },
+    {
+      path: '/sources',
+      name: 'sources',
+      meta: { title: 'Viri' },
+      component: Sources
+    }
+  ]
 })
 
 export default router

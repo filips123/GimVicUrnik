@@ -1,3 +1,3 @@
 <template>
-  <h1>TIMETABLE</h1>
+  <h1>CIRCULARS</h1>
 </template>

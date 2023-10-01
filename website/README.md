@@ -1,63 +1,46 @@
-GimVičUrnik
-===========
+# website
 
-A website for a school timetable, substitutions and menus at Gimnazija Vič.
+This template should help get you started developing with Vue 3 in Vite.
 
-## Description
+## Recommended IDE Setup
 
-This is the website part of the GimVičUrnik system. For more details see [the main README file](../README.md).
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
-## Installation
+## Type Support for `.vue` Imports in TS
 
-GimVičUrnik website requires Node.js or later and [Yarn](https://yarnpkg.com/) dependency manager.
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
 
-You can then clone this repository and install dependencies:
+If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
 
-```bash
-git clone https://github.com/filips123/GimVicUrnik.git
-cd GimVicUrnik/website
-yarn
+1. Disable the built-in TypeScript Extension
+    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
+    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
+2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+
+## Customize configuration
+
+See [Vite Configuration Reference](https://vitejs.dev/config/).
+
+## Project Setup
+
+```sh
+npm install
 ```
 
-## Usage
+### Compile and Hot-Reload for Development
 
-### Configuration
-
-GimVičUrnik website uses `.env` file for configuration. Example file can be found at [`.env.sample`](.env.sample). The official API server only allows requests from the official website, so you will also have to set up your own API server. If you don't plan to use Sentry, you can delete its section entirely.
-
-You can also set configuration using your environment variables or in one of `.env` files [supported by Vue CLI](https://cli.vuejs.org/guide/mode-and-env.html).
-
-### Development Server
-
-Development server can be started using:
-
-```bash
-yarn serve
+```sh
+npm run dev
 ```
 
-This will automatically build the website and start the server. It includes automatic hot reloading, code linting and support for single page apps.
+### Type-Check, Compile and Minify for Production
 
-### Building for Production
-
-Website can be built for production using:
-
-```bash
-yarn build
+```sh
+npm run build
 ```
 
-It will build whole website, optimized for production and save it into `dist` directory. This will also include all assets and service worker file.
+### Lint with [ESLint](https://eslint.org/)
 
-### Hosting for Production
-
-The website uses Vue Router in `history` mode, so a simple static file server will fail. You will need to configure your web server to fall back to `index.html` for any non-file requests.
-
-See [Vue Documentation](https://cli.vuejs.org/guide/deployment.html) for more details.
-
-## Contributing
-
-The website uses ESLint with JavaScript Standard Style with TypeScript and Vue extensions. They are included in project's development dependencies.
-
-Please make sure that your changes are formatted correctly according to the code style:
-
-* Linting: `yarn lint --no-fix`
-* Formatting: `yarn lint`
+```sh
+npm run lint
+```
