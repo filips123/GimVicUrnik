@@ -8,6 +8,6 @@ from .eclassroom import (
     InvalidTokenError,
     SubstitutionsFormatError,
     LunchScheduleFormatError,
+    MenuFormatError,
 )
-from .menu import MenuApiError, MenuDateError, MenuFormatError
 from .timetable import TimetableApiError

@@ -7,8 +7,6 @@ sources:
     pluginFileWebserviceUrl: https://ucilnica.gimvic.org/webservice/pluginfile.php
     pluginFileNormalUrl: https://ucilnica.gimvic.org/pluginfile.php
     course: 118
-  menu:
-    url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
 
 urls:
   website: https://urnik.gimvic.org

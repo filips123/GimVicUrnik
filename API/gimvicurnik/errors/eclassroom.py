@@ -23,3 +23,7 @@ class SubstitutionsFormatError(ClassroomError):
 
 class LunchScheduleFormatError(ClassroomError):
     pass
+
+
+class MenuFormatError(ClassroomError):
+    pass
