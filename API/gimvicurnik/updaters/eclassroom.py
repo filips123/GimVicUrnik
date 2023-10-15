@@ -675,6 +675,10 @@ class EClassroomUpdater(BaseMultiUpdater):
         """Insert the lunch schedule json document."""
 
         for schedule in load(stream):
+            # Get the class id from class name (it will always exist)
+            schedule["class_id"] = self.session.query(Class).filter(Class.name == schedule.class_).first().id  # type: ignore
+            del schedule["class_"]
+
             self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
             self.session.execute(insert(LunchSchedule), schedule)
 
@@ -682,10 +686,6 @@ class EClassroomUpdater(BaseMultiUpdater):
         """Insert the snack menu json document."""
 
         for menu in load(stream):
-            # Get the class id from class name (it will always exist)
-            menu["class_id"] = self.session.query(Class).filter(Class.name == menu.class_).first().id  # type: ignore
-            del menu["class_"]
-
             self.session.query(SnackMenu).filter(SnackMenu.date == effective).delete()
             self.session.execute(insert(SnackMenu), menu)
 
