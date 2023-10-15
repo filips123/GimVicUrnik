@@ -11,23 +11,33 @@ from urllib.parse import urlparse
 
 from mammoth import convert_to_html  # type: ignore
 from sqlalchemy import insert
-from openpyxl import load_workbook
+from json import load
 
 from .base import BaseMultiUpdater, DocumentInfo
-from ..database import Class, Classroom, DocumentType, LunchSchedule, Substitution, Teacher
+from ..database import (
+    Class,
+    Classroom,
+    DocumentType,
+    Substitution,
+    Teacher,
+    LunchSchedule,
+    LunchMenu,
+    SnackMenu,
+)
 from ..errors import (
     ClassroomApiError,
     InvalidRecordError,
     InvalidTokenError,
     SubstitutionsFormatError,
     LunchScheduleFormatError,
+    MenuFormatError,
 )
 from ..utils.database import get_or_create
 from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Type
     from collections.abc import Iterator
     from io import BytesIO
     from mammoth.documents import Image  # type: ignore
@@ -193,8 +203,12 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         if "www.dropbox.com" in url:
             return DocumentType.SUBSTITUTIONS
-        elif "delitev-kosila" in url:
+        elif "razpored-kosila-" in url:
             return DocumentType.LUNCH_SCHEDULE
+        elif "malica-" in url:
+            return DocumentType.SNACK_MENU
+        elif "kosilo-" in url:
+            return DocumentType.LUNCH_MENU
         elif "okroznica" in url.lower() or "okrožnica" in url.lower():
             return DocumentType.CIRCULAR
         else:
@@ -226,11 +240,15 @@ class EClassroomUpdater(BaseMultiUpdater):
     def get_document_title(self, document: DocumentInfo) -> str:
         """Return the normalized document title."""
 
-        if document.type == DocumentType.SUBSTITUTIONS:
-            return "Nadomeščanja in obvestila"
-
-        if document.type == DocumentType.LUNCH_SCHEDULE:
-            return "Razpored kosila"
+        match document.type:
+            case DocumentType.SUBSTITUTIONS:
+                return "Nadomeščanja in obvestila"
+            case DocumentType.LUNCH_SCHEDULE:
+                return "Razpored kosila"
+            case DocumentType.SNACK_MENU:
+                return "Malica"
+            case DocumentType.LUNCH_MENU:
+                return "Kosilo"
 
         assert document.title
         return document.title
@@ -239,14 +257,13 @@ class EClassroomUpdater(BaseMultiUpdater):
     def get_document_effective(self, document: DocumentInfo) -> date:
         """Return the document effective date in a local timezone."""
 
-        if document.type == DocumentType.SUBSTITUTIONS:
-            effective = re.search(r"_obvestila_(.+).pdf", document.url, re.IGNORECASE).group(1)
-            return datetime.strptime(effective, "%d._%m._%Y").date()
-
-        if document.type == DocumentType.LUNCH_SCHEDULE:
-            title = document.title.split(",")[-1].split("-")[-1].strip()
-            search = re.search(r"(\d+) *\. *(\d+) *\. *(\d+)", title)
-            return date(year=int(search.group(3)), month=int(search.group(2)), day=int(search.group(1)))
+        match document.type:
+            case DocumentType.SUBSTITUTIONS:
+                effective = re.search(r"_obvestila_(.+).pdf", document.url, re.IGNORECASE).group(1)
+                return datetime.strptime(effective, "%d._%m._%Y").date()
+            case DocumentType.LUNCH_SCHEDULE | DocumentType.SNACK_MENU | DocumentType.LUNCH_MENU:
+                search = re.search(r"(\d+)-(\d+)-(\d+)", document.url)
+                return date(year=int(search.group(1)), month=int(search.group(2)), day=int(search.group(3)))
 
         # This cannot happen because only substitutions and schedules are provided
         raise KeyError("Unknown parsable document type from the e-classroom")
@@ -254,8 +271,9 @@ class EClassroomUpdater(BaseMultiUpdater):
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
         """Return whether the document needs parsing."""
 
-        if document.type == DocumentType.SUBSTITUTIONS or document.type == DocumentType.LUNCH_SCHEDULE:
-            return True
+        match document.type:
+            case DocumentType.SUBSTITUTIONS | DocumentType.LUNCH_SCHEDULE | DocumentType.SNACK_MENU | DocumentType.LUNCH_MENU:
+                return True
 
         return False
 
@@ -271,11 +289,13 @@ class EClassroomUpdater(BaseMultiUpdater):
             case (DocumentType.SUBSTITUTIONS, "pdf"):
                 self._parse_substitutions_pdf(stream, effective)
             case (DocumentType.LUNCH_SCHEDULE, "pdf"):
-                self._parse_lunch_schedule_pdf(stream, effective)
-            case (DocumentType.SUBSTITUTIONS, "xlsx"):
-                self._parse_substitutions_xlsx(stream, effective)
-            case (DocumentType.LUNCH_SCHEDULE, "xlsx"):
-                self._parse_lunch_schedule_xlsx(stream, effective)
+                return
+            case (DocumentType.LUNCH_SCHEDULE, "json"):
+                self._insert_json_document(stream, effective, LunchSchedule)
+            case (DocumentType.SNACK_MENU, "json"):
+                self._insert_json_document(stream, effective, SnackMenu)
+            case (DocumentType.LUNCH_MENU, "json"):
+                self._insert_json_document(stream, effective, LunchMenu)
             case (DocumentType.SUBSTITUTIONS, _):
                 raise SubstitutionsFormatError(
                     "Unknown substitutions document format: " + str(document.extension)
@@ -284,8 +304,11 @@ class EClassroomUpdater(BaseMultiUpdater):
                 raise LunchScheduleFormatError(
                     "Unknown lunch schedule document format: " + str(document.extension)
                 )
+            case (DocumentType.SNACK_MENU, _):
+                raise MenuFormatError("Unknown snack menu document format: " + str(document.extension))
+            case (DocumentType.LUNCH_MENU, _):
+                raise MenuFormatError("Unknown lunch menu document format: " + str(document.extension))
             case _:
-                # This cannot happen because only menus are provided by the API
                 raise KeyError("Unknown parsable document type from the e-classroom")
 
     def document_needs_extraction(self, document: DocumentInfo) -> bool:
@@ -647,148 +670,10 @@ class EClassroomUpdater(BaseMultiUpdater):
         if substitutions:
             self.session.execute(insert(Substitution), substitutions)
 
-    def _parse_substitutions_xlsx(self, stream: BytesIO, effective: date) -> None:
-        """Parse the substitutions xlsx document."""
-        # Currently not useful.
-        pass
-
-    def _parse_lunch_schedule_pdf(self, stream: BytesIO, effective: date) -> None:
-        """Parse the lunch schedule pdf document."""
-
-        schedule = []
-
-        # Extract all tables from a PDF stream
-        tables = with_span(op="extract")(extract_tables)(stream)
-
-        for table in tables:
-            # Skip instructions
-            if not table[0][0] or "Dijaki prihajate v jedilnico" in table[0][0]:
-                continue
-
-            for index, row in enumerate(table):
-                # Handle incorrectly connected cells
-                if row[0] and "\n" in row[0] and len(row) == 4:
-                    time, notes = row[0].split("\n", 1)
-                    row[0] = time
-                    row.insert(1, notes)
-
-                # Handle incorrectly connected cells
-                if row[0] and " " in row[0] and len(row) == 4:
-                    time, notes = row[0].split(" ", 1)
-                    row[0] = time
-                    row.insert(1, notes)
-
-                # Skip the header
-                if row[0] and "ura" in row[0]:
-                    continue
-
-                # Skip empty rows
-                if len(row) != 5 or not row[0]:
-                    continue
-
-                # Skip invalid time formats
-                if "odj." in row[0]:
-                    continue
-
-                # Handle multiple times in the same cell
-                times = row[0].split("\n", 1)
-                if len(times) == 2:
-                    row[0] = times[0]
-                    table[index + 1][0] = times[1]
-
-                # Handle incorrectly connected cells
-                if row[1] is None and len(row[0].split(" ", 1)) == 2:
-                    row[0], row[1] = row[0].split(" ", 1)
-
-                # Parse time format
-                time = re.sub("cca|do", "", row[0]).replace(".", ":").strip()
-                time = datetime.strptime(time, "%H:%M").time()  # type: ignore[assignment]
-
-                # Get notes, classes and location if they are specified
-                notes = row[1].strip() if row[1] else None  # type: ignore[assignment]
-                classes = re.sub("[().]", "", row[2]).split(",") if row[2] else []
-                location = row[4].strip() if row[4] else None
-
-                # Handle special format for multiple classes
-                if len(classes) == 1 and isinstance(classes[0], str):
-                    if search := re.search(r"(\d)\.? ?[lL]?(?:\.|$)", classes[0]):
-                        class_letters = ["A", "B", "C", "D", "E", "F"]
-                        classes = [search.group(1) + class_ for class_ in class_letters]
-
-                for class_ in classes:
-                    if not class_.strip():
-                        continue
-
-                    class_id = get_or_create(self.session, model=Class, name=class_.strip())[0].id
-
-                    schedule.append(
-                        {
-                            "class_id": class_id,
-                            "date": effective,
-                            "time": time,
-                            "location": location,
-                            "notes": notes,
-                        }
-                    )
-
-        # Store schedule to a database
-        self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
-        self.session.execute(insert(LunchSchedule), schedule)
-
-    def _parse_lunch_schedule_xlsx(self, stream: BytesIO, effective: date) -> None:
-        """
-        Parse the lunch schedule xlsx document.
-
-        Columns should be:
-        - Time (Ura)
-        - Notes (Opombe/Prilagoditev)
-        - Class (Razred)
-        * number of students (stevilo dijakov) [ignored]
-        - Location (Prostor)
-        """
-
-        # Extract workbook from an XLSX stream
-        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
-
-        lunch_schedule = []
-
-        # Parse lunch schedule
-        for ws in wb:
-            for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[0].value:
-                    break
-
-                # Check for correct cell value type
-                if typing.TYPE_CHECKING:
-                    assert isinstance(wr[0].value, datetime)
-                    assert isinstance(wr[1].value, str)
-                    assert isinstance(wr[2].value, str)
-                    assert isinstance(wr[4].value, str)
-
-                if "prilagoditev" in wr[1].value:
-                    continue
-
-                schedule: dict[str, Any] = {}
-
-                # Time in format H:M
-                schedule["time"] = wr[0].value
-
-                schedule["notes"] = wr[1].value.strip() if wr[1].value else None
-
-                if wr[2].value:
-                    # fmt: off
-                    schedule["class_id"] = get_or_create(
-                        self.session, model=Class, name=wr[2].value.strip()
-                    )[0].id
-                    # fmt: on
-
-                schedule["location"] = wr[4].value.strip() if wr[4].value else None
-
-                schedule["date"] = effective
-                lunch_schedule.append(schedule)
-
-        wb.close()
-
-        # Store schedule to a database
-        self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
-        self.session.execute(insert(LunchSchedule), lunch_schedule)
+    def _insert_json_document(
+        self, stream: BytesIO, effective: date, model: Type[LunchSchedule | SnackMenu | LunchMenu]
+    ) -> None:
+        """Insert the lunch schedules / snack menus / lunch menus json document."""
+        for item in load(stream):
+            self.session.query(model).filter(model.date == effective).delete()  # type: ignore
+            self.session.execute(insert(model), item)
