@@ -37,6 +37,7 @@ class ConfigSourcesEClassroom:
     pluginFileNormalUrl: str
     course: int
 
+
 @define(kw_only=True)
 class ConfigSources:
     timetable: ConfigSourcesTimetable
