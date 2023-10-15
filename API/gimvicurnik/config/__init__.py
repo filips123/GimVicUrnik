@@ -37,17 +37,10 @@ class ConfigSourcesEClassroom:
     pluginFileNormalUrl: str
     course: int
 
-
-@define(kw_only=True)
-class ConfigSourcesMenu:
-    url: str
-
-
 @define(kw_only=True)
 class ConfigSources:
     timetable: ConfigSourcesTimetable
     eclassroom: ConfigSourcesEClassroom
-    menu: ConfigSourcesMenu
 
 
 # --------- URLS CONFIG ---------

@@ -21,8 +21,9 @@ from ..database import (
     Substitution,
     Teacher,
     LunchSchedule,
-    LunchMenu,
     SnackMenu,
+    Class,
+    LunchMenu,
 )
 from ..errors import (
     ClassroomApiError,
@@ -37,7 +38,7 @@ from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Type
+    from typing import Any
     from collections.abc import Iterator
     from io import BytesIO
     from mammoth.documents import Image  # type: ignore
@@ -291,11 +292,11 @@ class EClassroomUpdater(BaseMultiUpdater):
             case (DocumentType.LUNCH_SCHEDULE, "pdf"):
                 return
             case (DocumentType.LUNCH_SCHEDULE, "json"):
-                self._insert_json_document(stream, effective, LunchSchedule)
+                self._insert_lunch_schedule_json(stream, effective)
             case (DocumentType.SNACK_MENU, "json"):
-                self._insert_json_document(stream, effective, SnackMenu)
+                self._insert_snack_menu_json(stream, effective)
             case (DocumentType.LUNCH_MENU, "json"):
-                self._insert_json_document(stream, effective, LunchMenu)
+                self._insert_lunch_menu_json(stream, effective)
             case (DocumentType.SUBSTITUTIONS, _):
                 raise SubstitutionsFormatError(
                     "Unknown substitutions document format: " + str(document.extension)
@@ -670,10 +671,27 @@ class EClassroomUpdater(BaseMultiUpdater):
         if substitutions:
             self.session.execute(insert(Substitution), substitutions)
 
-    def _insert_json_document(
-        self, stream: BytesIO, effective: date, model: Type[LunchSchedule | SnackMenu | LunchMenu]
-    ) -> None:
-        """Insert the lunch schedules / snack menus / lunch menus json document."""
-        for item in load(stream):
-            self.session.query(model).filter(model.date == effective).delete()  # type: ignore
-            self.session.execute(insert(model), item)
+    def _insert_lunch_schedule_json(self, stream: BytesIO, effective: date) -> None:
+        """Insert the lunch schedule json document."""
+
+        for schedule in load(stream):
+            self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
+            self.session.execute(insert(LunchSchedule), schedule)
+
+    def _insert_snack_menu_json(self, stream: BytesIO, effective: date) -> None:
+        """Insert the snack menu json document."""
+
+        for menu in load(stream):
+            # Get the class id from class name (it will always exist)
+            menu["class_id"] = self.session.query(Class).filter(Class.name == menu.class_).first().id  # type: ignore
+            del menu["class_"]
+
+            self.session.query(SnackMenu).filter(SnackMenu.date == effective).delete()
+            self.session.execute(insert(SnackMenu), menu)
+
+    def _insert_lunch_menu_json(self, stream: BytesIO, effective: date) -> None:
+        """Insert the lunch menu json document."""
+
+        for menu in load(stream):
+            self.session.query(LunchMenu).filter(LunchMenu.date == effective).delete()
+            self.session.execute(insert(LunchMenu), menu)
