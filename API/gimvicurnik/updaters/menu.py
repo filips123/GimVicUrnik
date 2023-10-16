@@ -219,7 +219,7 @@ class MenuUpdater(BaseMultiUpdater):
                     snack_menu["fruitvegetable"].append(wr[4].value.strip())
 
                 # Store the menu after the end of day
-                if wr[1].border.bottom.color:
+                if wr[1].value.strip() == "med odmori -  sadje na hodnikih":
                     snack_menu["date"] = effective + datetime.timedelta(days=days)
                     self.session.query(SnackMenu).filter(SnackMenu.date == snack_menu["date"]).delete()
 
@@ -312,7 +312,7 @@ class MenuUpdater(BaseMultiUpdater):
                     lunch_menu["vegetarian"].append(wr[2].value.strip())
 
                 # Store the menu after the end of day
-                if wr[1].border.bottom.color:
+                if wr[1].value.strip() == "voda ali sok":
                     lunch_menu["date"] = effective + datetime.timedelta(days=days)
                     self.session.query(LunchMenu).filter(LunchMenu.date == lunch_menu["date"]).delete()
 
