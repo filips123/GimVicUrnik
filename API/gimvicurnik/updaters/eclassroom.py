@@ -755,7 +755,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         # Parse lunch schedule
         for ws in wb:
             for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[0].value:
+                if not wr[2].value:
                     break
 
                 # Check for correct cell value type
@@ -765,7 +765,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[4].value, str)
 
-                if "prilagoditev" in wr[1].value:
+                if "raz" in wr[2].value:
                     continue
 
                 schedule: dict[str, Any] = {}
