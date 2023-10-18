@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import datetime
 import typing
+import os
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from io import BytesIO
+from urllib.parse import urlparse
 
 import attrs
 import requests
 
-from ..database import Document
+from ..database import Document, LunchSchedule, SnackMenu, LunchMenu
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
@@ -202,6 +204,18 @@ class BaseMultiUpdater(ABC):
 
         # Skip parsing if the document is unchanged
         if not changed:
+            # Remove lunch schedules, snack menus and lunch menus older than 1 week from the database
+            # fmt: off
+            if record.effective and record.effective < datetime.datetime.now().date() - datetime.timedelta(weeks=1):
+                match document.type.value:
+                    case "lunch-schedule":
+                        self.session.query(LunchSchedule).filter(LunchSchedule.date == record.effective).delete()
+                    case "snack-menu":
+                        self.session.query(SnackMenu).filter(SnackMenu.date == record.effective).delete()
+                    case "lunch-menu":
+                        self.session.query(LunchMenu).filter(LunchMenu.date == record.effective).delete()
+            # fmt: on
+
             # Changed can only be false if there is an existing record
             if typing.TYPE_CHECKING:
                 assert record
