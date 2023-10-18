@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import datetime
 import typing
-import os
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from io import BytesIO
-from urllib.parse import urlparse
 
 import attrs
 import requests
