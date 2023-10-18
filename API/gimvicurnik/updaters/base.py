@@ -204,6 +204,10 @@ class BaseMultiUpdater(ABC):
 
         # Skip parsing if the document is unchanged
         if not changed:
+            # Changed can only be false if there is an existing record
+            if typing.TYPE_CHECKING:
+                assert record
+
             # Remove lunch schedules, snack menus and lunch menus older than 1 week from the database
             # fmt: off
             if record.effective and record.effective < datetime.datetime.now().date() - datetime.timedelta(weeks=1):
@@ -215,10 +219,6 @@ class BaseMultiUpdater(ABC):
                     case "lunch-menu":
                         self.session.query(LunchMenu).filter(LunchMenu.date == record.effective).delete()
             # fmt: on
-
-            # Changed can only be false if there is an existing record
-            if typing.TYPE_CHECKING:
-                assert record
 
             if record.effective:
                 self.logger.info(
