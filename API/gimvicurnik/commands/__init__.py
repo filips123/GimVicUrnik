@@ -4,7 +4,10 @@ import typing
 import click
 from flask import current_app
 
-from ..database import Base, SessionFactory
+from datetime import datetime, timedelta
+from sqlalchemy import and_, or_
+
+from ..database import Base, SessionFactory, Document, DocumentType
 from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater
 from ..utils.sentry import with_transaction
 
@@ -49,6 +52,26 @@ def update_menu_command() -> None:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
         updater = MenuUpdater(gimvicurnik.config.sources.menu, session)
         updater.update()
+
+
+@click.command("cleanup-database", help="Clean up the database.")
+@with_transaction(name="cleanup-database", op="command")
+def cleanup_database_command() -> None:
+    """Remove lunch schedules, snack menus and lunch menus older than 2 weeks from the database."""
+
+    logging.getLogger(__name__).info("Cleaning up the database")
+
+    with SessionFactory.begin() as session:
+        session.query(Document).filter(
+            and_(
+                or_(
+                    Document.type == DocumentType.LUNCH_SCHEDULE,
+                    Document.type == DocumentType.SNACK_MENU,
+                    Document.type == DocumentType.LUNCH_MENU,
+                ),
+                Document.effective < datetime.now().date() - timedelta(weeks=2),
+            )
+        ).delete()
 
 
 @click.command("create-database", help="Create the database.")
