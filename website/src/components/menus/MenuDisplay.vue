@@ -26,9 +26,15 @@
       class="grey--text pb-2">
       <h2 class="font-weight-regular pb-2">Razpored kosila</h2>
       <p v-for="currentLunchSchedule in currentLunchSchedules" :key="currentLunchSchedule.time">
-        Ura: {{ currentLunchSchedule.time }}<br />
-        Prostor: {{ currentLunchSchedule.location }}<br />
-        Opombe: {{ currentLunchSchedule.notes }}<br />
+        <span v-if="currentLunchSchedule.time">
+          Ura: {{ currentLunchSchedule.time }}<br />
+        </span>
+        <span v-if="currentLunchSchedule.location">
+          Prostor: {{ currentLunchSchedule.location }}<br />
+        </span>
+        <span v-if="currentLunchSchedule.notes">
+          Opombe: {{ currentLunchSchedule.notes }}<br />
+        </span>
       </p>
     </v-card-text>
   </v-card>
