@@ -739,11 +739,11 @@ class EClassroomUpdater(BaseMultiUpdater):
         """
         Parse the lunch schedule xlsx document.
 
-        Columns should be:
+        Columns:
         - Time (Ura)
         - Notes (Opombe/Prilagoditev)
         - Class (Razred)
-        * number of students (stevilo dijakov) [ignored]
+        - Number of students (Stevilo dijakov)
         - Location (Prostor)
         """
 
@@ -754,8 +754,11 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Parse lunch schedule
         for ws in wb:
+            if ws.title != "kosilo":
+                continue
+
             for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[2].value:
+                if not wr[3].value:
                     break
 
                 # Check for correct cell value type
@@ -763,15 +766,17 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[0].value, datetime)
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
+                    assert isinstance(wr[3].value, int)
                     assert isinstance(wr[4].value, str)
 
-                if "raz" in wr[2].value:
+                # Ignore rows that do not contain a class name
+                if not wr[2].value or "raz" in wr[2].value:
                     continue
 
                 schedule: dict[str, Any] = {}
 
                 # Time in format H:M
-                schedule["time"] = wr[0].value
+                schedule["time"] = wr[0].value if wr[0].value else None
 
                 schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
