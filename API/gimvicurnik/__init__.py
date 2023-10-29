@@ -24,6 +24,7 @@ from .commands import (
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
+    cleanup_database_command,
     update_timetable_command,
 )
 from .config import Config
@@ -245,6 +246,7 @@ class GimVicUrnik:
         self.app.cli.add_command(update_timetable_command)
         self.app.cli.add_command(update_eclassroom_command)
         self.app.cli.add_command(update_menu_command)
+        self.app.cli.add_command(cleanup_database_command)
         self.app.cli.add_command(create_database_command)
 
     def register_routes(self) -> None:
