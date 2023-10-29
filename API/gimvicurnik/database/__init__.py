@@ -259,7 +259,7 @@ class LunchSchedule(Base):
 
     id: Mapped[intpk]
     date: Mapped[date_] = mapped_column(index=True)
-    time: Mapped[time_]
+    time: Mapped[time_ | None]
 
     class_id: Mapped[class_fk] = mapped_column(index=True)
     class_: Mapped[Class] = relationship()
