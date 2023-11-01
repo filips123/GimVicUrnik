@@ -41,7 +41,8 @@ const router = createRouter({
       path: '/menus',
       name: 'menus',
       meta: { title: 'Jedilnik' },
-      component: Menus
+      component: Menus,
+      props: { mobile: true }
     },
     {
       path: '/circulars',

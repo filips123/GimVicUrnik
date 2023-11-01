@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores/user'
 
 const { weekdays } = defineProps<{ weekdays: string[] }>()
 
-const { day } = useUserStore()
+const { day } = storeToRefs(useUserStore())
 </script>
 
 <template>

@@ -6,8 +6,13 @@ import NavigationDesktop from '@/components/NavigationDesktop.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
 
+import { updateAllData } from './composables/update'
+
 // TODO: Check for tablet
 const { mobile } = useDisplay()
+
+// Not fast enough / need to check again?
+updateAllData()
 
 const pages: { title: string; link: string; icon: string }[] = [
   { title: 'Viri', link: 'sources', icon: 'mdi-file-document-outline' },
@@ -166,7 +171,7 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
       <!--<span id="ptr--target"></span>-->
 
       <v-container fluid>
-        <router-view />
+        <router-view :mobile="mobile" />
       </v-container>
     </v-main>
 
@@ -190,6 +195,7 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
 /* IGNORE FOR NOW */
 
 /* Hide scrollbar that Vuetify adds by default */
+
 html {
   overflow-y: auto !important;
 }
