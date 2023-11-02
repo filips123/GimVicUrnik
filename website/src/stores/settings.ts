@@ -26,16 +26,18 @@ export const useSettingsStore = defineStore('settings', {
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 
-      class: "1A",
-      teacher: "Smrdu",
-      classroom: "45",
+      class: '1A',
+      teacher: 'Smrdu',
+      classroom: '45',
 
       showSubstitutions: true,
       showLinksInTimetable: true,
       showHoursInTimetable: true,
       enableShowingDetails: true,
       enablePullToRefresh: true,
-      enableUpdateOnLoad: true
+      enableUpdateOnLoad: true,
+
+      moodleToken: ''
     }
   }
 })

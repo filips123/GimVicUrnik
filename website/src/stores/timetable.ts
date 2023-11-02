@@ -6,12 +6,12 @@ export const useTimetableStore = defineStore('timetable', {
     return {
       classList: [] as String[],
       teachersList: [] as String[],
-      classroomsList: [] as String[],
+      classroomsList: [] as String[]
     }
   },
 
   actions: {
-    async updateLists () {
+    async updateLists() {
       try {
         const responses = await Promise.all([
           fetchHandle(import.meta.env.VITE_API + '/list/classes'),
@@ -19,7 +19,9 @@ export const useTimetableStore = defineStore('timetable', {
           fetchHandle(import.meta.env.VITE_API + '/list/classrooms')
         ])
 
-        const [classList, teachersList, classroomsList] = await Promise.all(responses.map(response => response.json()))
+        const [classList, teachersList, classroomsList] = await Promise.all(
+          responses.map((response) => response.json())
+        )
         this.classList = classList
         this.teachersList = teachersList
         this.classroomsList = classroomsList

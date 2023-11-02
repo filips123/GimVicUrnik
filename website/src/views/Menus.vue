@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
 
 import MenuDisplay from '@/components/MenuDisplay.vue'
 
 import { useMenuStore } from '@/stores/menu'
 import { useUserStore } from '@/stores/user'
 
-defineProps<{ mobile: boolean }>()
+// TODO: Check for tablet
+const { mobile } = useDisplay()
 
 document.title = import.meta.env.VITE_TITLE + '- Jedilnik'
 

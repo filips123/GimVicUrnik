@@ -160,7 +160,7 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
         large
       />
 
-      <template v-if="mobile" v-slot:extension>
+      <template v-if="mobile && $router.currentRoute.value.name != 'circulars'" v-slot:extension>
         <navigation-day :weekdays="weekdays" />
       </template>
     </v-app-bar>
@@ -171,7 +171,7 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
       <!--<span id="ptr--target"></span>-->
 
       <v-container fluid>
-        <router-view :mobile="mobile" />
+        <router-view />
       </v-container>
     </v-main>
 

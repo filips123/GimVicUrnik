@@ -1,5 +1,6 @@
 import { useMenuStore } from '@/stores/menu'
 import { useTimetableStore } from '@/stores/timetable'
+import { useDocumentsStore } from '@/stores/documents'
 
 class HTTPError extends Error {
   status: number
@@ -25,11 +26,13 @@ export async function fetchHandle(input: RequestInfo, init?: RequestInit): Promi
 export async function updateAllData(): Promise<void> {
   const menuStore = useMenuStore()
   const timetableStore = useTimetableStore()
+  const documentsStore = useDocumentsStore()
 
   await Promise.all([
     menuStore.updateLunchSchedules(),
     menuStore.updateMenus(),
-    timetableStore.updateLists()
+    timetableStore.updateLists(),
+    documentsStore.updateDocuments()
   ])
 
   // displaySnackbar('Podatki posodobljeni')
