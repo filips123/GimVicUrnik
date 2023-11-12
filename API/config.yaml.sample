@@ -77,3 +77,6 @@ lessonTimes:
   - name: "9. ura"
     start: "1505"
     end: "1550"
+  - name: "10. ura"
+    start: "1555"
+    end: "1640"
