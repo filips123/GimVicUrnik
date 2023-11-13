@@ -201,15 +201,19 @@ def create_schedule_calendar(
             span.set_tag("event.time", model.time)
             span.set_data("event.source", model)
 
+            # Skip schedules without time
+            if not model.time:
+                logger.debug(
+                    "Skipping iCalendar event",
+                    extra={"type": "lunch-schedule", "source": model},
+                )
+
+                continue
+
             logger.debug(
                 "Preparing iCalendar event",
                 extra={"type": "lunch-schedule", "source": model},
             )
-
-            # Assert date and time exist, so mypy does not complain
-            if typing.TYPE_CHECKING:
-                assert model.date
-                assert model.time
 
             # Create event and add internal properties
             event = Event()
