@@ -23,7 +23,7 @@ class ScheduleHandler(BaseHandler):
                 {
                     "class": model[1],
                     "date": model[0].date.strftime("%Y-%m-%d"),
-                    "time": model[0].time.strftime("%H:%M"),
+                    "time": model[0].time.strftime("%H:%M") if model[0].time else None,
                     "location": model[0].location,
                     "notes": model[0].notes,
                 }
@@ -41,7 +41,7 @@ class ScheduleHandler(BaseHandler):
                 {
                     "class": model[1],
                     "date": model[0].date.strftime("%Y-%m-%d"),
-                    "time": model[0].time.strftime("%H:%M"),
+                    "time": model[0].time.strftime("%H:%M") if model[0].time else None,
                     "location": model[0].location,
                     "notes": model[0].notes,
                 }
