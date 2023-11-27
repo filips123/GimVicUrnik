@@ -51,7 +51,7 @@ export const useMenuStore = defineStore('menu', {
       // Dates are fixed during development phase
       try {
         this.menus = await Promise.all(
-          getWeekdays(new Date('2023-11-06')).map(async (date): Promise<Menu> => {
+          getWeekdays(new Date('2023-11-27')).map(async (date): Promise<Menu> => {
             const response = await fetchHandle(
               import.meta.env.VITE_API + '/menus/date/' + date.toISOString().split('T')[0]
             )
@@ -72,7 +72,7 @@ export const useMenuStore = defineStore('menu', {
     async updateLunchSchedules() {
       try {
         this.lunchSchedules = await Promise.all(
-          getWeekdays(new Date('2023-09-15')).map(async (date): Promise<LunchSchedule[]> => {
+          getWeekdays(new Date('2023-11-27')).map(async (date): Promise<LunchSchedule[]> => {
             const response = await fetchHandle(
               import.meta.env.VITE_API + '/schedule/date/' + date.toISOString().split('T')[0]
             )

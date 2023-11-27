@@ -1,18 +1,29 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { ref, reactive, computed } from 'vue'
+
+import { RouterView, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import NavigationDesktop from '@/components/NavigationDesktop.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
 
-import { updateAllData } from './composables/update'
+import { updateAllData } from '@/composables/update'
+import { weekdays } from '@/composables/days'
+
+import { useUserStore } from '@/stores/user'
+
+const router = useRouter()
+const routerTitle = computed(() => router.currentRoute.value.meta.title)
+const routerName = computed(() => router.currentRoute.value.name)
 
 // TODO: Check for tablet
 const { mobile } = useDisplay()
 
 // Not fast enough / need to check again?
 updateAllData()
+
+const userStore = useUserStore()
 
 const pages: { title: string; link: string; icon: string }[] = [
   { title: 'Viri', link: 'sources', icon: 'mdi-file-document-outline' },
@@ -26,8 +37,6 @@ const navigation: { title: string; link: string; icon: string }[] = [
   { title: 'Jedilnik', link: 'menus', icon: 'mdi-food' },
   { title: 'Okrožnice', link: 'circulars', icon: 'mdi-newspaper' }
 ]
-
-const weekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek']
 
 /* IGNORE FOR NOW */
 
@@ -149,7 +158,15 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
 <template>
   <v-app>
     <v-app-bar app clipped-left color="#009300" dark extension-height="35">
-      <v-app-bar-title>{{ $router.currentRoute.value.meta.title }}</v-app-bar-title>
+      <v-app-bar-title>
+        {{ routerTitle }}
+        <template v-if="routerTitle === 'Urnik'">
+          <br />
+          <div style="color: hsla(0, 0%, 100%, 0.7); font-size: 0.775rem">
+            {{ userStore.getCurrentEntities.join(', ') }}
+          </div>
+        </template>
+      </v-app-bar-title>
 
       <v-btn
         v-for="page in pages"
@@ -160,7 +177,10 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
         large
       />
 
-      <template v-if="mobile && $router.currentRoute.value.name != 'circulars'" v-slot:extension>
+      <template
+        v-if="mobile && ['timetable', 'menus'].includes(String(routerName))"
+        v-slot:extension
+      >
         <navigation-day :weekdays="weekdays" />
       </template>
     </v-app-bar>

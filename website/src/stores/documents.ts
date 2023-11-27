@@ -23,7 +23,6 @@ export const useDocumentsStore = defineStore('documents', {
       try {
         const response = await fetchHandle(import.meta.env.VITE_API + '/documents')
         this.documents = await response.json()
-        console.log(this.documents?.filter(document => document.type === 'substitutions').reverse())
       } catch (error) {
         console.error(error)
       }

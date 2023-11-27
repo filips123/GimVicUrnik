@@ -22,17 +22,18 @@ export enum LunchType {
 export const useSettingsStore = defineStore('settings', {
   state: () => {
     return {
-      entityType: EntityType.Class,
+      entityType: EntityType.Teacher,
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 
-      class: '1A',
-      teacher: 'Smrdu',
-      classroom: '45',
+      classes: ['1F', '3INF'],
+      teachers: ['Klobučar'],
+      classrooms: ['45'],
 
       showSubstitutions: true,
       showLinksInTimetable: true,
       showHoursInTimetable: true,
+      showCurrentTime: true,
       enableShowingDetails: true,
       enablePullToRefresh: true,
       enableUpdateOnLoad: true,

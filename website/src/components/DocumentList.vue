@@ -81,7 +81,8 @@ function displayDate(document: Document): string {
 }
 
 /* Fix padding of title and subtitle*/
-.v-list-item__title, .v-list-item__subtitle {
+.v-list-item__title,
+.v-list-item__subtitle {
   padding-left: 4px !important;
 }
 </style>

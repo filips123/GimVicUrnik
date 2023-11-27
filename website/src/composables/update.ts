@@ -1,6 +1,7 @@
 import { useMenuStore } from '@/stores/menu'
 import { useTimetableStore } from '@/stores/timetable'
 import { useDocumentsStore } from '@/stores/documents'
+import { useUserStore } from '@/stores/user'
 
 class HTTPError extends Error {
   status: number
@@ -24,14 +25,20 @@ export async function fetchHandle(input: RequestInfo, init?: RequestInit): Promi
 }
 
 export async function updateAllData(): Promise<void> {
+  const useStore = useUserStore()
   const menuStore = useMenuStore()
   const timetableStore = useTimetableStore()
   const documentsStore = useDocumentsStore()
 
   await Promise.all([
+    useStore.resetData(),
     menuStore.updateLunchSchedules(),
     menuStore.updateMenus(),
     timetableStore.updateLists(),
+    timetableStore.updateTimetable(),
+    timetableStore.updateSubstitutions(),
+    timetableStore.updateEmptyClassrooms(),
+    timetableStore.updateEmptyClassrooms(),
     documentsStore.updateDocuments()
   ])
 
