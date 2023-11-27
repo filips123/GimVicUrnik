@@ -36,11 +36,9 @@ const maxLessonTime = computed(() => {
   const lessons = !mobile.value
     ? timetableStore.lessons
     : timetableStore.lessons.filter((lesson) => lesson.day == day.value + 1)
-  return (
-    lessons.reduce(
-      (maxTime, lesson) => (lesson?.time > maxTime ? lesson?.time : maxTime),
-      lessons[0]?.time
-    )
+  return lessons.reduce(
+    (maxTime, lesson) => (lesson?.time > maxTime ? lesson?.time : maxTime),
+    lessons[0]?.time
   )
 })
 
@@ -48,11 +46,9 @@ const minLessonTime = computed(() => {
   const lessons = !mobile.value
     ? timetableStore.lessons
     : timetableStore.lessons.filter((lesson) => lesson.day == day.value + 1)
-  return (
-    lessons.reduce(
-      (minTime, lesson) => (lesson.time < minTime ? lesson.time : minTime),
-      lessons[0]?.time
-    )
+  return lessons.reduce(
+    (minTime, lesson) => (lesson.time < minTime ? lesson.time : minTime),
+    lessons[0]?.time
   )
 })
 

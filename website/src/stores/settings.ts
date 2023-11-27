@@ -22,7 +22,7 @@ export enum LunchType {
 export const useSettingsStore = defineStore('settings', {
   state: () => {
     return {
-      entityType: EntityType.Teacher,
+      entityType: EntityType.Class,
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 

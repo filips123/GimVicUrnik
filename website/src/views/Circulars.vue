@@ -1,54 +1,70 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+
+import type { Document } from '@/stores/documents'
+
 import { useDocumentsStore } from '@/stores/documents'
 import { tokenizeUrl, formatDate } from '@/composables/documents'
 
 document.title = import.meta.env.VITE_TITLE + '- Okrožnice'
 
 const documentsStore = useDocumentsStore()
-
 documentsStore.updateDocuments()
 
-const circulars =
+const DocumentDialog = ref(false)
+
+const circulars = computed (() => 
   documentsStore.documents
     ?.filter((document) => document.type === 'circular' || document.type === 'other')
     .reverse() || []
+)
 
-const documentDialogs = {}
-// :href="tokenizeUrl(circular.url)"
+let circularDialog: Document = {} as Document
+
+function handleDialog(circular: Document, event: Event) {
+  if ((event?.target as HTMLInputElement)?.classList.contains('mdi-open-in-new')) {
+    return
+  }
+
+  circularDialog = circular
+  DocumentDialog.value = true
+}
+
 </script>
 
 <template>
-  <v-card class="circulars">
-    <v-list>
-      <v-item-group>
-        <v-list-item v-for="circular in circulars" class="mb-4">
-          <v-list-item-title>{{ circular.title }}</v-list-item-title>
-          <v-list-item-subtitle>{{ formatDate(new Date(circular.created)) }}</v-list-item-subtitle>
-          <!--<v-lazy v-if="circular.content">-->
-          <v-dialog width="500">
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" icon="mdi-text-box-outline" flat></v-btn>
-            </template>
-            <template v-slot:default="{ isActive }">
-              <v-card>
-                <v-card-title>
-                  <span class="text-h5 word-wrap">{{ circular.title }}</span>
-                </v-card-title>
-                <v-card-text>
-                  <div class="con" v-html="circular.content"></div>
-                </v-card-text>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="green" @click="isActive.value = false">Zapri</v-btn>
-                </v-card-actions>
-              </v-card>
-            </template>
-          </v-dialog>
-          <!--</v-lazy>-->
+  <v-lazy :min-height="100">
+    <v-card class="circulars">
+      <v-list>
+        <v-list-item 
+          v-for="circular in circulars"
+          :title="circular.title"
+          :subtitle="formatDate(new Date(circular.created))"
+          class="mb-4"
+          @click="handleDialog(circular, $event)"
+        >
+        <template v-slot:append>
+          <v-btn icon="mdi-open-in-new" variant="text" :href="tokenizeUrl(circular.url)" />
+        </template>
         </v-list-item>
-      </v-item-group>
-    </v-list>
-  </v-card>
+      </v-list>
+    </v-card>
+  </v-lazy>
+
+  <v-dialog v-model="DocumentDialog" scrollable width="42rem">
+    <v-card>
+      <v-card-title>
+        <span class="text-h5 text-wrap">{{ circularDialog.title }}</span>
+      </v-card-title>
+      <v-card-text>
+        <div v-html="circularDialog.content"></div>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="green" @click="DocumentDialog = false">Zapri</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style>

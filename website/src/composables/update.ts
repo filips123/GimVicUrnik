@@ -31,6 +31,7 @@ export async function updateAllData(): Promise<void> {
   const documentsStore = useDocumentsStore()
 
   await Promise.all([
+    documentsStore.updateDocuments(),
     useStore.resetData(),
     menuStore.updateLunchSchedules(),
     menuStore.updateMenus(),
@@ -39,7 +40,6 @@ export async function updateAllData(): Promise<void> {
     timetableStore.updateSubstitutions(),
     timetableStore.updateEmptyClassrooms(),
     timetableStore.updateEmptyClassrooms(),
-    documentsStore.updateDocuments()
   ])
 
   // displaySnackbar('Podatki posodobljeni')
