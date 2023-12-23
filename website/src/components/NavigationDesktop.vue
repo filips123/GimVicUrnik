@@ -17,15 +17,13 @@ const { navigation } = defineProps<{
         :aria-label="tab.title"
         :prepend-icon="tab.icon"
         :title="tab.title"
-        :value="tab.title"
-      />
+        :value="tab.title" />
     </v-list>
     <template v-slot:append>
       <v-btn
         variant="text"
         :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-        @click.stop="rail = !rail"
-      ></v-btn>
+        @click.stop="rail = !rail"></v-btn>
     </template>
   </v-navigation-drawer>
 </template>

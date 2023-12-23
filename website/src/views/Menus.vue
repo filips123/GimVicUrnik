@@ -36,8 +36,7 @@ const dayMenu = computed(() => {
     v-if="mobile"
     :menu="dayMenu.menu"
     :lunch-schedule="dayMenu.lunchSchedule"
-    :mobile="mobile"
-  />
+    :mobile="mobile" />
   <v-row v-else no-gutters>
     <v-col v-for="(menu, dayIndex) in menus">
       <menu-display :menu="menu" :lunch-schedule="lunchSchedules[dayIndex]" :mobile="mobile" />

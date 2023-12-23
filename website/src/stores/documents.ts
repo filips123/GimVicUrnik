@@ -27,5 +27,7 @@ export const useDocumentsStore = defineStore('documents', {
         console.error(error)
       }
     }
-  }
+  },
+
+  persist: true
 })

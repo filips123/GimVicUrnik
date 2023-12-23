@@ -4,7 +4,8 @@ export enum EntityType {
   Class,
   Teacher,
   Classroom,
-  EmptyClassrooms
+  EmptyClassrooms,
+  None
 }
 
 export enum SnackType {
@@ -19,16 +20,25 @@ export enum LunchType {
   Vegetarian
 }
 
+export enum MenuType {
+  Snack,
+  Lunch
+}
+
+export enum ThemeType {
+  System,
+  Light,
+  Dark
+}
+
 export const useSettingsStore = defineStore('settings', {
   state: () => {
     return {
-      entityType: EntityType.Class,
+      entityType: EntityType.Class, // EntityType.None,
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 
-      classes: ['1F', '3INF'],
-      teachers: ['Klobučar'],
-      classrooms: ['45'],
+      entities: ['1A'], //[''],
 
       showSubstitutions: true,
       showLinksInTimetable: true,
@@ -38,150 +48,10 @@ export const useSettingsStore = defineStore('settings', {
       enablePullToRefresh: true,
       enableUpdateOnLoad: true,
 
+      themeType: ThemeType.Light,
       moodleToken: ''
     }
-  }
+  },
+
+  persist: true
 })
-
-/*
-import { getModule, Module, Mutation, VuexModule } from 'vuex-module-decorators'
-
-import store from '@/store'
-
-export enum EntityType {
-  Class,
-  Teacher,
-  Classroom,
-  EmptyClassrooms
-}
-
-export enum ThemeType {
-  System,
-  Light,
-  Dark
-}
-
-export interface SelectedEntity {
-  type: EntityType;
-  data: string[];
-}
-
-export interface SelectedMenu {
-  snack: SnackType;
-  lunch: LunchType;
-}
-
-export interface DataCollectionConfig {
-  performance: boolean;
-  crashes: boolean;
-}
-
-interface NavigatorGPC extends Navigator {
-  globalPrivacyControl: boolean | undefined
-}
-
-@Module({ name: 'settings', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
-class Settings extends VuexModule {
-  selectedEntity: SelectedEntity | null = null
-
-  selectedMenu: SelectedMenu = {
-    snack: SnackType.Normal,
-    lunch: LunchType.Normal
-  }
-
-  showSubstitutions = true
-  showLinksInTimetable = true
-  showHoursInTimetable = true
-  enableShowingDetails = true
-  enablePullToRefresh = true
-  enableUpdateOnLoad = true
-
-  dataCollection: DataCollectionConfig = {
-    performance: !(navigator.doNotTrack === '1' || !!(navigator as NavigatorGPC).globalPrivacyControl),
-    crashes: true
-  }
-
-  theme: ThemeType = ThemeType.System
-
-  moodleToken: string | null = null
-
-  @Mutation
-  setSelectedEntity (selectedEntity: SelectedEntity): void {
-    this.selectedEntity = selectedEntity
-  }
-
-  @Mutation
-  setSelectedMenu (selectedMenu: SelectedMenu): void {
-    this.selectedMenu = selectedMenu
-  }
-
-  @Mutation
-  setSelectedMenuSnack (snack: SnackType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack, lunch: LunchType.Normal }
-    else this.selectedMenu.snack = snack
-  }
-
-  @Mutation
-  setSelectedMenuLunch (lunch: LunchType) {
-    if (this.selectedMenu === null) this.selectedMenu = { snack: SnackType.Normal, lunch }
-    else this.selectedMenu.lunch = lunch
-  }
-
-  @Mutation
-  setShowSubstitutions (showSubstitutions: boolean): void {
-    this.showSubstitutions = showSubstitutions
-  }
-
-  @Mutation
-  setShowLinksInTimetable (showLinksInTimetable: boolean): void {
-    this.showLinksInTimetable = showLinksInTimetable
-  }
-
-  @Mutation
-  setShowHoursInTimetable (showHoursInTimetable: boolean): void {
-    this.showHoursInTimetable = showHoursInTimetable
-  }
-
-  @Mutation
-  setEnableShowingDetails (enableShowingDetails: boolean): void {
-    this.enableShowingDetails = enableShowingDetails
-  }
-
-  @Mutation
-  setEnablePullToRefresh (enablePullToRefresh: boolean): void {
-    this.enablePullToRefresh = enablePullToRefresh
-  }
-
-  @Mutation
-  setEnableUpdateOnLoad (enableUpdateOnLoad: boolean): void {
-    this.enableUpdateOnLoad = enableUpdateOnLoad
-  }
-
-  @Mutation
-  setDataCollection (dataCollection: DataCollectionConfig): void {
-    this.dataCollection = dataCollection
-  }
-
-  @Mutation
-  setDataCollectionPerformance (performance: boolean): void {
-    this.dataCollection.performance = performance
-  }
-
-  @Mutation
-  setDataCollectionCrashes (crashes: boolean): void {
-    this.dataCollection.crashes = crashes
-  }
-
-  @Mutation
-  setTheme (theme: ThemeType): void {
-    this.theme = theme
-  }
-
-  @Mutation
-  setMoodleToken (moodleToken: string | null): void {
-    this.moodleToken = moodleToken
-  }
-}
-
-export const SettingsModule = getModule(Settings)
-*/

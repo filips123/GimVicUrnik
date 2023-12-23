@@ -47,7 +47,7 @@ const currentLunch = computed(() => {
 const currentLunchSchedules = computed(() => {
   if (settingsStore.entityType !== EntityType.Class) return null
 
-  return props.lunchSchedule?.filter((schedule) => schedule.class === settingsStore.classes[0])
+  return props.lunchSchedule?.filter((schedule) => schedule.class === settingsStore.entities[0])
 })
 
 // Format date to show day name

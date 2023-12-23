@@ -1,12 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
+// import { useSettingsStore, EntityType } from '@/stores/settings'
+
+// const settingsStore = useSettingsStore()
+// const { entityType } = settingsStore
 
 const Home = () => import('../views/Home.vue')
+const Welcome = () => import('../views/Welcome.vue')
 const Subscribe = () => import('../views/Subscribe.vue')
 const Settings = () => import('../views/Settings.vue')
 const Timetable = () => import('../views/Timetable.vue')
 const Menus = () => import('../views/Menus.vue')
 const Circulars = () => import('../views/Circulars.vue')
 const Sources = () => import('../views/Sources.vue')
+const NotFound = () => import('../views/NotFound.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,8 +23,12 @@ const router = createRouter({
       meta: { title: 'Domov' },
       component: Home
     },
-    //{ path: '*', name: 'notfound', component: NotFound },
-    //{ path: '/welcome', name: 'welcome', component: Welcome },
+    {
+      path: '/welcome',
+      name: 'welcome',
+      meta: { title: 'Dobrodošli' },
+      component: Welcome
+    },
     {
       path: '/subscribe',
       name: 'subscribe',
@@ -54,8 +64,18 @@ const router = createRouter({
       name: 'sources',
       meta: { title: 'Viri' },
       component: Sources
+    },
+    {
+      path: '/:pathMatch(.*)',
+      name: 'notfound',
+      meta: { title: 'Strani ni mogoče najti' },
+      component: NotFound
     }
   ]
 })
+
+// router.beforeEach(async (to, from) => {
+//   if (entityType == EntityType.None && to.name !== 'welcome') return { name: 'welcome' }
+// })
 
 export default router

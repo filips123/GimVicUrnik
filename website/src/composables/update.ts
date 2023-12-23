@@ -39,7 +39,7 @@ export async function updateAllData(): Promise<void> {
     timetableStore.updateTimetable(),
     timetableStore.updateSubstitutions(),
     timetableStore.updateEmptyClassrooms(),
-    timetableStore.updateEmptyClassrooms(),
+    timetableStore.updateEmptyClassrooms()
   ])
 
   // displaySnackbar('Podatki posodobljeni')

@@ -23,10 +23,8 @@ const entity = computed(() => {
 
 <template>
   <td
-    class="px-2"
     :class="{ 'text-blue': showLinksInTimetable }"
-    @click="showLinksInTimetable ? userStore.changeEntity(entityType, entity) : null"
-  >
+    @click="showLinksInTimetable ? userStore.changeEntity(entityType, entity) : null">
     {{ entity }}
   </td>
 </template>

@@ -159,11 +159,11 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
   <v-app>
     <v-app-bar app clipped-left color="#009300" dark extension-height="35">
       <v-app-bar-title>
-        {{ routerTitle }}
+        <span @click="userStore.resetData()">{{ routerTitle }}</span>
         <template v-if="routerTitle === 'Urnik'">
           <br />
           <div style="color: hsla(0, 0%, 100%, 0.7); font-size: 0.775rem">
-            {{ userStore.getCurrentEntities.join(', ') }}
+            {{ userStore.entities.join(', ') }}
           </div>
         </template>
       </v-app-bar-title>
@@ -174,13 +174,11 @@ setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
         :alt="page.title"
         :aria-label="page.title"
         :icon="page.icon"
-        large
-      />
+        large />
 
       <template
         v-if="mobile && ['timetable', 'menus'].includes(String(routerName))"
-        v-slot:extension
-      >
+        v-slot:extension>
         <navigation-day :weekdays="weekdays" />
       </template>
     </v-app-bar>

@@ -13,10 +13,11 @@ documentsStore.updateDocuments()
 
 const DocumentDialog = ref(false)
 
-const circulars = computed (() => 
-  documentsStore.documents
-    ?.filter((document) => document.type === 'circular' || document.type === 'other')
-    .reverse() || []
+const circulars = computed(
+  () =>
+    documentsStore.documents
+      ?.filter((document) => document.type === 'circular' || document.type === 'other')
+      .reverse() || []
 )
 
 let circularDialog: Document = {} as Document
@@ -30,22 +31,22 @@ function handleDialog(circular: Document, event: Event) {
   DocumentDialog.value = true
 }
 
+// Load first 10-20 circular and add "more" button
 </script>
 
 <template>
   <v-lazy :min-height="100">
     <v-card class="circulars">
       <v-list>
-        <v-list-item 
+        <v-list-item
           v-for="circular in circulars"
           :title="circular.title"
           :subtitle="formatDate(new Date(circular.created))"
           class="mb-4"
-          @click="handleDialog(circular, $event)"
-        >
-        <template v-slot:append>
-          <v-btn icon="mdi-open-in-new" variant="text" :href="tokenizeUrl(circular.url)" />
-        </template>
+          @click="handleDialog(circular, $event)">
+          <template v-slot:append>
+            <v-btn icon="mdi-open-in-new" variant="text" :href="tokenizeUrl(circular.url)" />
+          </template>
         </v-list-item>
       </v-list>
     </v-card>

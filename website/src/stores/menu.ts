@@ -85,5 +85,7 @@ export const useMenuStore = defineStore('menu', {
         console.error(error)
       }
     }
-  }
+  },
+
+  persist: true
 })

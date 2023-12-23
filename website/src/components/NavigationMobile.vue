@@ -10,8 +10,7 @@ const { navigation } = defineProps<{
       v-for="tab in navigation"
       :to="{ name: tab.link }"
       :aria-label="tab.title"
-      :prepend-icon="tab.icon"
-    >
+      :prepend-icon="tab.icon">
       {{ tab.title }}
     </v-btn>
   </v-bottom-navigation>

@@ -17,15 +17,12 @@ document.title = import.meta.env.VITE_TITLE + ' - Urnik'
 
 const { mobile } = useDisplay()
 
-const userStore = useUserStore()
 const timetableStore = useTimetableStore()
 const settingsStore = useSettingsStore()
 
 timetableStore.updateTimetable()
 timetableStore.updateSubstitutions()
 timetableStore.updateEmptyClassrooms()
-
-userStore.resetData()
 
 const lessonDetailsDialog = ref(false)
 
@@ -70,7 +67,7 @@ const lessonsArray = computed(() => {
 let detailsLessons = reactive([] as MergedLesson[])
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
-  if ((event?.target as HTMLInputElement)?.classList.contains('text-blue')) {
+  if (!showSubstitutions || (event?.target as HTMLInputElement)?.classList.contains('text-blue')) {
     return
   }
 
@@ -89,8 +86,7 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
           <th
             v-for="(weekday, index) in weekdays"
             class="text-center"
-            :class="{ 'highlight-light': index === day }"
-          >
+            :class="{ 'highlight-light': index === day }">
             {{ weekday }}
           </th>
         </tr>
@@ -104,15 +100,13 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
               showSubstitutions &&
               lessonsArray[day + 1][timeIndex]?.find((lesson) => lesson.substitution)
           }"
-          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
-        >
+          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null">
           <template v-if="timeIndex >= minLessonTime">
             <td
               class="timetable-time"
               :class="{
                 'current-time': mobile && day === getCurrentDay() && timeIndex === getCurrentTime()
-              }"
-            >
+              }">
               {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
             </td>
             <template v-if="!mobile">
@@ -125,18 +119,17 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
               :class="{
                 'highlight-substitution':
                   !mobile &&
+                  showSubstitutions &&
                   lessonsArray[dayIndex][timeIndex].find((lesson) => lesson.substitution),
                 'highlight-day': !mobile && dayIndex - 1 === getCurrentDay(),
                 'current-time':
                   !mobile && dayIndex - 1 === getCurrentDay() && timeIndex === getCurrentTime()
               }"
-              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
-            >
+              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null">
               <tr
                 class="d-flex"
                 :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
-                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
-              >
+                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]">
                 <td>
                   {{
                     showSubstitutions && lesson.substitution
@@ -149,42 +142,36 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
                     :entityType="EntityType.Teacher"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.teacher"
-                    :substitutionEntity="lesson.substitutionTeacher"
-                  />
+                    :substitutionEntity="lesson.substitutionTeacher" />
                   <timetable-link
                     :entityType="EntityType.Classroom"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.classroom"
-                    :substitutionEntity="lesson.substitutionClassroom"
-                  />
+                    :substitutionEntity="lesson.substitutionClassroom" />
                 </template>
                 <template v-else-if="entityType === EntityType.Teacher">
                   <timetable-link
                     :entityType="EntityType.Class"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.class"
-                    :substitutionEntity="lesson.class"
-                  />
+                    :substitutionEntity="lesson.class" />
                   <timetable-link
                     :entityType="EntityType.Classroom"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.classroom"
-                    :substitutionEntity="lesson.substitutionClassroom"
-                  />
+                    :substitutionEntity="lesson.substitutionClassroom" />
                 </template>
                 <template v-else>
                   <timetable-link
                     :entityType="EntityType.Class"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.class"
-                    :substitutionEntity="lesson.class"
-                  />
+                    :substitutionEntity="lesson.class" />
                   <timetable-link
                     :entityType="EntityType.Teacher"
                     :substitution="lesson.substitution"
                     :originalEntity="lesson.teacher"
-                    :substitutionEntity="lesson.substitutionTeacher"
-                  />
+                    :substitutionEntity="lesson.substitutionTeacher" />
                 </template>
               </tr>
             </td>

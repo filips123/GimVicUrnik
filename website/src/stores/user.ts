@@ -7,25 +7,8 @@ export const useUserStore = defineStore('user', {
     return {
       day: getCurrentDay(),
 
-      entityType: EntityType.EmptyClassrooms,
-      classes: [] as string[],
-      teachers: [] as string[],
-      classrooms: [] as string[]
-    }
-  },
-
-  getters: {
-    getCurrentEntities(state) {
-      switch (state.entityType) {
-        case EntityType.Class:
-          return state.classes
-        case EntityType.Teacher:
-          return state.teachers
-        case EntityType.Classroom:
-          return state.classrooms
-      }
-
-      return ['']
+      entityType: EntityType.None,
+      entities: ['']
     }
   },
 
@@ -34,22 +17,12 @@ export const useUserStore = defineStore('user', {
       const settingsStore = useSettingsStore()
 
       this.entityType = settingsStore.entityType
-      this.classes = settingsStore.classes
-      this.teachers = settingsStore.teachers
-      this.classrooms = settingsStore.classrooms
+      this.entities = settingsStore.entities
     },
 
     changeEntity(entityType: EntityType, entity: string) {
       this.entityType = entityType
-
-      switch (entityType) {
-        case EntityType.Class:
-          this.classes = [entity]
-        case EntityType.Teacher:
-          this.teachers = [entity]
-        case EntityType.Classroom:
-          this.classrooms = [entity]
-      }
+      this.entities = [entity]
     }
   }
 })

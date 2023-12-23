@@ -41,7 +41,7 @@ export const useTimetableStore = defineStore('timetable', {
       emptyClassrooms: [] as Lesson[],
       substitutions: [] as Substitution[][],
 
-      classList: [] as String[],
+      classesList: [] as String[],
       teachersList: [] as String[],
       classroomsList: [] as String[]
     }
@@ -56,7 +56,7 @@ export const useTimetableStore = defineStore('timetable', {
 
       switch (userStore.entityType) {
         case EntityType.Class:
-          for (const class_ of userStore.classes) {
+          for (const class_ of userStore.entities) {
             timetable = timetable.concat(state.timetable.filter((lesson) => lesson.class == class_))
             for (const substitutionsDay of state.substitutions) {
               substitutions = substitutions.concat(
@@ -66,7 +66,7 @@ export const useTimetableStore = defineStore('timetable', {
           }
           break
         case EntityType.Teacher:
-          for (const teacher of userStore.teachers) {
+          for (const teacher of userStore.entities) {
             timetable = timetable.concat(
               state.timetable.filter((lesson) => lesson.teacher == teacher)
             )
@@ -78,7 +78,7 @@ export const useTimetableStore = defineStore('timetable', {
           }
           break
         case EntityType.Classroom:
-          for (const classroom of userStore.classrooms) {
+          for (const classroom of userStore.entities) {
             timetable = timetable.concat(
               state.timetable.filter((lesson) => lesson.classroom == classroom)
             )
@@ -164,15 +164,17 @@ export const useTimetableStore = defineStore('timetable', {
           fetchHandle(import.meta.env.VITE_API + '/list/classrooms')
         ])
 
-        const [classList, teachersList, classroomsList] = await Promise.all(
+        const [classesList, teachersList, classroomsList] = await Promise.all(
           responses.map((response) => response.json())
         )
-        this.classList = classList
+        this.classesList = classesList
         this.teachersList = teachersList
         this.classroomsList = classroomsList
       } catch (error) {
         console.error(error)
       }
     }
-  }
+  },
+
+  persist: true
 })

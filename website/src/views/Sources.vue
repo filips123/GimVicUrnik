@@ -25,6 +25,5 @@ const menus =
     :documents="menus"
     title="Jedilniki"
     displayed-date="effective"
-    display-date-as-week="true"
-  />
+    display-date-as-week="true" />
 </template>
