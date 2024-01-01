@@ -14,6 +14,7 @@ from sqlalchemy import insert
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import DocumentType, LunchMenu, SnackMenu
 from ..errors import MenuApiError, MenuDateError, MenuFormatError
+from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
@@ -120,6 +121,10 @@ class MenuUpdater(BaseMultiUpdater):
         span.set_tag("document.format", document.extension)
 
         match (document.type, document.extension):
+            case (DocumentType.SNACK_MENU, "pdf"):
+                self._parse_snack_menu_pdf(stream, effective)
+            case (DocumentType.LUNCH_MENU, "pdf"):
+                self._parse_lunch_menu_pdf(stream, effective)
             case (DocumentType.SNACK_MENU, "xlsx"):
                 self._parse_snack_menu_xlsx(stream, effective)
             case (DocumentType.LUNCH_MENU, "xlsx"):
@@ -130,6 +135,41 @@ class MenuUpdater(BaseMultiUpdater):
                 raise MenuFormatError("Unknown lunch menu document format: " + str(document.extension))
             case _:
                 raise KeyError("Unknown document type for menu")
+
+    def _parse_snack_menu_pdf(self, stream: BytesIO, effective: datetime.date) -> None:
+        """Parse the snack menu PDF document."""
+
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
+
+        days = 0
+
+        # Parse tables into menus and store them
+        for table in tables:
+            for row in table:
+                if not row[1] or "NV in N" in row[1]:
+                    continue
+
+                current = effective + datetime.timedelta(days=days)
+                days += 1
+
+                menu = {
+                    "date": current,
+                    "normal": row[1],
+                    "poultry": row[2],
+                    "vegetarian": row[3],
+                    "fruitvegetable": row[4],
+                }
+
+                model = self.session.query(SnackMenu).filter(SnackMenu.date == current).first()
+
+                if not model:
+                    model = SnackMenu()
+
+                for key, value in menu.items():
+                    setattr(model, key, value)
+
+                self.session.add(model)
 
     def _parse_snack_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the snack menu XLSX document."""
@@ -200,6 +240,39 @@ class MenuUpdater(BaseMultiUpdater):
                     }
 
         wb.close()
+
+    def _parse_lunch_menu_pdf(self, stream: BytesIO, effective: datetime.date) -> None:
+        """Parse the lunch menu PDF document."""
+
+        # Extract all tables from a PDF stream
+        tables = with_span(op="extract")(extract_tables)(stream)
+
+        days = 0
+
+        # Parse tables into menus and store them
+        for table in tables:
+            for row in table:
+                if not row[1] or "N KOSILO" in row[1]:
+                    continue
+
+                current = effective + datetime.timedelta(days=days)
+                days += 1
+
+                menu = {
+                    "date": current,
+                    "normal": row[1],
+                    "vegetarian": row[2],
+                }
+
+                model = self.session.query(LunchMenu).filter(LunchMenu.date == current).first()
+
+                if not model:
+                    model = LunchMenu()
+
+                for key, value in menu.items():
+                    setattr(model, key, value)
+
+                self.session.add(model)
 
     def _parse_lunch_menu_xlsx(self, stream: BytesIO, effective: datetime.date) -> None:
         """Parse the lunch menu XLSX document."""
