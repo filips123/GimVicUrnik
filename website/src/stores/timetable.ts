@@ -40,10 +40,6 @@ export const useTimetableStore = defineStore('timetable', {
       timetable: [] as Lesson[],
       emptyClassrooms: [] as Lesson[],
       substitutions: [] as Substitution[][],
-
-      classesList: [] as String[],
-      teachersList: [] as String[],
-      classroomsList: [] as String[]
     }
   },
 
@@ -60,7 +56,7 @@ export const useTimetableStore = defineStore('timetable', {
             timetable = timetable.concat(state.timetable.filter((lesson) => lesson.class == class_))
             for (const substitutionsDay of state.substitutions) {
               substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.class == class_)
+                substitutionsDay.filter((substitution) => substitution.class == class_),
               )
             }
           }
@@ -68,11 +64,11 @@ export const useTimetableStore = defineStore('timetable', {
         case EntityType.Teacher:
           for (const teacher of userStore.entities) {
             timetable = timetable.concat(
-              state.timetable.filter((lesson) => lesson.teacher == teacher)
+              state.timetable.filter((lesson) => lesson.teacher == teacher),
             )
             for (const substitutionsDay of state.substitutions) {
               substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.teacher == teacher)
+                substitutionsDay.filter((substitution) => substitution.teacher == teacher),
               )
             }
           }
@@ -80,11 +76,11 @@ export const useTimetableStore = defineStore('timetable', {
         case EntityType.Classroom:
           for (const classroom of userStore.entities) {
             timetable = timetable.concat(
-              state.timetable.filter((lesson) => lesson.classroom == classroom)
+              state.timetable.filter((lesson) => lesson.classroom == classroom),
             )
             for (const substitutionsDay of state.substitutions) {
               substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.classroom == classroom)
+                substitutionsDay.filter((substitution) => substitution.classroom == classroom),
               )
             }
           }
@@ -100,7 +96,7 @@ export const useTimetableStore = defineStore('timetable', {
           (substitution) =>
             substitution?.day === lesson.day &&
             substitution?.time === lesson.time &&
-            substitution?.['original-teacher'] === lesson.teacher
+            substitution?.['original-teacher'] === lesson.teacher,
         )
 
         lessons.push({
@@ -114,12 +110,12 @@ export const useTimetableStore = defineStore('timetable', {
           substitutionClassroom: substitution?.classroom || '',
           substitutionSubject: substitution?.subject || '',
           substitutionTeacher: substitution?.teacher || '',
-          notes: substitution?.notes || ''
+          notes: substitution?.notes || '',
         })
       }
 
       return lessons
-    }
+    },
   },
 
   actions: {
@@ -137,9 +133,9 @@ export const useTimetableStore = defineStore('timetable', {
         const responses = await Promise.all(
           getWeekdays(new Date('2023-11-27')).map((date) =>
             fetchHandle(
-              import.meta.env.VITE_API + '/substitutions/date/' + date.toISOString().split('T')[0]
-            )
-          )
+              import.meta.env.VITE_API + '/substitutions/date/' + date.toISOString().split('T')[0],
+            ),
+          ),
         )
         this.substitutions = await Promise.all(responses.map((response) => response.json()))
       } catch (error) {
@@ -155,26 +151,7 @@ export const useTimetableStore = defineStore('timetable', {
         console.error(error)
       }
     },
-
-    async updateLists() {
-      try {
-        const responses = await Promise.all([
-          fetchHandle(import.meta.env.VITE_API + '/list/classes'),
-          fetchHandle(import.meta.env.VITE_API + '/list/teachers'),
-          fetchHandle(import.meta.env.VITE_API + '/list/classrooms')
-        ])
-
-        const [classesList, teachersList, classroomsList] = await Promise.all(
-          responses.map((response) => response.json())
-        )
-        this.classesList = classesList
-        this.teachersList = teachersList
-        this.classroomsList = classroomsList
-      } catch (error) {
-        console.error(error)
-      }
-    }
   },
 
-  persist: true
+  persist: true,
 })

@@ -1,44 +1,49 @@
 import { defineStore } from 'pinia'
+import { fetchHandle } from '@/composables/update'
 
 export enum EntityType {
   Class,
   Teacher,
   Classroom,
   EmptyClassrooms,
-  None
+  None,
 }
 
 export enum SnackType {
-  Normal,
-  Vegetarian,
-  Poultry,
-  Fruitvegetable
+  Normal = 'normal',
+  Vegetarian = 'vegetarian',
+  Poultry = 'poultry',
+  Fruitvegetable = 'fruitvegetable',
 }
 
 export enum LunchType {
-  Normal,
-  Vegetarian
+  Normal = 'normal',
+  Vegetarian = 'vegetarian',
 }
 
 export enum MenuType {
   Snack,
-  Lunch
+  Lunch,
 }
 
 export enum ThemeType {
   System,
   Light,
-  Dark
+  Dark,
 }
 
 export const useSettingsStore = defineStore('settings', {
   state: () => {
     return {
       entityType: EntityType.Class, // EntityType.None,
+      classesList: [] as string[],
+      teachersList: [] as string[],
+      classroomsList: [] as string[],
+
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 
-      entities: ['1A'], //[''],
+      entities: ['1A'], // [''],
 
       showSubstitutions: true,
       showLinksInTimetable: true,
@@ -48,10 +53,32 @@ export const useSettingsStore = defineStore('settings', {
       enablePullToRefresh: true,
       enableUpdateOnLoad: true,
 
+      dataCollection: true,
       themeType: ThemeType.Light,
-      moodleToken: ''
+      moodleToken: '',
     }
   },
 
-  persist: true
+  actions: {
+    async updateLists() {
+      try {
+        const responses = await Promise.all([
+          fetchHandle(import.meta.env.VITE_API + '/list/classes'),
+          fetchHandle(import.meta.env.VITE_API + '/list/teachers'),
+          fetchHandle(import.meta.env.VITE_API + '/list/classrooms'),
+        ])
+
+        const [classesList, teachersList, classroomsList] = await Promise.all(
+          responses.map((response) => response.json()),
+        )
+        this.classesList = classesList
+        this.teachersList = teachersList
+        this.classroomsList = classroomsList
+      } catch (error) {
+        console.error(error)
+      }
+    },
+  },
+
+  persist: true,
 })

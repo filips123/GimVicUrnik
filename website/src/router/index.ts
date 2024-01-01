@@ -21,57 +21,57 @@ const router = createRouter({
       path: '/',
       name: 'home',
       meta: { title: 'Domov' },
-      component: Home
+      component: Home,
     },
     {
       path: '/welcome',
       name: 'welcome',
       meta: { title: 'Dobrodošli' },
-      component: Welcome
+      component: Welcome,
     },
     {
       path: '/subscribe',
       name: 'subscribe',
       meta: { title: 'Naročanje' },
-      component: Subscribe
+      component: Subscribe,
     },
     {
       path: '/settings',
       name: 'settings',
       meta: { title: 'Nastavitve' },
-      component: Settings
+      component: Settings,
     },
     {
       path: '/timetable/:type?/:value?',
       name: 'timetable',
       meta: { title: 'Urnik' },
-      component: Timetable
+      component: Timetable,
     },
     {
       path: '/menus',
       name: 'menus',
       meta: { title: 'Jedilnik' },
-      component: Menus
+      component: Menus,
     },
     {
       path: '/circulars',
       name: 'circulars',
       meta: { title: 'Okrožnice' },
-      component: Circulars
+      component: Circulars,
     },
     {
       path: '/sources',
       name: 'sources',
       meta: { title: 'Viri' },
-      component: Sources
+      component: Sources,
     },
     {
       path: '/:pathMatch(.*)',
       name: 'notfound',
       meta: { title: 'Strani ni mogoče najti' },
-      component: NotFound
-    }
-  ]
+      component: NotFound,
+    },
+  ],
 })
 
 // router.beforeEach(async (to, from) => {

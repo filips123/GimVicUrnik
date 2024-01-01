@@ -1,99 +1,55 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useDisplay } from 'vuetify'
+
 import type { Menu, LunchSchedule } from '@/stores/menu'
-import { useSettingsStore, EntityType, LunchType, SnackType } from '@/stores/settings'
+import { useSettingsStore, EntityType } from '@/stores/settings'
+
+import { localizeDay, localizeDate } from '@/composables/localization'
 
 const props = defineProps<{
   menu: Menu
-  lunchSchedule: LunchSchedule[]
-  mobile: boolean
+  lunchSchedules: LunchSchedule[]
 }>()
 
+const { mobile } = useDisplay()
+
 const settingsStore = useSettingsStore()
+const { snackType, lunchType, entities, entityType } = settingsStore
 
-// Shorter solution possible??
-// Get current snack
-const currentSnack = computed(() => {
-  if (!props.menu?.snack) return null
-  const snackMenu = props.menu.snack
+const snackMenu = computed(() => props.menu?.snack?.[snackType])
+const lunchMenu = computed(() => props.menu?.lunch?.[lunchType])
 
-  switch (settingsStore.snackType) {
-    case SnackType.Vegetarian:
-      return snackMenu.vegetarian
-    case SnackType.Poultry:
-      return snackMenu.poultry
-    case SnackType.Fruitvegetable:
-      return snackMenu.fruitvegetable
-    default:
-      return snackMenu.normal
-  }
+const classLunchSchedules = computed(() => {
+  if (entityType !== EntityType.Class) return null
+  return props.lunchSchedules?.filter((schedule) => entities.includes(schedule.class))
 })
-
-// Get current lunch
-const currentLunch = computed(() => {
-  if (!props.menu?.lunch) return null
-  const lunchMenu = props.menu.lunch
-
-  switch (settingsStore.lunchType) {
-    case LunchType.Vegetarian:
-      return lunchMenu.vegetarian
-    default:
-      return lunchMenu.normal
-  }
-})
-
-// Get current lunch schedule
-const currentLunchSchedules = computed(() => {
-  if (settingsStore.entityType !== EntityType.Class) return null
-
-  return props.lunchSchedule?.filter((schedule) => schedule.class === settingsStore.entities[0])
-})
-
-// Format date to show day name
-function formatDay(date: string): string {
-  return new Date(date).toLocaleDateString('sl', { weekday: 'long' })
-}
-
-// Format date to show slovenian writing convention
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('sl')
-}
 </script>
 
 <template>
-  <v-card v-if="!mobile" class="menu-display">
-    <v-card-title class="text-capitalize">{{ formatDay(menu.date) }}</v-card-title>
-    <v-card-text>{{ formatDate(menu.date) }}</v-card-text>
-  </v-card>
+  <v-card
+    v-if="!mobile"
+    class="ma-2"
+    :title="localizeDay(menu.date)"
+    :text="localizeDate(menu.date)"
+  />
+  <v-card v-if="snackMenu" class="ma-2 pre-line" title="Malica" :text="snackMenu" />
+  <v-card v-if="lunchMenu" class="ma-2 pre-line" title="Kosilo" :text="lunchMenu" />
 
-  <v-card v-if="currentSnack" class="menu-display">
-    <v-card-title>Malica</v-card-title>
-    <v-card-text>{{ currentSnack }}</v-card-text>
-  </v-card>
-
-  <v-card v-if="currentLunch" class="menu-display">
-    <v-card-title>Kosilo</v-card-title>
-    <v-card-text>{{ currentLunch }}</v-card-text>
-  </v-card>
-
-  <v-card v-if="currentLunchSchedules?.length" class="menu-display">
-    <v-card-title>Razpored kosila</v-card-title>
-    <v-card-text v-for="currentLunchSchedule in currentLunchSchedules">
-      <span v-if="currentLunchSchedule?.time"> Ura: {{ currentLunchSchedule.time }}<br /> </span>
-      <span v-if="currentLunchSchedule?.location">
-        Prostor: {{ currentLunchSchedule.location }}<br />
-      </span>
-      <span v-if="currentLunchSchedule?.notes">
-        Opombe: {{ currentLunchSchedule.notes }}<br />
-      </span>
+  <v-card v-if="classLunchSchedules?.length" class="ma-2 pre-line" title="Razpored kosila">
+    <v-card-text v-for="classLunchSchedule in classLunchSchedules">
+      <span v-if="classLunchSchedule.time">Ura: {{ classLunchSchedule.time }}</span> <br />
+      <span v-if="classLunchSchedule?.location"> Prostor: {{ classLunchSchedule.location }} </span>
+      <br />
+      <span v-if="classLunchSchedule?.notes"> Opombe: {{ classLunchSchedule.notes }} </span><br />
     </v-card-text>
   </v-card>
 </template>
 
 <style>
-.menu-display {
-  margin: 10px;
+/* Consider new lines */
+.pre-line {
   white-space: pre-line;
 }
 </style>

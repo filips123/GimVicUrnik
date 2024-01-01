@@ -1,13 +1,18 @@
-import { EntityType, SnackType, LunchType, ThemeType } from '@/stores/settings'
+import { EntityType, SnackType, LunchType, ThemeType, MenuType } from '@/stores/settings'
 
-export const localizeSnackTypeList = [
-  'Navadna',
-  'Vegetarijanska',
-  'Vegetarijanska s perutnino in ribo',
-  'Sadnozelenjavna'
-]
-export const localizeLunchTypeList = ['Navadno', 'Vegetarijansko']
+// Days localization
+export function localizeDay(date: string): string {
+  const day = new Date(date).toLocaleDateString('sl', { weekday: 'long' })
+  return day.charAt(0).toUpperCase() + day.slice(1)
+}
 
+export function localizeDate(date: string): string {
+  return new Date(date).toLocaleDateString('sl')
+}
+
+export const localizedWeekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek']
+
+// Entity localization
 export function localizeEntityType(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
@@ -21,6 +26,7 @@ export function localizeEntityType(entityType: EntityType) {
   }
 }
 
+// Menu localization
 export function localizeSnackType(snackType: SnackType) {
   switch (snackType) {
     case SnackType.Normal:
@@ -43,17 +49,24 @@ export function localizeLunchType(lunchType: LunchType) {
   }
 }
 
-export const localizeSwitchSettings = [
-  'Prikaži nadomešanja',
-  'Prikaži povezave v urniku',
-  'Prikaži ure v urniku',
-  'Klikni za podrobnosti',
-  'Potegni za posodobitev',
-  'Samodejno posodabljanje'
+export function localizeMenu(menuType: MenuType) {
+  switch (menuType) {
+    case MenuType.Snack:
+      return 'Malica'
+    case MenuType.Lunch:
+      return 'Kosilo'
+  }
+}
+
+export const localizedSnackTypeList = [
+  'Navadna',
+  'Vegetarijanska',
+  'Vegetarijanska s perutnino in ribo',
+  'Sadnozelenjavna',
 ]
+export const localizedLunchTypeList = ['Navadno', 'Vegetarijansko']
 
-export const localizeThemeTypeList = ['Sistemska', 'Svetla', 'Temna']
-
+// Settings localization
 export function localizeThemeType(themeType: ThemeType) {
   switch (themeType) {
     case ThemeType.System:
@@ -64,3 +77,15 @@ export function localizeThemeType(themeType: ThemeType) {
       return 'Temna'
   }
 }
+
+export const localizedSwitchSettings = [
+  'Prikaži nadomešanja',
+  'Prikaži povezave v urniku',
+  'Prikaži ure v urniku',
+  'Prikaži trenutno uro',
+  'Klikni za podrobnosti',
+  'Potegni za posodobitev',
+  'Samodejno posodabljanje',
+]
+
+export const localizedThemeTypeList = ['Sistemska', 'Svetla', 'Temna']

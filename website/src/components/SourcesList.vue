@@ -2,11 +2,12 @@
 import type { Document } from '@/stores/documents'
 
 import { getWeekdays } from '@/composables/days'
-import { tokenizeUrl, formatDate } from '@/composables/documents'
+import { localizeDate } from '@/composables/localization'
+import { tokenizeUrl } from '@/composables/documents'
 
 const props = defineProps<{
   documents: Document[]
-  title: String
+  title: string
   displayedDate: string
 }>()
 
@@ -29,23 +30,24 @@ function displayDate(document: Document): string {
 
   if (document.type === 'snack-menu' || document.type === 'lunch-menu') {
     const weekdays = getWeekdays(new Date(date))
-    return `${formatDate(weekdays[0])} - ${formatDate(weekdays[4])}`
+    return `${localizeDate(weekdays[0].toString())} - ${localizeDate(weekdays[4].toString())}`
   }
 
-  return formatDate(new Date(date))
+  return localizeDate(date)
 }
 </script>
 
 <template>
-  <v-expansion-panels v-if="documents.length > 0">
-    <v-expansion-panel>
-      <v-expansion-panel-title class="text-h6 list-title">{{ title }}</v-expansion-panel-title>
+  <v-expansion-panels v-if="documents?.length > 0">
+    <v-expansion-panel :title="title">
       <v-expansion-panel-text>
         <v-list>
-          <v-list-item v-for="document in documents" :href="tokenizeUrl(document.url)">
-            <v-list-item-title>{{ document.title }}</v-list-item-title>
-            <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
-          </v-list-item>
+          <v-list-item
+            v-for="document in documents"
+            :href="tokenizeUrl(document.url)"
+            :title="document.title"
+            :subtitle="displayDate(document)"
+          />
         </v-list>
       </v-expansion-panel-text>
     </v-expansion-panel>
@@ -68,21 +70,5 @@ function displayDate(document: Document): string {
   line-height: 1rem !important;
   min-height: 48px !important;
   padding: 0 16px !important;
-}
-
-/* Change font weight*/
-.list-title {
-  font-weight: 400 !important;
-}
-
-/* Wrap text by words*/
-.word-wrap {
-  word-break: break-word;
-}
-
-/* Fix padding of title and subtitle*/
-.v-list-item__title,
-.v-list-item__subtitle {
-  padding-left: 4px !important;
 }
 </style>

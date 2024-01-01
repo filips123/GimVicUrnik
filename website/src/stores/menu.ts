@@ -28,7 +28,7 @@ export const useMenuStore = defineStore('menu', {
   state: () => {
     return {
       menus: [] as Menu[],
-      lunchSchedules: [] as LunchSchedule[][]
+      lunchSchedules: [] as LunchSchedule[][],
     }
   },
 
@@ -42,7 +42,6 @@ export const useMenuStore = defineStore('menu', {
       */
 
       /*
-      // Reasonable?
       const { enableUpdateOnLoad } = useSettingsStore()
       if (enableUpdateOnLoad || !localStorage.storage || !localStorage.settings) {
         return
@@ -53,13 +52,13 @@ export const useMenuStore = defineStore('menu', {
         this.menus = await Promise.all(
           getWeekdays(new Date('2023-11-27')).map(async (date): Promise<Menu> => {
             const response = await fetchHandle(
-              import.meta.env.VITE_API + '/menus/date/' + date.toISOString().split('T')[0]
+              import.meta.env.VITE_API + '/menus/date/' + date.toISOString().split('T')[0],
             )
             const menu = await response.json()
             menu['date'] = date.toISOString().split('T')[0]
 
             return menu
-          })
+          }),
         )
       } catch (error) {
         // displaySnackbar('Napaka pri pridobivanju podatkov')
@@ -72,20 +71,20 @@ export const useMenuStore = defineStore('menu', {
     async updateLunchSchedules() {
       try {
         this.lunchSchedules = await Promise.all(
-          getWeekdays(new Date('2023-11-27')).map(async (date): Promise<LunchSchedule[]> => {
+          getWeekdays(new Date('2023-10-24')).map(async (date): Promise<LunchSchedule[]> => {
             const response = await fetchHandle(
-              import.meta.env.VITE_API + '/schedule/date/' + date.toISOString().split('T')[0]
+              import.meta.env.VITE_API + '/schedule/date/' + date.toISOString().split('T')[0],
             )
             const lunchSchedule = await response.json()
 
             return lunchSchedule
-          })
+          }),
         )
       } catch (error) {
         console.error(error)
       }
-    }
+    },
   },
 
-  persist: true
+  persist: true,
 })

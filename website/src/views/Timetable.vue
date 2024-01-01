@@ -4,13 +4,14 @@ import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
-import { useSettingsStore, EntityType } from '@/stores/settings'
+import { useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 
 import { lessonTimes, getCurrentTime } from '@/composables/times'
-import { weekdays, getCurrentDay } from '@/composables/days'
+import { getCurrentDay } from '@/composables/days'
+import { localizedWeekdays } from '@/composables/localization'
 
-import TimetableLink from '@/components/TimetableLink.vue'
+import TimetableLesson from '@/components/TimetableLesson.vue'
 import TimetableDetails from '@/components/TimetableDetails.vue'
 
 document.title = import.meta.env.VITE_TITLE + ' - Urnik'
@@ -24,10 +25,14 @@ timetableStore.updateTimetable()
 timetableStore.updateSubstitutions()
 timetableStore.updateEmptyClassrooms()
 
+const { day } = storeToRefs(useUserStore())
+const { showHoursInTimetable, showSubstitutions, showCurrentTime, enableShowingDetails } =
+  settingsStore
+
 const lessonDetailsDialog = ref(false)
 
-const { day, entityType } = storeToRefs(useUserStore())
-const { showHoursInTimetable, showSubstitutions } = settingsStore
+const currentDay = computed(() => getCurrentDay())
+const currentTime = computed(() => getCurrentTime())
 
 const maxLessonTime = computed(() => {
   const lessons = !mobile.value
@@ -35,7 +40,7 @@ const maxLessonTime = computed(() => {
     : timetableStore.lessons.filter((lesson) => lesson.day == day.value + 1)
   return lessons.reduce(
     (maxTime, lesson) => (lesson?.time > maxTime ? lesson?.time : maxTime),
-    lessons[0]?.time
+    lessons[0]?.time,
   )
 })
 
@@ -45,7 +50,7 @@ const minLessonTime = computed(() => {
     : timetableStore.lessons.filter((lesson) => lesson.day == day.value + 1)
   return lessons.reduce(
     (minTime, lesson) => (lesson.time < minTime ? lesson.time : minTime),
-    lessons[0]?.time
+    lessons[0]?.time,
   )
 })
 
@@ -64,29 +69,65 @@ const lessonsArray = computed(() => {
   return lessonsArray
 })
 
-let detailsLessons = reactive([] as MergedLesson[])
+let lessonsDetails = reactive([] as MergedLesson[])
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
-  if (!showSubstitutions || (event?.target as HTMLInputElement)?.classList.contains('text-blue')) {
+  if (!enableShowingDetails || (event?.target as HTMLInputElement)?.classList.contains('text-blue'))
     return
-  }
 
   if (lessons.length) {
-    detailsLessons = lessons
+    lessonsDetails = lessons
     lessonDetailsDialog.value = true
+  }
+}
+
+// Class bindings
+function styleMobile(timeIndex: number) {
+  return {
+    'highlight-substitution':
+      mobile.value &&
+      showSubstitutions &&
+      lessonsArray.value[day.value + 1][timeIndex]?.find((lesson) => lesson.substitution),
+  }
+}
+
+function styleDesktop(dayIndex: number, timeIndex: number) {
+  return {
+    'highlight-substitution':
+      !mobile.value &&
+      showSubstitutions &&
+      lessonsArray.value[dayIndex][timeIndex].find((lesson) => lesson.substitution),
+    'highlight-day': !mobile.value && dayIndex - 1 === currentDay.value,
+    'current-time':
+      showCurrentTime &&
+      !mobile.value &&
+      dayIndex - 1 === currentDay.value &&
+      timeIndex === currentTime.value,
+  }
+}
+
+function styleMobileCurrentTime(timeIndex: number) {
+  return {
+    'current-time':
+      showCurrentTime &&
+      mobile.value &&
+      day.value === currentDay.value &&
+      timeIndex === currentTime.value,
   }
 }
 </script>
 <template>
   <v-sheet elevation="2">
-    <v-table class="timetable-day">
+    <v-table>
       <thead>
         <tr v-if="!mobile">
-          <th class="timetable-time text-center" :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
+          <th class="text-center" :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
           <th
-            v-for="(weekday, index) in weekdays"
+            v-for="(weekday, index) in localizedWeekdays"
+            :key="index"
+            :class="{ 'highlight-light': index === day }"
             class="text-center"
-            :class="{ 'highlight-light': index === day }">
+          >
             {{ weekday }}
           </th>
         </tr>
@@ -94,85 +135,32 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
       <tbody>
         <tr
           v-for="timeIndex in maxLessonTime"
-          :class="{
-            'highlight-substitution':
-              mobile &&
-              showSubstitutions &&
-              lessonsArray[day + 1][timeIndex]?.find((lesson) => lesson.substitution)
-          }"
-          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null">
+          :key="timeIndex"
+          :class="styleMobile(timeIndex)"
+          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
+        >
           <template v-if="timeIndex >= minLessonTime">
-            <td
-              class="timetable-time"
-              :class="{
-                'current-time': mobile && day === getCurrentDay() && timeIndex === getCurrentTime()
-              }">
+            <td class="text-center" :class="styleMobileCurrentTime(timeIndex)">
               {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
             </td>
             <template v-if="!mobile">
-              <td v-if="showHoursInTimetable" class="timetable-hour">
+              <td class="text-center" v-if="showHoursInTimetable">
                 {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
               </td>
             </template>
             <td
               v-for="dayIndex in mobile ? 1 : 5"
-              :class="{
-                'highlight-substitution':
-                  !mobile &&
-                  showSubstitutions &&
-                  lessonsArray[dayIndex][timeIndex].find((lesson) => lesson.substitution),
-                'highlight-day': !mobile && dayIndex - 1 === getCurrentDay(),
-                'current-time':
-                  !mobile && dayIndex - 1 === getCurrentDay() && timeIndex === getCurrentTime()
-              }"
-              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null">
+              :key="dayIndex"
+              :class="styleDesktop(dayIndex, timeIndex)"
+              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
+            >
               <tr
+                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
+                :key="lesson.day + lesson.class + lesson.time"
                 class="d-flex"
                 :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
-                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]">
-                <td>
-                  {{
-                    showSubstitutions && lesson.substitution
-                      ? lesson.substitutionSubject
-                      : lesson.subject
-                  }}
-                </td>
-                <template v-if="entityType === EntityType.Class">
-                  <timetable-link
-                    :entityType="EntityType.Teacher"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.teacher"
-                    :substitutionEntity="lesson.substitutionTeacher" />
-                  <timetable-link
-                    :entityType="EntityType.Classroom"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.classroom"
-                    :substitutionEntity="lesson.substitutionClassroom" />
-                </template>
-                <template v-else-if="entityType === EntityType.Teacher">
-                  <timetable-link
-                    :entityType="EntityType.Class"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.class"
-                    :substitutionEntity="lesson.class" />
-                  <timetable-link
-                    :entityType="EntityType.Classroom"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.classroom"
-                    :substitutionEntity="lesson.substitutionClassroom" />
-                </template>
-                <template v-else>
-                  <timetable-link
-                    :entityType="EntityType.Class"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.class"
-                    :substitutionEntity="lesson.class" />
-                  <timetable-link
-                    :entityType="EntityType.Teacher"
-                    :substitution="lesson.substitution"
-                    :originalEntity="lesson.teacher"
-                    :substitutionEntity="lesson.substitutionTeacher" />
-                </template>
+              >
+                <TimetableLesson :lesson="lesson" />
               </tr>
             </td>
           </template>
@@ -181,7 +169,7 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
     </v-table>
 
     <v-dialog v-model="lessonDetailsDialog" width="25rem">
-      <timetable-details :lessons="detailsLessons" @closeDialog="lessonDetailsDialog = false" />
+      <TimetableDetails :lessons="lessonsDetails" @closeDialog="lessonDetailsDialog = false" />
     </v-dialog>
   </v-sheet>
 </template>
@@ -202,7 +190,6 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
   background-color: #009300;
   left: 0;
   top: 0;
-  bottom: 0;
 }
 
 .highlight-day {

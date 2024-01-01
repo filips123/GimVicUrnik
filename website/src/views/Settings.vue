@@ -2,24 +2,31 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
-import { EntityType, MenuType, useSettingsStore } from '@/stores/settings'
+import { useSettingsStore, EntityType } from '@/stores/settings'
 
+import { updateAllData } from '@/composables/update'
 import {
   localizeEntityType,
   localizeSnackType,
   localizeLunchType,
-  localizeSwitchSettings
+  localizeThemeType,
 } from '@/composables/localization'
 
-import EntitySelect from '@/components/EntitySelect.vue'
-import MenuSelect from '@/components/MenuSelect.vue'
-import ThemeSelect from '@/components/ThemeSelect.vue'
-import SelectMoodleToken from '@/components/SelectMoodleToken.vue'
+import SettingsAction from '@/components/SettingsAction.vue'
+import SettingsSwitch from '@/components/SettingsSwitch.vue'
+
+import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
+import SettingsSelectMenuSnack from '@/components/SettingsSelectMenuSnack.vue'
+import SettingsSelectMenuLunch from '@/components/SettingsSelectMenuLunch.vue'
+
+import SettingsSelectTheme from '@/components/SettingsSelectTheme.vue'
+import SettingsSetMoodleToken from '@/components/SettingsSetMoodleToken.vue'
+import SettingsSetDataCollection from '@/components/SettingsSetDataCollection.vue'
+
 import SettingsAbout from '@/components/SettingsAbout.vue'
 
-const settingsStore = useSettingsStore()
-
 const {
+  entities,
   entityType,
   snackType,
   lunchType,
@@ -29,92 +36,119 @@ const {
   showCurrentTime,
   enableShowingDetails,
   enablePullToRefresh,
-  enableUpdateOnLoad
+  enableUpdateOnLoad,
+  themeType,
+  moodleToken,
+  dataCollection,
 } = storeToRefs(useSettingsStore())
 
-const switchModels = [
-  showSubstitutions,
-  showLinksInTimetable,
-  showHoursInTimetable,
-  showCurrentTime,
-  enableShowingDetails,
-  enablePullToRefresh,
-  enableUpdateOnLoad
-]
+const selectEntity = ref(false)
+const selectSnack = ref(false)
+const selectLunch = ref(false)
 
-const entitySelect = ref(false)
+const selectTheme = ref(false)
+const setMoodleToken = ref(false)
+const setDataCollection = ref(false)
 
-const menuSelectionDialog = ref(false)
+const about = ref(false)
 
-const menuType = ref(MenuType.Snack)
+const selectEntityLabel =
+  (entityType.value === EntityType.Classroom ? 'Izbrana ' : 'Izbran ') +
+  localizeEntityType(entityType.value)
 </script>
 
 <template>
-  <div class="settings px-4 pt-4">
-    <v-input
-      class="mb-6"
-      append-icon="mdi-tune-variant"
-      :messages="settingsStore.entities.join(', ')"
-      @click="entitySelect = true">
-      {{ entityType === EntityType.Classroom ? 'Izbrana' : 'Izbran' }}
-      {{ localizeEntityType(entityType) }}
-    </v-input>
-    <v-input
-      class="mb-6"
-      append-icon="mdi-tune-variant"
+  <div class="px-4 pt-4 mx-auto" style="max-width: 35rem">
+    <SettingsAction
+      icon="mdi-tune-variant"
+      :messages="entities.join(', ')"
+      v-model="selectEntity"
+      :label="selectEntityLabel"
+    />
+
+    <SettingsAction
+      icon="mdi-tune-variant"
       :messages="localizeSnackType(snackType)"
-      @click="
-        menuType = MenuType.Snack;
-        menuSelectionDialog = true
-      ">
-      Izbrana malica
-    </v-input>
-    <v-input
-      append-icon="mdi-tune-variant"
+      v-model="selectSnack"
+      label="Izbrana malica"
+    />
+
+    <SettingsAction
+      icon="mdi-tune-variant"
       :messages="localizeLunchType(lunchType)"
-      @click="
-        menuType = MenuType.Lunch;
-        menuSelectionDialog = true
-      ">
-      Izbrano kosilo
-    </v-input>
+      v-model="selectLunch"
+      label="Izbrano kosilo"
+    />
 
-    <v-divider class="mt-6" />
+    <v-divider class="mb-6" />
 
-    <entity-select v-model="entitySelect" />
-    <menu-select v-model="menuSelectionDialog" :menuType="menuType" />
+    <SettingsSwitch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
+    <SettingsSwitch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
+    <SettingsSwitch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
+    <SettingsSwitch v-model="showCurrentTime" label="Prikaži trenutno uro" />
+    <SettingsSwitch v-model="enableShowingDetails" label="Klikni za podrobnosti" />
+    <SettingsSwitch v-model="enablePullToRefresh" label="Potegni za posodobitev" />
+    <SettingsSwitch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
 
-    <v-list>
-      <v-list-item
-        class="pa-0"
-        v-for="(switchSettings, indexModel) in localizeSwitchSettings"
-        :title="switchSettings">
-        <template v-slot:append>
-          <v-switch v-model="switchModels[indexModel].value" color="green"> </v-switch>
-        </template>
-      </v-list-item>
-    </v-list>
+    <v-divider class="mb-6" />
 
-    <v-divider class="my-6" />
+    <SettingsAction
+      icon="mdi-weather-night"
+      :messages="localizeThemeType(themeType)"
+      v-model="selectTheme"
+      label="Izbrana barvna tema"
+    />
 
-    <!-- DATA collection -->
-    <theme-select />
-    <select-moodle-token />
+    <SettingsAction
+      icon="mdi-key"
+      :messages="moodleToken ? 'Nastavljen' : 'Ni nastavljen'"
+      v-model="setMoodleToken"
+      label="Moodle žeton"
+    />
 
-    <v-divider class="my-6" />
+    <SettingsAction
+      icon="mdi-database-import-outline"
+      :messages="dataCollection.toString()"
+      v-model="setDataCollection"
+      label="Zbiranje tehničnih podatkov"
+    />
 
-    <!-- APP update -->
-    LALA
+    <v-divider class="mb-6" />
 
-    <v-divider class="my-6" />
+    <SettingsAction
+      icon="mdi-update"
+      messages="TODO VERZIJA"
+      label="Posodobi aplikacijo"
+      @click=""
+    />
 
-    <settings-about />
+    <SettingsAction
+      icon="mdi-update"
+      messages="TODO VERZIJA"
+      label="Posodobi podatke"
+      @click="updateAllData()"
+    />
+
+    <v-divider class="mb-6" />
+
+    <SettingsAction
+      icon="mdi-information-outline"
+      messages="TODO VERZIJA"
+      v-model="about"
+      label="O Aplikaciji"
+    />
+
+    <SettingsSelectEntity v-model="selectEntity" />
+    <SettingsSelectMenuSnack v-model="selectSnack" />
+    <SettingsSelectMenuLunch v-model="selectLunch" />
+    <SettingsSelectTheme v-model="selectTheme" />
+    <SettingsSetMoodleToken v-model="setMoodleToken" />
+    <SettingsSetDataCollection v-model="setDataCollection" />
+    <SettingsAbout v-model="about" />
   </div>
 </template>
-
 <style>
-.settings {
-  margin: 0 auto;
-  max-width: 40rem;
+.v-selection-control--density-default {
+  --v-input-control-height: 0px;
 }
 </style>

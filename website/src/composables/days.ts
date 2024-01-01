@@ -1,5 +1,3 @@
-export const weekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek']
-
 export function getCurrentDay(): number {
   let currentDay = new Date().getDay()
 

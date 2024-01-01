@@ -14,7 +14,7 @@ export interface Document {
 export const useDocumentsStore = defineStore('documents', {
   state: () => {
     return {
-      documents: [] as Document[]
+      documents: [] as Document[],
     }
   },
 
@@ -26,8 +26,8 @@ export const useDocumentsStore = defineStore('documents', {
       } catch (error) {
         console.error(error)
       }
-    }
+    },
   },
 
-  persist: true
+  persist: true,
 })

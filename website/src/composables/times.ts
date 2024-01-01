@@ -8,7 +8,7 @@ export const lessonTimes: [string, string][] = [
   ['12:35', '13:20'],
   ['13:25', '14:10'],
   ['14:15', '15:00'],
-  ['15:05', '15:50']
+  ['15:05', '15:50'],
 ]
 
 export function getCurrentTime(): number {

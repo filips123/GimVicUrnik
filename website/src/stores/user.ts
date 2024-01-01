@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user', {
       day: getCurrentDay(),
 
       entityType: EntityType.None,
-      entities: ['']
+      entities: [''],
     }
   },
 
@@ -19,10 +19,5 @@ export const useUserStore = defineStore('user', {
       this.entityType = settingsStore.entityType
       this.entities = settingsStore.entities
     },
-
-    changeEntity(entityType: EntityType, entity: string) {
-      this.entityType = entityType
-      this.entities = [entity]
-    }
-  }
+  },
 })
