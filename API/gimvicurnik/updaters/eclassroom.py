@@ -656,7 +656,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         """
 
         # Extract workbook from an XLSX stream
-        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
+        wb = with_span(op="extract")(load_workbook)(stream, data_only=True)
 
         lunch_schedule = []
 
@@ -664,6 +664,9 @@ class EClassroomUpdater(BaseMultiUpdater):
         for ws in wb:
             if ws.title != "kosilo":
                 continue
+
+            while not ws["A1"].value:
+                ws.delete_cols(1)
 
             for wr in ws.iter_rows(min_row=3, max_col=5):
                 if not wr[3].value:
@@ -674,7 +677,6 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[0].value, datetime)
                     assert isinstance(wr[1].value, str)
                     assert isinstance(wr[2].value, str)
-                    assert isinstance(wr[3].value, int)
                     assert isinstance(wr[4].value, str)
 
                 # Ignore rows that do not contain a class name
