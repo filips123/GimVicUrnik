@@ -20,7 +20,7 @@ const routerName = computed(() => router.currentRoute.value.name)
 const userStore = useUserStore()
 const { entities, entityType } = storeToRefs(useUserStore())
 
-userStore.resetData()
+userStore.resetEntityToSettings()
 
 const sortedEntityList = computed(() => sortEntityList(entityType.value, entities.value))
 
@@ -43,7 +43,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
   <v-app>
     <v-app-bar app clipped-left color="#009300" extension-height="35">
       <v-app-bar-title>
-        <span @click="userStore.resetData()">{{ routerTitle }}</span>
+        <span @click="userStore.resetEntityToSettings()">{{ routerTitle }}</span>
         <template v-if="routerTitle === 'Urnik'">
           <div class="entities">{{ sortedEntityList.join(', ') }}</div>
         </template>

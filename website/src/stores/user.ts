@@ -13,7 +13,7 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    resetData() {
+    resetEntityToSettings() {
       const settingsStore = useSettingsStore()
 
       this.entityType = settingsStore.entityType

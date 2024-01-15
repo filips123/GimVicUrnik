@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// import { useSettingsStore, EntityType } from '@/stores/settings'
-
-// const settingsStore = useSettingsStore()
-// const { entityType } = settingsStore
+import { useSettingsStore, EntityType } from '@/stores/settings'
 
 const Home = () => import('../views/Home.vue')
 const Welcome = () => import('../views/Welcome.vue')
@@ -74,8 +71,11 @@ const router = createRouter({
   ],
 })
 
-// router.beforeEach(async (to, from) => {
-//   if (entityType == EntityType.None && to.name !== 'welcome') return { name: 'welcome' }
-// })
+router.beforeEach(async (to, from) => {
+  const settingsStore = useSettingsStore()
+  const { entityType } = settingsStore
+
+  if (entityType === EntityType.None && to.name !== 'welcome') return { name: 'welcome' }
+})
 
 export default router

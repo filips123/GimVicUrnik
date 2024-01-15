@@ -35,7 +35,7 @@ export enum ThemeType {
 export const useSettingsStore = defineStore('settings', {
   state: () => {
     return {
-      entityType: EntityType.Class, // EntityType.None,
+      entityType: EntityType.None,
       classesList: [] as string[],
       teachersList: [] as string[],
       classroomsList: [] as string[],
@@ -43,7 +43,7 @@ export const useSettingsStore = defineStore('settings', {
       snackType: SnackType.Normal,
       lunchType: LunchType.Normal,
 
-      entities: ['1A'], // [''],
+      entities: [''],
 
       showSubstitutions: true,
       showLinksInTimetable: true,

@@ -25,7 +25,7 @@ const isChecked = computed({
   </v-list-item>
 </template>
 
-<style>
+<style scoped>
 .v-switch.v-input--horizontal {
   grid-template-areas: none;
 }
