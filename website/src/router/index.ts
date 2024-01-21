@@ -65,7 +65,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)',
       name: 'notfound',
-      meta: { title: 'Strani ni mogoče najti' },
+      meta: { title: 'Stran ni najdena' },
       component: NotFound,
     },
   ],
