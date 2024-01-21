@@ -662,14 +662,12 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         # Parse lunch schedule
         for ws in wb:
-            if ws.title != "kosilo":
-                continue
-
-            while not ws["A1"].value:
-                ws.delete_cols(1)
+            for column in ws.column_dimensions.values():
+                if column.hidden:
+                    ws.delete_cols(1)
 
             for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[3].value:
+                if not wr[3].value and wr[3].value != 0:
                     break
 
                 # Check for correct cell value type
