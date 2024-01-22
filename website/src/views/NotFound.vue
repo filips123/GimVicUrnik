@@ -4,6 +4,7 @@ document.title = import.meta.env.VITE_TITLE + ' - Stran ni najdena'
 
 <template>
   <h2>
-    Strani, ki ste jo zahtevali, ni bilo mogoče najti. Preverite, ali je vnešen naslov pravilen ter poskusite znova.
+    Strani, ki ste jo zahtevali, ni bilo mogoče najti. Preverite, ali je vnešen naslov pravilen ter
+    poskusite znova.
   </h2>
 </template>

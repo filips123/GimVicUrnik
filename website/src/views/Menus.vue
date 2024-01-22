@@ -20,10 +20,30 @@ menuStore.updateMenus()
 menuStore.updateLunchSchedules()
 
 const { menus, lunchSchedules } = menuStore
+
+function swipe(direction: string) {
+  switch (direction) {
+    case 'left':
+      day.value = Math.min(4, day.value + 1)
+      break
+    case 'right':
+      day.value = Math.max(0, day.value - 1)
+      break
+  }
+}
 </script>
 
 <template>
-  <MenuDisplay v-if="mobile" :menu="menus[day]" :lunch-schedules="lunchSchedules[day]" />
+  <div
+    v-if="mobile"
+    v-touch="{
+      left: () => swipe('left'),
+      right: () => swipe('right'),
+    }"
+    class="h-auto"
+  >
+    <MenuDisplay :menu="menus[day]" :lunch-schedules="lunchSchedules[day]" />
+  </div>
   <v-row v-else no-gutters>
     <v-col v-for="(menu, dayIndex) in menus">
       <MenuDisplay :menu="menu" :lunch-schedules="lunchSchedules[dayIndex]" />

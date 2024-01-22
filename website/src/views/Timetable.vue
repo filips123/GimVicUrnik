@@ -115,63 +115,84 @@ function styleMobileCurrentTime(timeIndex: number) {
       timeIndex === currentTime.value,
   }
 }
+
+function swipe(direction: string) {
+  if (!mobile.value) return
+
+  switch (direction) {
+    case 'left':
+      day.value = Math.min(4, day.value + 1)
+      break
+    case 'right':
+      day.value = Math.max(0, day.value - 1)
+      break
+  }
+}
 </script>
 <template>
-  <v-sheet elevation="2">
-    <v-table>
-      <thead>
-        <tr v-if="!mobile">
-          <th class="text-center" :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
-          <th
-            v-for="(weekday, index) in localizedWeekdays"
-            :key="index"
-            :class="{ 'highlight-light': index === day }"
-            class="text-center"
+  <div
+    v-touch="{
+      left: () => swipe('left'),
+      right: () => swipe('right'),
+    }"
+    class="h-auto"
+  >
+    <v-sheet elevation="2">
+      <v-table>
+        <thead>
+          <tr v-if="!mobile">
+            <th class="text-center" :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
+            <th
+              v-for="(weekday, index) in localizedWeekdays"
+              :key="index"
+              :class="{ 'highlight-light': index === day }"
+              class="text-center"
+            >
+              {{ weekday }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="timeIndex in maxLessonTime"
+            :key="timeIndex"
+            :class="styleMobile(timeIndex)"
+            @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
           >
-            {{ weekday }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="timeIndex in maxLessonTime"
-          :key="timeIndex"
-          :class="styleMobile(timeIndex)"
-          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
-        >
-          <template v-if="timeIndex >= minLessonTime">
-            <td class="text-center" :class="styleMobileCurrentTime(timeIndex)">
-              {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
-            </td>
-            <template v-if="!mobile">
-              <td class="text-center" v-if="showHoursInTimetable">
-                {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
+            <template v-if="timeIndex >= minLessonTime">
+              <td class="text-center" :class="styleMobileCurrentTime(timeIndex)">
+                {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
+              </td>
+              <template v-if="!mobile">
+                <td class="text-center" v-if="showHoursInTimetable">
+                  {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
+                </td>
+              </template>
+              <td
+                v-for="dayIndex in mobile ? 1 : 5"
+                :key="dayIndex"
+                :class="styleDesktop(dayIndex, timeIndex)"
+                @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
+              >
+                <tr
+                  v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
+                  :key="lesson.day + lesson.class + lesson.time"
+                  class="d-flex"
+                  :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
+                >
+                  <TimetableLesson :lesson="lesson" />
+                </tr>
               </td>
             </template>
-            <td
-              v-for="dayIndex in mobile ? 1 : 5"
-              :key="dayIndex"
-              :class="styleDesktop(dayIndex, timeIndex)"
-              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
-            >
-              <tr
-                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
-                :key="lesson.day + lesson.class + lesson.time"
-                class="d-flex"
-                :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
-              >
-                <TimetableLesson :lesson="lesson" />
-              </tr>
-            </td>
-          </template>
-        </tr>
-      </tbody>
-    </v-table>
+          </tr>
+        </tbody>
+      </v-table>
 
-    <v-dialog v-model="lessonDetailsDialog" width="25rem">
-      <TimetableDetails :lessons="lessonsDetails" @closeDialog="lessonDetailsDialog = false" />
-    </v-dialog>
-  </v-sheet>
+      <v-dialog v-model="lessonDetailsDialog" width="25rem">
+        <TimetableDetails :lessons="lessonsDetails" @closeDialog="lessonDetailsDialog = false" />
+      </v-dialog>
+    </v-sheet>
+  </div>
 </template>
 
 <style>
