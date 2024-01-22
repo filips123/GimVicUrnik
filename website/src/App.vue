@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { RouterView, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import { useUserStore } from '@/stores/user'
+import { useSettingsStore } from '@/stores/settings'
 
-import { sortEntityList } from './composables/entities'
+import { sortEntityList } from '@/composables/entities'
+import { updateAllData } from '@/composables/update'
+
+import PullToRefresh from 'pulltorefreshjs'
 
 import NavigationDesktop from '@/components/NavigationDesktop.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
+
+const { mobile } = useDisplay()
 
 const router = useRouter()
 const routerTitle = computed(() => router.currentRoute.value.meta.title)
@@ -19,12 +25,26 @@ const routerName = computed(() => router.currentRoute.value.name)
 
 const userStore = useUserStore()
 const { entities, entityType } = storeToRefs(useUserStore())
+const { enablePullToRefresh } = storeToRefs(useSettingsStore())
 
 userStore.resetEntityToSettings()
 
 const sortedEntityList = computed(() => sortEntityList(entityType.value, entities.value))
 
-const { mobile } = useDisplay()
+onMounted(() => {
+  PullToRefresh.init({
+    mainElement: '#ptr--target',
+
+    instructionsPullToRefresh: 'Povlecite za posodobitev',
+    instructionsReleaseToRefresh: 'Izpustite za posodobitev',
+    instructionsRefreshing: 'Posodabljanje',
+
+    shouldPullToRefresh: () => enablePullToRefresh.value,
+    onRefresh: (): void => {
+      updateAllData()
+    },
+  })
+})
 
 const pages: { title: string; link: string; icon: string }[] = [
   { title: 'Viri', link: 'sources', icon: 'mdi-file-document-outline' },
@@ -65,6 +85,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
     </v-app-bar>
     <NavigationDesktop v-if="!mobile" :navigation="navigation" />
     <v-main id="main">
+      <span id="ptr--target"></span>
       <v-container fluid><router-view /></v-container>
     </v-main>
     <NavigationMobile v-if="mobile" :navigation="navigation" />

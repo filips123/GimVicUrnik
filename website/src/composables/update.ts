@@ -40,6 +40,6 @@ export async function updateAllData(): Promise<void> {
     timetableStore.updateTimetable(),
     timetableStore.updateSubstitutions(),
     timetableStore.updateEmptyClassrooms(),
-    userStore.resetData(),
+    userStore.resetEntityToSettings(),
   ])
 }
