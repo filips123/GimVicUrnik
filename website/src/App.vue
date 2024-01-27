@@ -13,9 +13,10 @@ import { updateAllData } from '@/composables/update'
 
 import PullToRefresh from 'pulltorefreshjs'
 
-import NavigationDesktop from '@/components/NavigationDesktop.vue'
-import NavigationMobile from '@/components/NavigationMobile.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
+import NavigationDesktop from '@/components/NavigationDesktop.vue'
+import Snackbar from '@/components/Snackbar.vue'
+import NavigationMobile from '@/components/NavigationMobile.vue'
 
 const { mobile } = useDisplay()
 
@@ -88,6 +89,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
       <span id="ptr--target"></span>
       <v-container fluid><router-view /></v-container>
     </v-main>
+    <Snackbar />
     <NavigationMobile v-if="mobile" :navigation="navigation" />
   </v-app>
 </template>

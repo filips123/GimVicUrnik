@@ -6,10 +6,14 @@ import { useRouter } from 'vue-router'
 import { EntityType } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 
+import { updateAllData } from '@/composables/update'
+
 import WelcomeInfo from '@/components/WelcomeInfo.vue'
 import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
 
 const router = useRouter()
+
+updateAllData()
 
 const userStore = useUserStore()
 userStore.$reset()

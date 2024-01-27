@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { getWeekdays } from '@/composables/days'
-import { fetchHandle } from '@/composables/update'
+import { fetchHandle, updateWrapper } from '@/composables/update'
 
 export interface Menu {
   date: string
@@ -34,23 +34,9 @@ export const useMenuStore = defineStore('menu', {
 
   actions: {
     async updateMenus() {
-      /*
-      if (!navigator.onLine) {
-        displaySnackbar('Internetna povezava ni na voljo')
-        return
-      }
-      */
-
-      /*
-      const { enableUpdateOnLoad } = useSettingsStore()
-      if (enableUpdateOnLoad || !localStorage.storage || !localStorage.settings) {
-        return
-      }*/
-
-      // Dates are fixed during development phase
-      try {
+      updateWrapper(async () => {
         this.menus = await Promise.all(
-          getWeekdays(new Date('2023-11-27')).map(async (date): Promise<Menu> => {
+          getWeekdays(new Date()).map(async (date): Promise<Menu> => {
             const response = await fetchHandle(
               import.meta.env.VITE_API + '/menus/date/' + date.toISOString().split('T')[0],
             )
@@ -60,16 +46,11 @@ export const useMenuStore = defineStore('menu', {
             return menu
           }),
         )
-      } catch (error) {
-        // displaySnackbar('Napaka pri pridobivanju podatkov')
-        console.error(error)
-
-        // if (import.meta.env.VITE_SENTRY_ENABLED === 'true') captureException(error)
-      }
+      })
     },
 
     async updateLunchSchedules() {
-      try {
+      updateWrapper(async () => {
         this.lunchSchedules = await Promise.all(
           getWeekdays(new Date('2023-10-24')).map(async (date): Promise<LunchSchedule[]> => {
             const response = await fetchHandle(
@@ -80,9 +61,7 @@ export const useMenuStore = defineStore('menu', {
             return lunchSchedule
           }),
         )
-      } catch (error) {
-        console.error(error)
-      }
+      })
     },
   },
 

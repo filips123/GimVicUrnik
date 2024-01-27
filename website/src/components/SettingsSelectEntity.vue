@@ -5,13 +5,14 @@ import { useDisplay } from 'vuetify'
 
 import { useSettingsStore, EntityType } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
+import { useSnackbarStore } from '@/stores/snackbar'
 
 import { sortEntityList } from '@/composables/entities'
 import { storeToRefs } from 'pinia'
 
 const props = defineProps<{
   modelValue: boolean
-  welcome: boolean
+  welcome?: boolean
 }>()
 const emit = defineEmits(['update:modelValue'])
 
@@ -32,6 +33,9 @@ const settingsStore = useSettingsStore()
 
 settingsStore.updateLists()
 const { classesList, teachersList, classroomsList } = storeToRefs(useSettingsStore())
+
+const snackbarStore = useSnackbarStore()
+const { displaySnackbar } = snackbarStore
 
 const saveSelection = ref(true)
 
@@ -90,8 +94,18 @@ function handleEntitySelection() {
 
     saveSelection.value = true
     entitySelectionList.value = []
-  } else {
-    // Snackbar
+    return
+  }
+
+  switch (entityType.value) {
+    case EntityType.Class:
+      displaySnackbar('Izberite vsaj en razred ali izbirni predmet')
+      return
+    case EntityType.Teacher:
+      displaySnackbar('Izberite vsaj enega profesorja')
+      return
+    case EntityType.Classroom:
+      displaySnackbar('Izberite vsaj eno učilnico')
   }
 }
 
@@ -136,7 +150,7 @@ function backToSelectEntity() {
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="entitySelection" scrollable width="25rem" height="30rem" persistent>
+  <v-dialog v-model="entitySelection" scrollable width="25rem" height="20rem" persistent>
     <v-card>
       <v-card-title class="bg-green uppercase">{{ title }}</v-card-title>
       <v-card-subtitle class="pa-2">

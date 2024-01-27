@@ -1,8 +1,10 @@
+import { storeToRefs } from 'pinia'
 import { useMenuStore } from '@/stores/menu'
 import { useTimetableStore } from '@/stores/timetable'
 import { useDocumentsStore } from '@/stores/documents'
 import { useUserStore } from '@/stores/user'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore, EntityType } from '@/stores/settings'
+import { useSnackbarStore } from '@/stores/snackbar'
 
 class HTTPError extends Error {
   status: number
@@ -29,8 +31,18 @@ export async function updateAllData(): Promise<void> {
   const documentsStore = useDocumentsStore()
   const menuStore = useMenuStore()
   const settingsStore = useSettingsStore()
+  const { entityType } = storeToRefs(useSettingsStore())
+
   const timetableStore = useTimetableStore()
   const userStore = useUserStore()
+
+  const snackbarStore = useSnackbarStore()
+  const { displaySnackbar } = snackbarStore
+
+  if (!navigator.onLine) {
+    displaySnackbar('Internetna povezava ni na voljo')
+    return
+  }
 
   await Promise.all([
     documentsStore.updateDocuments(),
@@ -42,4 +54,30 @@ export async function updateAllData(): Promise<void> {
     timetableStore.updateEmptyClassrooms(),
     userStore.resetEntityToSettings(),
   ])
+
+  if (entityType.value !== EntityType.None) {
+    displaySnackbar('Podatki posodobljeni')
+  }
+}
+
+export function updateWrapper(updateFunction: () => any) {
+  const snackbarStore = useSnackbarStore()
+  const { displaySnackbar } = snackbarStore
+
+  const { dataVersion } = storeToRefs(useSettingsStore())
+
+  if (!navigator.onLine) {
+    displaySnackbar('Internetna povezava ni na voljo')
+    return
+  }
+
+  try {
+    updateFunction()
+    dataVersion.value = new Date().toLocaleDateString('sl', { hour: 'numeric', minute: 'numeric' })
+  } catch (error) {
+    displaySnackbar('Napaka pri pridobivanju podatkov')
+    console.error(error)
+
+    // if (import.meta.env.VITE_SENTRY_ENABLED === 'true') captureException(error)
+  }
 }

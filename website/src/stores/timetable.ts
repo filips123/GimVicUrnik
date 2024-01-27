@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchHandle } from '@/composables/update'
+import { fetchHandle, updateWrapper } from '@/composables/update'
 import { getWeekdays } from '@/composables/days'
 import { EntityType } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
@@ -120,36 +120,30 @@ export const useTimetableStore = defineStore('timetable', {
 
   actions: {
     async updateTimetable() {
-      try {
+      updateWrapper(async () => {
         const response = await fetchHandle(import.meta.env.VITE_API + '/timetable')
         this.timetable = await response.json()
-      } catch (error) {
-        console.error(error)
-      }
+      })
     },
 
     async updateSubstitutions() {
-      try {
+      updateWrapper(async () => {
         const responses = await Promise.all(
-          getWeekdays(new Date('2023-11-27')).map((date) =>
+          getWeekdays(new Date()).map((date) =>
             fetchHandle(
               import.meta.env.VITE_API + '/substitutions/date/' + date.toISOString().split('T')[0],
             ),
           ),
         )
         this.substitutions = await Promise.all(responses.map((response) => response.json()))
-      } catch (error) {
-        console.error(error)
-      }
+      })
     },
 
     async updateEmptyClassrooms() {
-      try {
+      updateWrapper(async () => {
         const response = await fetchHandle(import.meta.env.VITE_API + '/timetable/classrooms/empty')
         this.emptyClassrooms = await response.json()
-      } catch (error) {
-        console.error(error)
-      }
+      })
     },
   },
 

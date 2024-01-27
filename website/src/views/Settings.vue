@@ -40,6 +40,7 @@ const {
   themeType,
   moodleToken,
   dataCollection,
+  dataVersion,
 } = storeToRefs(useSettingsStore())
 
 const selectEntity = ref(false)
@@ -124,7 +125,7 @@ const selectEntityLabel =
 
     <SettingsAction
       icon="mdi-update"
-      messages="TODO VERZIJA"
+      :messages="`Trenutna različica: ${dataVersion}`"
       label="Posodobi podatke"
       @click="updateAllData()"
     />

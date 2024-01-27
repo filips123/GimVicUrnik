@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchHandle } from '@/composables/update'
+import { fetchHandle, updateWrapper } from '@/composables/update'
 
 export enum EntityType {
   Class,
@@ -56,12 +56,14 @@ export const useSettingsStore = defineStore('settings', {
       dataCollection: true,
       themeType: ThemeType.Light,
       moodleToken: '',
+
+      dataVersion: '',
     }
   },
 
   actions: {
     async updateLists() {
-      try {
+      updateWrapper(async () => {
         const responses = await Promise.all([
           fetchHandle(import.meta.env.VITE_API + '/list/classes'),
           fetchHandle(import.meta.env.VITE_API + '/list/teachers'),
@@ -74,9 +76,7 @@ export const useSettingsStore = defineStore('settings', {
         this.classesList = classesList
         this.teachersList = teachersList
         this.classroomsList = classroomsList
-      } catch (error) {
-        console.error(error)
-      }
+      })
     },
   },
 
