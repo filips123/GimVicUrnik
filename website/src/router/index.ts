@@ -75,6 +75,8 @@ router.beforeEach(async (to, from) => {
   const settingsStore = useSettingsStore()
   const { entityType } = settingsStore
 
+  document.title = import.meta.env.VITE_TITLE + ' - ' + to.meta.title
+
   if (entityType === EntityType.None && to.name !== 'welcome') return { name: 'welcome' }
 })
 

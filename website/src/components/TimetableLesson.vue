@@ -23,42 +23,42 @@ const { showSubstitutions } = settingsStore
     <TimetableLink
       :entityType="EntityType.Teacher"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.teacher"
-      :substitutionEntity="lesson.substitutionTeacher"
+      :originalEntity="lesson.teacher || ''"
+      :substitutionEntity="lesson.substitutionTeacher || ''"
     />
     <TimetableLink
       :entityType="EntityType.Classroom"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.classroom"
-      :substitutionEntity="lesson.substitutionClassroom"
+      :originalEntity="lesson.classroom || ''"
+      :substitutionEntity="lesson.substitutionClassroom || ''"
     />
   </template>
   <template v-else-if="entityType === EntityType.Teacher">
     <TimetableLink
       :entityType="EntityType.Class"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.class"
-      :substitutionEntity="lesson.class"
+      :originalEntity="lesson.class || ''"
+      :substitutionEntity="lesson.class || ''"
     />
     <TimetableLink
       :entityType="EntityType.Classroom"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.classroom"
-      :substitutionEntity="lesson.substitutionClassroom"
+      :originalEntity="lesson.classroom || ''"
+      :substitutionEntity="lesson.substitutionClassroom || ''"
     />
   </template>
   <template v-else>
     <TimetableLink
       :entityType="EntityType.Class"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.class"
-      :substitutionEntity="lesson.class"
+      :originalEntity="lesson.class || ''"
+      :substitutionEntity="lesson.class || ''"
     />
     <TimetableLink
       :entityType="EntityType.Teacher"
       :substitution="lesson.substitution"
-      :originalEntity="lesson.teacher"
-      :substitutionEntity="lesson.substitutionTeacher"
+      :originalEntity="lesson.teacher || ''"
+      :substitutionEntity="lesson.substitutionTeacher || ''"
     />
   </template>
 </template>

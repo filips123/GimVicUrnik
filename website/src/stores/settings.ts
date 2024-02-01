@@ -56,8 +56,9 @@ export const useSettingsStore = defineStore('settings', {
       dataCollection: true,
       themeType: ThemeType.Light,
       moodleToken: '',
-
       dataVersion: '',
+
+      circularsPassword: ''
     }
   },
 

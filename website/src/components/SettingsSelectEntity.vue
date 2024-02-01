@@ -44,6 +44,7 @@ const entitySelection = ref(false)
 const entityType = ref(EntityType.None)
 
 function handleChooseEntity(selectedEntity: EntityType) {
+  entitySelectionList.value = []
   entityType.value = selectedEntity
   entitySelection.value = true
   selectEntity.value = false
@@ -93,7 +94,6 @@ function handleEntitySelection() {
     }
 
     saveSelection.value = true
-    entitySelectionList.value = []
     return
   }
 
@@ -111,7 +111,6 @@ function handleEntitySelection() {
 
 function closeEntitySelection() {
   entitySelection.value = false
-  entitySelectionList.value = []
 }
 
 function backToSelectEntity() {
@@ -172,20 +171,21 @@ function backToSelectEntity() {
           <v-switch hide-details v-model="saveSelection" color="green" class="pl-2" />
           <v-btn
             color="green"
-            :class="{ 'ma-0': mobile }"
+            :class="{ 'ma-0': mobile, 'pa-0': mobile }"
+            :style="{ 'min-width': 0 + 'px' }"
             @click="closeEntitySelection()"
             text="Zapri"
           />
         </template>
         <v-btn
           color="green"
-          :class="{ 'ma-0': mobile }"
+          :class="{ 'ma-0': mobile, 'pa-0': mobile }"
           @click="backToSelectEntity()"
           text="Nazaj"
         />
         <v-btn
           color="green"
-          :class="{ 'ma-0': mobile }"
+          :class="{ 'ma-0': mobile, 'pa-0': mobile }"
           @click="handleEntitySelection()"
           text="V redu"
         />

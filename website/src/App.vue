@@ -40,7 +40,7 @@ onMounted(() => {
     instructionsReleaseToRefresh: 'Izpustite za posodobitev',
     instructionsRefreshing: 'Posodabljanje',
 
-    shouldPullToRefresh: () => enablePullToRefresh.value,
+    shouldPullToRefresh: () => enablePullToRefresh.value && !window.scrollY,
     onRefresh: (): void => {
       updateAllData()
     },
@@ -98,5 +98,14 @@ const navigation: { title: string; link: string; icon: string }[] = [
 .entities {
   color: hsla(0, 0%, 100%, 0.7);
   font-size: 0.775rem;
+}
+p {
+  padding: 5px 0px;
+}
+.v-card-title {
+  white-space: normal !important;
+}
+li {
+  margin-left: 25px;
 }
 </style>

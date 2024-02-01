@@ -3,8 +3,6 @@ import { useDocumentsStore } from '@/stores/documents'
 
 import SourcesList from '@/components/SourcesList.vue'
 
-document.title = import.meta.env.VITE_TITLE + ' - Viri'
-
 const documentsStore = useDocumentsStore()
 const { documents } = documentsStore
 

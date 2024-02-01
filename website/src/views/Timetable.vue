@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 
@@ -13,8 +13,6 @@ import { localizedWeekdays } from '@/composables/localization'
 
 import TimetableLesson from '@/components/TimetableLesson.vue'
 import TimetableDetails from '@/components/TimetableDetails.vue'
-
-document.title = import.meta.env.VITE_TITLE + ' - Urnik'
 
 const { mobile } = useDisplay()
 
@@ -69,14 +67,14 @@ const lessonsArray = computed(() => {
   return lessonsArray
 })
 
-let lessonsDetails = reactive([] as MergedLesson[])
+const lessonsDetails = ref([] as MergedLesson[])
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
   if (!enableShowingDetails || (event?.target as HTMLInputElement)?.classList.contains('text-blue'))
     return
 
   if (lessons.length) {
-    lessonsDetails = lessons
+    lessonsDetails.value = lessons
     lessonDetailsDialog.value = true
   }
 }
@@ -176,7 +174,7 @@ function swipe(direction: string) {
               >
                 <tr
                   v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
-                  :key="lesson.day + lesson.class + lesson.time"
+                  :key="lesson.day + lesson.class + lesson.time + lesson.teacher"
                   class="d-flex"
                   :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
                 >
@@ -187,10 +185,7 @@ function swipe(direction: string) {
           </tr>
         </tbody>
       </v-table>
-
-      <v-dialog v-model="lessonDetailsDialog" width="25rem">
-        <TimetableDetails :lessons="lessonsDetails" @closeDialog="lessonDetailsDialog = false" />
-      </v-dialog>
+      <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
     </v-sheet>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { useSettingsStore, EntityType } from '@/stores/settings'
@@ -53,9 +53,11 @@ const setDataCollection = ref(false)
 
 const about = ref(false)
 
-const selectEntityLabel =
-  (entityType.value === EntityType.Classroom ? 'Izbrana ' : 'Izbran ') +
-  localizeEntityType(entityType.value)
+const selectEntityLabel = computed(
+  () =>
+    (entityType.value === EntityType.Classroom ? 'Izbrana ' : 'Izbran ') +
+    localizeEntityType(entityType.value),
+)
 </script>
 
 <template>
@@ -109,7 +111,7 @@ const selectEntityLabel =
 
     <SettingsAction
       icon="mdi-database-import-outline"
-      :messages="dataCollection.toString()"
+      :messages="dataCollection ? 'Vklopljeno' : 'Izklopljeno'"
       v-model="setDataCollection"
       label="Zbiranje tehničnih podatkov"
     />

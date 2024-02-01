@@ -8,8 +8,6 @@ import { useMenuStore } from '@/stores/menu'
 
 import MenuDisplay from '@/components/MenuDisplay.vue'
 
-document.title = import.meta.env.VITE_TITLE + ' - Jedilnik'
-
 const { mobile } = useDisplay()
 
 const { day } = storeToRefs(useUserStore())

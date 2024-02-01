@@ -3,8 +3,6 @@ import { EntityType, useSettingsStore } from '@/stores/settings'
 
 import SubscribeUrl from '@/components/SubscribeUrl.vue'
 
-document.title = import.meta.env.VITE_TITLE + ' - Naročanje'
-
 const api = import.meta.env.VITE_API
 
 const settingsStore = useSettingsStore()
