@@ -45,8 +45,10 @@ function closeDialog() {
       <v-card-title class="bg-green">VPIŠITE GESLO</v-card-title>
       <v-card-text>
         <p>
-          Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
-        </p> <br>
+          Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na
+          <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
+        </p>
+        <br />
         <v-text-field
           v-model="circularsPassword"
           color="green"

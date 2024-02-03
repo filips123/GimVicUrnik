@@ -58,7 +58,7 @@ export const useSettingsStore = defineStore('settings', {
       moodleToken: '',
       dataVersion: '',
 
-      circularsPassword: ''
+      circularsPassword: '',
     }
   },
 

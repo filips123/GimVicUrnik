@@ -16,7 +16,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits(['update:modelValue'])
 
-const selectEntity = computed({
+const selectEntityType = computed({
   get() {
     return props.modelValue
   },
@@ -39,15 +39,15 @@ const { displaySnackbar } = snackbarStore
 
 const saveSelection = ref(true)
 
-const entitySelectionList = ref([] as string[])
-const entitySelection = ref(false)
+const selectEntityList = ref([] as string[])
+const selectEntity = ref(false)
 const entityType = ref(EntityType.None)
 
-function handleChooseEntity(selectedEntity: EntityType) {
-  entitySelectionList.value = []
+function handleSelectEntityType(selectedEntity: EntityType) {
+  selectEntityList.value = []
   entityType.value = selectedEntity
-  entitySelection.value = true
-  selectEntity.value = false
+  selectEntity.value = true
+  selectEntityType.value = false
 }
 
 const title = computed(() => {
@@ -75,20 +75,20 @@ const entityList = computed(() => {
 })
 
 const sortedEntityList = computed(() => sortEntityList(entityType.value, entityList.value))
-const sortedEntitySelectionList = computed(() =>
-  sortEntityList(entityType.value, entitySelectionList.value),
+const sortedSelectEntityList = computed(() =>
+  sortEntityList(entityType.value, selectEntityList.value),
 )
 
-function handleEntitySelection() {
-  if (entitySelectionList.value.length) {
-    entitySelection.value = false
+function handleSelectEntity() {
+  if (selectEntityList.value.length) {
+    selectEntity.value = false
 
     userStore.entityType = entityType.value
-    userStore.entities = entitySelectionList.value
+    userStore.entities = selectEntityList.value
 
     if (saveSelection.value) {
       settingsStore.entityType = entityType.value
-      settingsStore.entities = entitySelectionList.value
+      settingsStore.entities = selectEntityList.value
     } else {
       router.push({ name: 'timetable' })
     }
@@ -109,56 +109,75 @@ function handleEntitySelection() {
   }
 }
 
-function closeEntitySelection() {
-  entitySelection.value = false
+function backToSelectEntityType() {
+  selectEntity.value = false
+  selectEntityType.value = true
 }
 
-function backToSelectEntity() {
-  closeEntitySelection()
-  selectEntity.value = true
+function handleEmptyClassrooms() {
+  selectEntity.value = false
+  userStore.entityType = EntityType.EmptyClassrooms
+  userStore.entities = ['Proste učilnice']
+
+  if (saveSelection.value) {
+    settingsStore.entityType = EntityType.EmptyClassrooms
+    settingsStore.entities = ['Proste učilnice']
+  } else {
+    router.push({ name: 'timetable' })
+  }
+
+  saveSelection.value = true
 }
 </script>
 
 <template>
-  <v-dialog v-model="selectEntity" width="25rem" persistent>
+  <v-dialog v-model="selectEntityType" width="25rem" persistent>
     <v-card>
       <v-card-title class="bg-green">IZBERITE POGLED</v-card-title>
       <v-card-text>
         <v-btn
-          @click="handleChooseEntity(EntityType.Class)"
+          @click="handleSelectEntityType(EntityType.Class)"
           color="green"
           variant="text"
           text="Razred"
         />
         <v-btn
-          @click="handleChooseEntity(EntityType.Teacher)"
+          @click="handleSelectEntityType(EntityType.Teacher)"
           color="green"
           variant="text"
           text="Profesor"
         />
         <v-btn
-          @click="handleChooseEntity(EntityType.Classroom)"
+          @click="handleSelectEntityType(EntityType.Classroom)"
           color="green"
           variant="text"
           text="Učilnica"
         />
       </v-card-text>
       <v-card-actions v-if="!welcome" class="justify-end">
-        <v-btn color="green" @click="selectEntity = false" text="Zapri" />
+        <v-btn color="green" @click="selectEntityType = false" text="Zapri" />
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="entitySelection" scrollable width="25rem" height="20rem" persistent>
+  <v-dialog v-model="selectEntity" scrollable width="25rem" height="20rem" persistent>
     <v-card>
       <v-card-title class="bg-green uppercase">{{ title }}</v-card-title>
+      <v-btn
+        v-if="entityType === EntityType.Classroom"
+        @click="handleEmptyClassrooms()"
+        class="text-left"
+        color="green"
+        variant="text"
+        text="Proste učilnice"
+      />
       <v-card-subtitle class="pa-2">
-        Vaša izbira: {{ sortedEntitySelectionList.join(', ') }}
+        Vaša izbira: {{ sortedSelectEntityList.join(', ') }}
       </v-card-subtitle>
       <v-card-text class="pa-0 h-300">
         <v-checkbox
           v-for="entity in sortedEntityList"
-          v-model="entitySelectionList"
+          v-model="selectEntityList"
           :label="entity.toString()"
           :value="entity"
           color="green"
@@ -173,20 +192,20 @@ function backToSelectEntity() {
             color="green"
             :class="{ 'ma-0': mobile, 'pa-0': mobile }"
             :style="{ 'min-width': 0 + 'px' }"
-            @click="closeEntitySelection()"
+            @click="selectEntity = false"
             text="Zapri"
           />
         </template>
         <v-btn
           color="green"
           :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="backToSelectEntity()"
+          @click="backToSelectEntityType()"
           text="Nazaj"
         />
         <v-btn
           color="green"
           :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="handleEntitySelection()"
+          @click="handleSelectEntity()"
           text="V redu"
         />
       </v-card-actions>

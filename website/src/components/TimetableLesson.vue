@@ -47,7 +47,7 @@ const { showSubstitutions } = settingsStore
       :substitutionEntity="lesson.substitutionClassroom || ''"
     />
   </template>
-  <template v-else>
+  <template v-else-if="entityType === EntityType.Classroom">
     <TimetableLink
       :entityType="EntityType.Class"
       :substitution="lesson.substitution"
@@ -60,5 +60,14 @@ const { showSubstitutions } = settingsStore
       :originalEntity="lesson.teacher || ''"
       :substitutionEntity="lesson.substitutionTeacher || ''"
     />
+  </template>
+  <template v-else>
+    <TimetableLink
+      :entityType="EntityType.EmptyClassrooms"
+      :substitution="lesson.substitution"
+      :originalEntity="lesson.classroom || ''"
+      :substitutionEntity="lesson.substitutionClassroom || ''"
+    />
+    <div></div>
   </template>
 </template>

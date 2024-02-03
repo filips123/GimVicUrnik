@@ -20,9 +20,8 @@ export function localizeEntityType(entityType: EntityType) {
     case EntityType.Teacher:
       return 'profesor'
     case EntityType.Classroom:
-      return 'učilnica'
     case EntityType.EmptyClassrooms:
-      return 'prazne učilnice'
+      return 'učilnica'
   }
 }
 

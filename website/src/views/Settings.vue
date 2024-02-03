@@ -55,8 +55,9 @@ const about = ref(false)
 
 const selectEntityLabel = computed(
   () =>
-    (entityType.value === EntityType.Classroom ? 'Izbrana ' : 'Izbran ') +
-    localizeEntityType(entityType.value),
+    (entityType.value === EntityType.Classroom || entityType.value === EntityType.EmptyClassrooms
+      ? 'Izbrana '
+      : 'Izbran ') + localizeEntityType(entityType.value),
 )
 </script>
 

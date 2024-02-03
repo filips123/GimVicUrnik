@@ -17,7 +17,7 @@ documentsStore.updateDocuments()
 const { circularsPassword } = storeToRefs(useSettingsStore())
 
 const circularDialog = ref(false)
-const setCircularsPassword =  ref(false)
+const setCircularsPassword = ref(false)
 
 const circulars =
   documents?.filter((document) => ['circular', 'other'].includes(document.type)).reverse() || []
