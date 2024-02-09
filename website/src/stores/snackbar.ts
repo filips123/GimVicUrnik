@@ -22,7 +22,7 @@ export const useSnackbarStore = defineStore('snackbar', {
       this.message = message
       this.buttonText = buttonText || ''
       this.buttonAction = buttonAction || (() => undefined)
-      this.timeout = timeout || 2000
+      this.timeout = timeout || 1500
     },
   },
 })

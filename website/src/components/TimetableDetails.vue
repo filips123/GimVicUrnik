@@ -35,33 +35,37 @@ const subtitle = computed(
     ' - ' +
     lessonTimes[props.lessons[0].time][1],
 )
+
+const substitutionLessons = computed(() => {
+  return props.lessons.filter((lesson) => lesson.substitution === true)
+})
 </script>
 
 <template>
-  <v-dialog v-model="detailsDialog" width="25rem">
+  <v-dialog v-model="detailsDialog">
     <v-card :title="lessons[0].time + '. URA'" :subtitle="subtitle">
-      <v-card-text>
-        <template v-for="lesson in lessons">
-          <template v-if="lesson.substitution">
-            <span>Predmet: {{ lesson.subject }} → {{ lesson.substitutionSubject }}</span> <br />
-            <template v-if="entityType === EntityType.Class">
-              <span>Profesor: {{ lesson.teacher }} → {{ lesson.substitutionTeacher }}</span> <br />
-              <span>Učilnica: {{ lesson.classroom }} → {{ lesson.substitutionClassroom }}</span>
-            </template>
-            <template v-else-if="entityType === EntityType.Teacher">
-              <span>Razred: {{ lesson.class }} </span><br />
-              <span>Učilnica: {{ lesson.classroom }} → {{ lesson.substitutionClassroom }}</span>
-            </template>
-            <template v-else>
-              <span>Razred: {{ lesson.class }}</span> <br />
-              <span>Profesor: {{ lesson.teacher }} → {{ lesson.substitutionTeacher }}</span>
-            </template>
-            <br /><br />
+      <v-card-text v-if="substitutionLessons.length">
+        <div
+          v-for="(lesson, index) in substitutionLessons"
+          :class="{ 'mb-3': index !== substitutionLessons.length - 1 }"
+        >
+          <span>Predmet: {{ lesson.subject }} → {{ lesson.substitutionSubject }}</span> <br />
+          <template v-if="entityType === EntityType.Class">
+            <span>Profesor: {{ lesson.teacher }} → {{ lesson.substitutionTeacher }}</span> <br />
+            <span>Učilnica: {{ lesson.classroom }} → {{ lesson.substitutionClassroom }}</span>
           </template>
-        </template>
+          <template v-else-if="entityType === EntityType.Teacher">
+            <span>Razred: {{ lesson.class }} </span><br />
+            <span>Učilnica: {{ lesson.classroom }} → {{ lesson.substitutionClassroom }}</span>
+          </template>
+          <template v-else>
+            <span>Razred: {{ lesson.class }}</span> <br />
+            <span>Profesor: {{ lesson.teacher }} → {{ lesson.substitutionTeacher }}</span>
+          </template>
+        </div>
       </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="detailsDialog = false" text="V redu" />
+      <v-card-actions>
+        <v-btn @click="detailsDialog = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -53,22 +53,3 @@ function displayDate(document: Document): string {
     </v-expansion-panel>
   </v-expansion-panels>
 </template>
-
-<style>
-.v-expansion-panels {
-  margin: 16px auto !important;
-  max-width: 40rem !important;
-}
-
-/* Remove horizontal padding from list */
-.v-expansion-panel-text__wrapper {
-  padding: 0 0 8px !important;
-}
-
-/* Change section title line height and padding*/
-.v-expansion-panel-title {
-  line-height: 1rem !important;
-  min-height: 48px !important;
-  padding: 0 16px !important;
-}
-</style>

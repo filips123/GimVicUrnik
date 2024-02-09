@@ -7,7 +7,6 @@ import { useSnackbarStore } from '@/stores/snackbar'
 import { storeToRefs } from 'pinia'
 
 const props = defineProps<{ modelValue: boolean }>()
-
 const emit = defineEmits(['update:modelValue'])
 
 const setCircularsPassword = computed({
@@ -40,26 +39,24 @@ function closeDialog() {
 </script>
 
 <template>
-  <v-dialog v-model="setCircularsPassword" width="35rem">
-    <v-card>
-      <v-card-title class="bg-green">VPIŠITE GESLO</v-card-title>
+  <v-dialog v-model="setCircularsPassword">
+    <v-card title="Vpišite geslo">
       <v-card-text>
         <p>
           Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na
           <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
         </p>
-        <br />
+        <v-divider />
         <v-text-field
           v-model="circularsPassword"
-          color="green"
           label="Geslo"
           :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
           :type="inputShow ? 'text' : 'password'"
           @click:append="inputShow = !inputShow"
         />
       </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="closeDialog()" text="V redu" />
+      <v-card-actions>
+        <v-btn @click="closeDialog()" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

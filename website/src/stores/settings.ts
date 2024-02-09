@@ -27,9 +27,9 @@ export enum MenuType {
 }
 
 export enum ThemeType {
-  System,
-  Light,
-  Dark,
+  System = 'systemTheme',
+  Light = 'lightTheme',
+  Dark = 'darkTheme',
 }
 
 export const useSettingsStore = defineStore('settings', {

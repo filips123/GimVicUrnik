@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 
 const props = defineProps<{ modelValue: boolean }>()
-
 const emit = defineEmits(['update:modelValue'])
 
 const about = computed({
@@ -16,9 +15,8 @@ const about = computed({
 </script>
 
 <template>
-  <v-dialog v-model="about" width="35rem">
-    <v-card>
-      <v-card-title class="bg-green">O APLIKACIJI</v-card-title>
+  <v-dialog v-model="about">
+    <v-card title="o aplikaciji">
       <v-card-text>
         <p>
           Aplikacija GimVič prikazuje urnik, nadomeščanja, jedilnik ter razpored kosila za dijake in
@@ -27,10 +25,10 @@ const about = computed({
         <p>
           Aplikacija je neuradna in lahko vsebuje nepopolne ali napačne podatke. Za ogled uradnih
           podatkov uporabite
-          <a href="https://ucilnica.gimvic.org/"> Spletno učilnico Gimnazije Vič </a> .
+          <a href="https://ucilnica.gimvic.org/"> Spletno učilnico Gimnazije Vič</a>.
         </p>
         <p>
-          V <a href="https://github.com/filips123/GimVicUrnik/wiki"> dokumentaciji projekta </a> so
+          V <a href="https://github.com/filips123/GimVicUrnik/wiki"> dokumentaciji projekta</a> so
           dostopna navodila za namestitev in uporabo.
         </p>
         <p>
@@ -47,14 +45,13 @@ const about = computed({
         <p>
           Če ste odkrili napako v aplikaciji ali morda želite ponuditi povratne informacije, lahko
           to naredite na
-          <a href="https://github.com/filips123/GimVicUrnik/issues/new/choose">
-            uradnem repozitoriju
-          </a>
-          .
+          <a href="https://github.com/filips123/GimVicUrnik/issues/new/choose"
+            >uradnem repozitoriju</a
+          >.
         </p>
       </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="about = false" text="V redu" />
+      <v-card-actions>
+        <v-btn @click="about = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

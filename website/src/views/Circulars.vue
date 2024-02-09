@@ -37,32 +37,30 @@ function handleDialog(clickedCircular: Document, event: Event) {
 </script>
 
 <template>
-  <v-card class="mx-auto" style="max-width: 40rem">
+  <div class="column-layout">
     <v-virtual-scroll :items="circulars">
       <template v-slot:default="{ item }">
         <v-list-item
-          class="mb-4"
           :key="item.title"
           :title="item.title"
           :subtitle="localizeDate(item.created)"
           @click="handleDialog(item, $event)"
         >
           <template #append>
-            <v-btn variant="text" icon="mdi-open-in-new" :href="tokenizeUrl(item.url)" />
+            <v-btn-icon icon="mdi-open-in-new" :href="tokenizeUrl(item.url)" />
           </template>
         </v-list-item>
       </template>
     </v-virtual-scroll>
-  </v-card>
+  </div>
   <CircularsPassword v-model="setCircularsPassword" />
-  <v-dialog v-model="circularDialog" scrollable width="42rem">
+  <v-dialog v-model="circularDialog">
     <v-card :title="circular.title">
       <v-card-text>
         <div v-html="circular.content"></div>
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
-        <v-btn color="green" @click="circularDialog = false" text="Zapri" />
+        <v-btn @click="circularDialog = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

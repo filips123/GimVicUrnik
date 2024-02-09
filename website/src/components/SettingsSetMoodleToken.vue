@@ -22,11 +22,10 @@ const inputShow = ref(false)
 </script>
 
 <template>
-  <v-dialog v-model="setMoodleToken" width="35rem">
-    <v-card>
-      <v-card-title class="bg-green">IZBERITE MOODLE ŽETON</v-card-title>
+  <v-dialog v-model="setMoodleToken">
+    <v-card title="Izberite moodle žeton">
       <v-card-text>
-        <p class="text-justify">
+        <p>
           Nastavljanje Moodle žetona omogoča ogled dokumentov iz spletne učilnice brez dodatne
           prijave. Nastavljanje žetona ni obvezno, vendar se boste pred ogledom dokumentov morda
           morali prijaviti. Žeton lahko pridobite po navodilih iz
@@ -34,9 +33,8 @@ const inputShow = ref(false)
             href="https://github.com/filips123/GimVicUrnik/wiki/Pridobitev-Moodle-žetona"
             target="_blank"
           >
-            dokumentacije projekta
-          </a>
-          .
+            dokumentacije projekta</a
+          >.
         </p>
         <p>
           <strong>Opozorilo:</strong> Žetona ne zaupajte nikomur, saj omogoča prijavo v spletno
@@ -44,17 +42,17 @@ const inputShow = ref(false)
           strežnikom, razen spletni učilnici. Viden bo v vaši zgodovini brskalnika, zato jo primerno
           zavarujte oziroma skrite.
         </p>
+        <v-divider />
         <v-text-field
           v-model="moodleToken"
-          color="green"
           label="Moodle žeton"
           :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
           :type="inputShow ? 'text' : 'password'"
           @click:append="inputShow = !inputShow"
         />
       </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="setMoodleToken = false" text="V redu" />
+      <v-card-actions>
+        <v-btn @click="setMoodleToken = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

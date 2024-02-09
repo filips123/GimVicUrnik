@@ -28,28 +28,16 @@ const classLunchSchedules = computed(() => {
 </script>
 
 <template>
-  <v-card
-    v-if="!mobile"
-    class="ma-2"
-    :title="localizeDay(menu.date)"
-    :text="localizeDate(menu.date)"
-  />
-  <v-card v-if="snackMenu" class="ma-2 pre-line" title="Malica" :text="snackMenu" />
-  <v-card v-if="lunchMenu" class="ma-2 pre-line" title="Kosilo" :text="lunchMenu" />
-
-  <v-card v-if="classLunchSchedules?.length" class="ma-2 pre-line" title="Razpored kosila">
-    <v-card-text v-for="classLunchSchedule in classLunchSchedules">
-      <span v-if="classLunchSchedule.time">Ura: {{ classLunchSchedule.time }}</span> <br />
-      <span v-if="classLunchSchedule?.location"> Prostor: {{ classLunchSchedule.location }} </span>
-      <br />
-      <span v-if="classLunchSchedule?.notes"> Opombe: {{ classLunchSchedule.notes }} </span><br />
+  <v-card v-if="!mobile" :title="localizeDay(menu.date)" :subtitle="localizeDate(menu.date)" />
+  <v-card v-if="snackMenu" title="Malica" :text="snackMenu" />
+  <v-card v-if="lunchMenu" title="Kosilo" :text="lunchMenu" />
+  <v-card v-if="classLunchSchedules?.length" title="Razpored kosila">
+    <v-card-text>
+      <div v-for="classLunchSchedule in classLunchSchedules" class="pb-2">
+        <div v-if="classLunchSchedule.time">Ura: {{ classLunchSchedule.time }}</div>
+        <div v-if="classLunchSchedule?.location">Prostor: {{ classLunchSchedule.location }}</div>
+        <div v-if="classLunchSchedule?.notes">Opombe: {{ classLunchSchedule.notes }}</div>
+      </div>
     </v-card-text>
   </v-card>
 </template>
-
-<style>
-/* Consider new lines */
-.pre-line {
-  white-space: pre-line;
-}
-</style>

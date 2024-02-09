@@ -11,8 +11,7 @@ const props = defineProps<{
       :to="{ name: tab.link }"
       :aria-label="tab.title"
       :prepend-icon="tab.icon"
-    >
-      {{ tab.title }}
-    </v-btn>
+      :text="tab.title"
+    />
   </v-bottom-navigation>
 </template>

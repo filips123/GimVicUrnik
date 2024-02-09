@@ -53,11 +53,26 @@ function handleSelectEntityType(selectedEntity: EntityType) {
 const title = computed(() => {
   switch (entityType.value) {
     case EntityType.Class:
-      return 'Izberite razred in izbirne predmete'
+      return 'Izberite razred'
     case EntityType.Teacher:
       return 'Izberite profesorje'
     case EntityType.Classroom:
       return 'Izberite učilnice'
+  }
+})
+
+const subtitle = computed(() => {
+  if (selectEntityList.value.length) {
+    return sortedSelectEntityList.value.join(', ')
+  }
+
+  switch (entityType.value) {
+    case EntityType.Class:
+      return 'Ni izbranega razreda'
+    case EntityType.Teacher:
+      return 'Ni izbranega profesorja'
+    case EntityType.Classroom:
+      return 'Ni izbrane učilnice'
   }
 })
 
@@ -99,7 +114,7 @@ function handleSelectEntity() {
 
   switch (entityType.value) {
     case EntityType.Class:
-      displaySnackbar('Izberite vsaj en razred ali izbirni predmet')
+      displaySnackbar('Izberite vsaj en razred')
       return
     case EntityType.Teacher:
       displaySnackbar('Izberite vsaj enega profesorja')
@@ -128,97 +143,67 @@ function handleEmptyClassrooms() {
 
   saveSelection.value = true
 }
+
+function handleViewEntity() {
+  saveSelection.value = false
+  handleSelectEntity()
+}
 </script>
 
 <template>
-  <v-dialog v-model="selectEntityType" width="25rem" persistent>
-    <v-card>
-      <v-card-title class="bg-green">IZBERITE POGLED</v-card-title>
-      <v-card-text>
-        <v-btn
-          @click="handleSelectEntityType(EntityType.Class)"
-          color="green"
-          variant="text"
-          text="Razred"
-        />
-        <v-btn
-          @click="handleSelectEntityType(EntityType.Teacher)"
-          color="green"
-          variant="text"
-          text="Profesor"
-        />
-        <v-btn
-          @click="handleSelectEntityType(EntityType.Classroom)"
-          color="green"
-          variant="text"
-          text="Učilnica"
-        />
+  <v-dialog v-model="selectEntityType">
+    <v-card title="izberite pogled">
+      <v-card-text class="justify-center">
+        <v-btn @click="handleSelectEntityType(EntityType.Class)" text="Razred" />
+        <v-btn @click="handleSelectEntityType(EntityType.Teacher)" text="Profesor" />
+        <v-btn @click="handleSelectEntityType(EntityType.Classroom)" text="Učilnica" />
       </v-card-text>
-      <v-card-actions v-if="!welcome" class="justify-end">
-        <v-btn color="green" @click="selectEntityType = false" text="Zapri" />
+      <v-card-actions v-if="!welcome">
+        <v-btn @click="selectEntityType = false" text="Zapri" />
       </v-card-actions>
     </v-card>
   </v-dialog>
-
-  <v-dialog v-model="selectEntity" scrollable width="25rem" height="20rem" persistent>
-    <v-card>
-      <v-card-title class="bg-green uppercase">{{ title }}</v-card-title>
+  <v-dialog v-model="selectEntity" height="25rem" persistent>
+    <v-card :title="title" :subtitle="subtitle">
       <v-btn
         v-if="entityType === EntityType.Classroom"
         @click="handleEmptyClassrooms()"
-        class="text-left"
-        color="green"
-        variant="text"
         text="Proste učilnice"
+        class="bg-surface-variation"
       />
-      <v-card-subtitle class="pa-2">
-        Vaša izbira: {{ sortedSelectEntityList.join(', ') }}
-      </v-card-subtitle>
-      <v-card-text class="pa-0 h-300">
+      <v-card-text-selection>
         <v-checkbox
           v-for="entity in sortedEntityList"
           v-model="selectEntityList"
           :label="entity.toString()"
           :value="entity"
-          color="green"
-          class="pl-1"
         />
-      </v-card-text>
-      <v-card-actions class="justify-end">
+      </v-card-text-selection>
+      <v-card-actions>
         <template v-if="!welcome">
-          Shrani:
-          <v-switch hide-details v-model="saveSelection" color="green" class="pl-2" />
           <v-btn
-            color="green"
             :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-            :style="{ 'min-width': 0 + 'px' }"
+            @click="handleViewEntity"
+            text="Oglej"
+          />
+          <v-btn
+            :class="{ 'ma-0': mobile, 'pa-0': mobile }"
             @click="selectEntity = false"
             text="Zapri"
           />
         </template>
         <v-btn
-          color="green"
+          v-if="welcome"
           :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="backToSelectEntityType()"
+          @click="backToSelectEntityType"
           text="Nazaj"
         />
         <v-btn
-          color="green"
           :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="handleSelectEntity()"
-          text="V redu"
+          @click="handleSelectEntity"
+          text="Shrani"
         />
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
-
-<style>
-.v-checkbox > .v-input__details {
-  display: none;
-}
-
-.v-input--density-default {
-  --v-input-control-height: 0px !important;
-}
-</style>

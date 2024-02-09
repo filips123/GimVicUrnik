@@ -18,15 +18,9 @@ const isChecked = computed({
 })
 </script>
 <template>
-  <v-list-item class="pa-0 mb-6" :title="label">
+  <v-list-item-switch :title="label">
     <template v-slot:append>
-      <v-switch v-model="isChecked" color="green" />
+      <v-switch v-model="isChecked" style="grid-template-areas: none !important" />
     </template>
-  </v-list-item>
+  </v-list-item-switch>
 </template>
-
-<style scoped>
-.v-switch.v-input--horizontal {
-  grid-template-areas: none;
-}
-</style>

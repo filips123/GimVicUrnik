@@ -22,20 +22,19 @@ const { lunchType } = storeToRefs(useSettingsStore())
 </script>
 
 <template>
-  <v-dialog v-model="selectLunch" scrollable width="25rem">
-    <v-card>
-      <v-card-title class="bg-green"> IZBERITE KOSILO </v-card-title>
-      <v-card-text class="pa-0 h-300">
-        <v-radio-group v-model="lunchType" color="green">
+  <v-dialog v-model="selectLunch">
+    <v-card title="Izberite kosilo">
+      <v-card-text-selection>
+        <v-radio-group v-model="lunchType">
           <v-radio
             v-for="lunchTypeValue in Object.values(LunchType)"
             :label="localizeLunchType(lunchTypeValue)"
             :value="lunchTypeValue"
           />
         </v-radio-group>
-      </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="selectLunch = false" text="V redu" />
+      </v-card-text-selection>
+      <v-card-actions>
+        <v-btn @click="selectLunch = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

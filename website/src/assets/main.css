@@ -8,22 +8,96 @@
   font-weight: normal;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
 @media (min-width: 1024px) {
   body {
     display: flex;
     place-items: center;
   }
+}
+
+/* Default tags */
+
+th,
+td {
+  text-align: center !important;
+}
+
+a {
+  color: rgb(var(--v-theme-primary-variant));
+}
+
+p {
+  padding: 3px 0px;
+}
+
+li {
+  margin-left: 25px;
+}
+
+/* Custom classes */
+
+.column-layout {
+  margin: 0 auto;
+  max-width: 35rem;
+}
+
+.entities {
+  font-size: 0.775rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.touch {
+  min-height: calc(-180px + 100vh);
+  height: auto;
+}
+
+.current-time {
+  position: relative;
+  overflow: hidden;
+}
+
+.current-time:after {
+  content: '';
+  position: absolute;
+  margin: -20px;
+  width: 40px;
+  height: 40px;
+  transform: rotate(45deg);
+  background-color: rgb(var(--v-theme-primary));
+  left: 0;
+  top: 0;
+}
+
+/* Pull-to-refresh */
+
+.ptr--icon,
+.ptr--text {
+  color: rgb(var(--v-theme-text)) !important;
+}
+
+/* Vuetify overrides */
+
+.v-snackbar__wrapper {
+  min-width: 250px !important;
+}
+
+.v-snackbar__content {
+  text-align: center !important;
+  background-color: rgb(var(--v-theme-surface-variation-secundary)) !important;
+  color: rgb(var(--v-theme-text)) !important;
+}
+
+.v-expansion-panel-text__wrapper {
+  padding: 0 0 8px !important;
+}
+
+.v-dialog > .v-overlay__content {
+  max-height: calc(100% - 120px) !important;
+  max-width: calc(100% - 10px) !important;
+  margin: 10px !important;
+}
+
+.v-checkbox > .v-input__details,
+.v-text-field > .v-input__details {
+  display: none;
 }

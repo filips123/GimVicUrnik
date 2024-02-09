@@ -29,7 +29,7 @@ function changeEntity() {
 
 <template>
   <td
-    :class="{ 'text-blue': showLinksInTimetable }"
+    :class="{ 'text-primary-variant': showLinksInTimetable }"
     @click="showLinksInTimetable ? changeEntity() : null"
   >
     {{ entity }}

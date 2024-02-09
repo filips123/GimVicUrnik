@@ -3,10 +3,10 @@ import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { RouterView, useRouter } from 'vue-router'
-import { useDisplay } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 
 import { useUserStore } from '@/stores/user'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore, ThemeType } from '@/stores/settings'
 
 import { sortEntityList } from '@/composables/entities'
 import { updateAllData } from '@/composables/update'
@@ -19,6 +19,7 @@ import Snackbar from '@/components/Snackbar.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
 
 const { mobile } = useDisplay()
+const theme = useTheme()
 
 const router = useRouter()
 const routerTitle = computed(() => router.currentRoute.value.meta.title)
@@ -26,7 +27,7 @@ const routerName = computed(() => router.currentRoute.value.name)
 
 const userStore = useUserStore()
 const { entities, entityType } = storeToRefs(useUserStore())
-const { enablePullToRefresh } = storeToRefs(useSettingsStore())
+const { enablePullToRefresh, themeType } = storeToRefs(useSettingsStore())
 
 userStore.resetEntityToSettings()
 
@@ -45,6 +46,16 @@ onMounted(() => {
       updateAllData()
     },
   })
+
+  // Set theme - here for now
+  if (themeType.value === ThemeType.System) {
+    theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'darkTheme'
+      : 'lightTheme'
+    return
+  }
+
+  theme.global.name.value = themeType.value
 })
 
 const pages: { title: string; link: string; icon: string }[] = [
@@ -58,25 +69,32 @@ const navigation: { title: string; link: string; icon: string }[] = [
   { title: 'Jedilnik', link: 'menus', icon: 'mdi-food' },
   { title: 'Okrožnice', link: 'circulars', icon: 'mdi-newspaper' },
 ]
+
+const welcome = computed(() => {
+  return routerName.value === 'welcome'
+})
 </script>
 
 <template>
   <v-app>
-    <v-app-bar app clipped-left color="#009300" extension-height="35">
+    <v-app-bar app clipped-left extension-height="35">
       <v-app-bar-title>
         <span @click="userStore.resetEntityToSettings()">{{ routerTitle }}</span>
         <template v-if="routerTitle === 'Urnik'">
-          <div class="entities">{{ sortedEntityList.join(', ') }}</div>
+          <div class="entities">
+            {{ sortedEntityList.join(', ') }}
+          </div>
         </template>
       </v-app-bar-title>
-      <v-btn
-        size="large"
-        v-for="page in pages"
-        :to="{ name: page.link }"
-        :alt="page.title"
-        :aria-label="page.title"
-        :icon="page.icon"
-      />
+      <template v-if="!welcome">
+        <v-btn-icon
+          v-for="page in pages"
+          :to="{ name: page.link }"
+          :alt="page.title"
+          :aria-label="page.title"
+          :icon="page.icon"
+        />
+      </template>
       <template
         v-if="mobile && (routerName === 'timetable' || routerName === 'menus')"
         v-slot:extension
@@ -84,28 +102,12 @@ const navigation: { title: string; link: string; icon: string }[] = [
         <NavigationDay />
       </template>
     </v-app-bar>
-    <NavigationDesktop v-if="!mobile" :navigation="navigation" />
+    <NavigationDesktop v-if="!mobile && !welcome" :navigation="navigation" />
     <v-main id="main">
-      <span id="ptr--target"></span>
+      <span class="bg-primary" id="ptr--target"></span>
       <v-container fluid><router-view /></v-container>
     </v-main>
     <Snackbar />
-    <NavigationMobile v-if="mobile" :navigation="navigation" />
+    <NavigationMobile v-if="mobile && !welcome" :navigation="navigation" />
   </v-app>
 </template>
-
-<style>
-.entities {
-  color: hsla(0, 0%, 100%, 0.7);
-  font-size: 0.775rem;
-}
-p {
-  padding: 5px 0px;
-}
-.v-card-title {
-  white-space: normal !important;
-}
-li {
-  margin-left: 25px;
-}
-</style>

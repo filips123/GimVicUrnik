@@ -15,9 +15,8 @@ const info = computed({
 </script>
 
 <template>
-  <v-dialog v-model="info" width="35rem" persistent>
-    <v-card>
-      <v-card-title class="bg-green">APLIKACIJA GIMVIC</v-card-title>
+  <v-dialog v-model="info" persistent>
+    <v-card title="Aplikacija GimVič">
       <v-card-text>
         <p>
           Aplikacija GimVič prikazuje urnik, nadomeščanja, jedilnik ter razpored kosila za dijake in
@@ -27,9 +26,8 @@ const info = computed({
           Aplikacija je neuradna in lahko vsebuje nepopolne ali napačne podatke. Za ogled uradnih
           podatkov uporabite
           <a class="text-decoration-none" href="https://ucilnica.gimvic.org/">
-            Spletno učilnico Gimnazije Vič
-          </a>
-          .
+            Spletno učilnico Gimnazije Vič</a
+          >.
         </p>
         <p>
           V
@@ -44,8 +42,8 @@ const info = computed({
           oglaševanje ali druge namene.
         </p>
       </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="info = false" text="V redu" />
+      <v-card-actions>
+        <v-btn @click="info = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -38,7 +38,7 @@ function swipe(direction: string) {
       left: () => swipe('left'),
       right: () => swipe('right'),
     }"
-    class="h-auto"
+    class="touch"
   >
     <MenuDisplay :menu="menus[day]" :lunch-schedules="lunchSchedules[day]" />
   </div>

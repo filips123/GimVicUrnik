@@ -10,7 +10,7 @@ const { entities, entityType } = settingsStore
 </script>
 
 <template>
-  <div class="pt-4 mx-auto" style="max-width: 35rem">
+  <div class="column-layout">
     <div>
       <SubscribeUrl label="Okrožnice" :url="`${api}/feed/circulars.atom`" />
       <SubscribeUrl label="Nadomeščanja" :url="`${api}/feed/substitutions.atom`" />

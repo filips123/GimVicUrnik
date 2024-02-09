@@ -62,7 +62,7 @@ const selectEntityLabel = computed(
 </script>
 
 <template>
-  <div class="px-4 pt-4 mx-auto" style="max-width: 35rem">
+  <div class="column-layout">
     <SettingsAction
       icon="mdi-tune-variant"
       :messages="entities.join(', ')"
@@ -84,7 +84,7 @@ const selectEntityLabel = computed(
       label="Izbrano kosilo"
     />
 
-    <v-divider class="mb-6" />
+    <v-divider-bigger-margin />
 
     <SettingsSwitch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <SettingsSwitch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
@@ -94,7 +94,7 @@ const selectEntityLabel = computed(
     <SettingsSwitch v-model="enablePullToRefresh" label="Potegni za posodobitev" />
     <SettingsSwitch v-model="enableUpdateOnLoad" label="Samodejno posodabljanje" />
 
-    <v-divider class="mb-6" />
+    <v-divider-bigger-margin />
 
     <SettingsAction
       icon="mdi-weather-night"
@@ -117,7 +117,7 @@ const selectEntityLabel = computed(
       label="Zbiranje tehničnih podatkov"
     />
 
-    <v-divider class="mb-6" />
+    <v-divider-bigger-margin />
 
     <SettingsAction
       icon="mdi-update"
@@ -133,7 +133,7 @@ const selectEntityLabel = computed(
       @click="updateAllData()"
     />
 
-    <v-divider class="mb-6" />
+    <v-divider-bigger-margin />
 
     <SettingsAction
       icon="mdi-information-outline"
@@ -151,8 +151,3 @@ const selectEntityLabel = computed(
     <SettingsAbout v-model="about" />
   </div>
 </template>
-<style>
-.v-selection-control--density-default {
-  --v-input-control-height: 0px;
-}
-</style>

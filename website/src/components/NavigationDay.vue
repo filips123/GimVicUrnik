@@ -9,6 +9,6 @@ const { day } = storeToRefs(useUserStore())
 
 <template>
   <v-tabs v-model="day" center-active>
-    <v-tab v-for="day in localizedWeekdays">{{ day }}</v-tab>
+    <v-tab v-for="day in localizedWeekdays" :text="day" />
   </v-tabs>
 </template>

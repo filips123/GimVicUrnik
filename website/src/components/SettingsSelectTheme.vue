@@ -5,10 +5,9 @@ import { useTheme } from 'vuetify'
 
 import { ThemeType, useSettingsStore } from '@/stores/settings'
 
-import { localizedThemeTypeList } from '@/composables/localization'
+import { localizeThemeType } from '@/composables/localization'
 
 const props = defineProps<{ modelValue: boolean }>()
-
 const emit = defineEmits(['update:modelValue'])
 
 const selectTheme = computed({
@@ -22,38 +21,32 @@ const selectTheme = computed({
 
 const { themeType } = storeToRefs(useSettingsStore())
 const theme = useTheme()
+watch(themeType, () => {
+  if (themeType.value === ThemeType.System) {
+    theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'darkTheme'
+      : 'lightTheme'
+    return
+  }
 
-watch(themeType, (newThemeIndex: ThemeType) => {
-  themeType.value = newThemeIndex as ThemeType
-  // Yet to be implemented
-
-  // switch (themeType.value) {
-  //   case ThemeType.System:
-  //     theme.global.name.value = 'system'
-  //   case ThemeType.Light:
-  //     theme.global.name.value = 'light'
-  //   case ThemeType.Dark:
-  //     theme.global.name.value = 'dark'
-  // }
+  theme.global.name.value = themeType.value
 })
 </script>
 
 <template>
-  <v-dialog v-model="selectTheme" scrollable width="25rem">
-    <v-card>
-      <v-card-title class="bg-green">IZBERITE BARVNO TEMO</v-card-title>
-      <v-card-text class="pa-0 h-300">
-        <v-radio-group v-model="themeType" color="green">
+  <v-dialog v-model="selectTheme">
+    <v-card title="Izberite barvno temo">
+      <v-card-text-selection>
+        <v-radio-group v-model="themeType">
           <v-radio
-            v-for="(theme, indexTheme) in localizedThemeTypeList"
-            :label="theme"
-            :value="indexTheme"
-            class="pl-1"
+            v-for="themeTypeValue in Object.values(ThemeType)"
+            :label="localizeThemeType(themeTypeValue)"
+            :value="themeTypeValue"
           />
         </v-radio-group>
-      </v-card-text>
-      <v-card-actions class="justify-end">
-        <v-btn color="green" @click="selectTheme = false" text="V redu" />
+      </v-card-text-selection>
+      <v-card-actions>
+        <v-btn @click="selectTheme = false" text="V redu" />
       </v-card-actions>
     </v-card>
   </v-dialog>

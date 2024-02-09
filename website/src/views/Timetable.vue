@@ -70,7 +70,10 @@ const lessonsArray = computed(() => {
 const lessonsDetails = ref([] as MergedLesson[])
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
-  if (!enableShowingDetails || (event?.target as HTMLInputElement)?.classList.contains('text-blue'))
+  if (
+    !enableShowingDetails ||
+    (event?.target as HTMLInputElement)?.classList.contains('text-primary-variant')
+  )
     return
 
   if (lessons.length) {
@@ -82,20 +85,26 @@ function handleDetails(lessons: MergedLesson[], event: Event) {
 // Class bindings
 function styleMobile(timeIndex: number) {
   return {
-    'highlight-substitution':
+    'bg-surface-variation-secundary':
       mobile.value &&
       showSubstitutions &&
       lessonsArray.value[day.value + 1][timeIndex]?.find((lesson) => lesson.substitution),
   }
 }
 
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
+
+theme.global.current.value.dark
+
 function styleDesktop(dayIndex: number, timeIndex: number) {
   return {
-    'highlight-substitution':
+    'bg-surface-variation-secundary':
       !mobile.value &&
       showSubstitutions &&
       lessonsArray.value[dayIndex][timeIndex].find((lesson) => lesson.substitution),
-    'highlight-day': !mobile.value && dayIndex - 1 === currentDay.value,
+    'bg-surface-variation': !mobile.value && dayIndex - 1 === currentDay.value,
     'current-time':
       showCurrentTime &&
       !mobile.value &&
@@ -133,86 +142,56 @@ function swipe(direction: string) {
       left: () => swipe('left'),
       right: () => swipe('right'),
     }"
-    class="h-auto"
+    class="touch"
   >
-    <v-sheet elevation="2">
-      <v-table>
-        <thead>
-          <tr v-if="!mobile">
-            <th class="text-center" :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
-            <th
-              v-for="(weekday, index) in localizedWeekdays"
-              :key="index"
-              :class="{ 'highlight-light': index === day }"
-              class="text-center"
-            >
-              {{ weekday }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="timeIndex in maxLessonTime"
-            :key="timeIndex"
-            :class="styleMobile(timeIndex)"
-            @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
+    <v-table>
+      <thead>
+        <tr v-if="!mobile" class="bg-surface-variation">
+          <th :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
+          <th
+            v-for="(weekday, index) in localizedWeekdays"
+            :key="index"
+            :class="{ 'bg-primary': index === getCurrentDay() }"
           >
-            <template v-if="timeIndex >= minLessonTime">
-              <td class="text-center" :class="styleMobileCurrentTime(timeIndex)">
-                {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
-              </td>
-              <template v-if="!mobile">
-                <td class="text-center" v-if="showHoursInTimetable">
-                  {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
-                </td>
-              </template>
-              <td
-                v-for="dayIndex in mobile ? 1 : 5"
-                :key="dayIndex"
-                :class="styleDesktop(dayIndex, timeIndex)"
-                @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
-              >
-                <tr
-                  v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
-                  :key="lesson.day + lesson.class + lesson.time + lesson.teacher"
-                  class="d-flex"
-                  :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
-                >
-                  <TimetableLesson :lesson="lesson" />
-                </tr>
+            {{ weekday }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="timeIndex in maxLessonTime"
+          :key="timeIndex"
+          :class="styleMobile(timeIndex)"
+          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
+        >
+          <template v-if="timeIndex >= minLessonTime">
+            <td :class="styleMobileCurrentTime(timeIndex)">
+              {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
+            </td>
+            <template v-if="!mobile">
+              <td v-if="showHoursInTimetable">
+                {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
               </td>
             </template>
-          </tr>
-        </tbody>
-      </v-table>
-      <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
-    </v-sheet>
+            <td
+              v-for="dayIndex in mobile ? 1 : 5"
+              :key="dayIndex"
+              :class="styleDesktop(dayIndex, timeIndex)"
+              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
+            >
+              <tr
+                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
+                :key="lesson.day + lesson.class + lesson.time + lesson.teacher"
+                class="d-flex"
+                :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
+              >
+                <TimetableLesson :lesson="lesson" />
+              </tr>
+            </td>
+          </template>
+        </tr>
+      </tbody>
+    </v-table>
+    <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
   </div>
 </template>
-
-<style>
-.current-time {
-  position: relative;
-  overflow: hidden;
-}
-
-.current-time:after {
-  content: '';
-  position: absolute;
-  margin: -20px;
-  width: 40px;
-  height: 40px;
-  transform: rotate(45deg);
-  background-color: #009300;
-  left: 0;
-  top: 0;
-}
-
-.highlight-day {
-  background: #f6f6f6;
-}
-
-.highlight-substitution {
-  background: #d6d6d6;
-}
-</style>
