@@ -1,30 +1,19 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
 import { useSettingsStore } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
-const props = defineProps<{ modelValue: boolean }>()
-
-const emit = defineEmits(['update:modelValue'])
-
-const setMoodleToken = computed({
-  get() {
-    return props.modelValue
-  },
-  set(value) {
-    emit('update:modelValue', value)
-  },
-})
+const dialog = defineModel<boolean>()
 
 const { moodleToken } = storeToRefs(useSettingsStore())
+
 const inputShow = ref(false)
 </script>
 
 <template>
-  <v-dialog v-model="setMoodleToken">
+  <v-dialog v-model="dialog">
     <v-card title="Izberite moodle žeton">
-      <v-card-text>
+      <template #text>
         <p>
           Nastavljanje Moodle žetona omogoča ogled dokumentov iz spletne učilnice brez dodatne
           prijave. Nastavljanje žetona ni obvezno, vendar se boste pred ogledom dokumentov morda
@@ -49,11 +38,13 @@ const inputShow = ref(false)
           :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
           :type="inputShow ? 'text' : 'password'"
           @click:append="inputShow = !inputShow"
+          @keyup.enter="dialog = false"
+          autofocus
         />
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="setMoodleToken = false" text="V redu" />
-      </v-card-actions>
+      </template>
+      <template #actions>
+        <v-btn text="V redu" @click="dialog = false" />
+      </template>
     </v-card>
   </v-dialog>
 </template>

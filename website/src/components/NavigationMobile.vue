@@ -1,17 +1,18 @@
 <script setup lang="ts">
-const props = defineProps<{
+const { navigation } = defineProps<{
   navigation: { title: string; link: string; icon: string }[]
 }>()
 </script>
 
 <template>
-  <v-bottom-navigation fixed grow>
+  <v-bottom-navigation grow>
     <v-btn
-      v-for="tab in navigation"
-      :to="{ name: tab.link }"
-      :aria-label="tab.title"
-      :prepend-icon="tab.icon"
-      :text="tab.title"
+      v-for="page in navigation"
+      :key="page.title"
+      :text="page.title"
+      :aria-label="page.title"
+      :prepend-icon="page.icon"
+      :to="{ name: page.link }"
     />
   </v-bottom-navigation>
 </template>

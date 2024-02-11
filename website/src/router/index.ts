@@ -1,14 +1,14 @@
+import { EntityType, useSettingsStore } from '@/stores/settings'
 import { createRouter, createWebHistory } from 'vue-router'
-import { useSettingsStore, EntityType } from '@/stores/settings'
 
-const Home = () => import('../views/Home.vue')
-const Welcome = () => import('../views/Welcome.vue')
-const Subscribe = () => import('../views/Subscribe.vue')
-const Settings = () => import('../views/Settings.vue')
-const Timetable = () => import('../views/Timetable.vue')
-const Menus = () => import('../views/Menus.vue')
-const Circulars = () => import('../views/Circulars.vue')
-const Sources = () => import('../views/Sources.vue')
+const Home = () => import('../views/ViewHome.vue')
+const Welcome = () => import('../views/ViewWelcome.vue')
+const Subscribe = () => import('../views/ViewSubscribe.vue')
+const Settings = () => import('../views/ViewSettings.vue')
+const Timetable = () => import('../views/ViewTimetable.vue')
+const Menu = () => import('../views/ViewMenu.vue')
+const Circulars = () => import('../views/ViewCirculars.vue')
+const Sources = () => import('../views/ViewSources.vue')
 const NotFound = () => import('../views/NotFound.vue')
 
 const router = createRouter({
@@ -45,10 +45,10 @@ const router = createRouter({
       component: Timetable,
     },
     {
-      path: '/menus',
-      name: 'menus',
+      path: '/menu',
+      name: 'menu',
       meta: { title: 'Jedilnik' },
-      component: Menus,
+      component: Menu,
     },
     {
       path: '/circulars',
@@ -71,7 +71,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const settingsStore = useSettingsStore()
   const { entityType } = settingsStore
 

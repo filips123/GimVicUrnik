@@ -1,6 +1,6 @@
-import 'vuetify/styles'
-import { createVuetify, type ThemeDefinition } from 'vuetify'
 import '@mdi/font/css/materialdesignicons.css'
+import type { ThemeDefinition } from 'vuetify'
+import { createVuetify } from 'vuetify'
 import {
   VApp,
   VAppBar,
@@ -8,7 +8,6 @@ import {
   VBottomNavigation,
   VBtn,
   VCard,
-  VCardActions,
   VCardText,
   VCheckbox,
   VCol,
@@ -17,7 +16,6 @@ import {
   VDivider,
   VExpansionPanel,
   VExpansionPanels,
-  VExpansionPanelText,
   VInput,
   VList,
   VListItem,
@@ -26,6 +24,7 @@ import {
   VRadio,
   VRadioGroup,
   VRow,
+  VSheet,
   VSnackbar,
   VSwitch,
   VTab,
@@ -34,7 +33,7 @@ import {
   VTextField,
   VVirtualScroll,
 } from 'vuetify/components'
-import { Touch } from 'vuetify/directives'
+import 'vuetify/styles'
 
 const lightTheme: ThemeDefinition = {
   dark: false,
@@ -48,6 +47,9 @@ const lightTheme: ThemeDefinition = {
     'surface-variation': '#f6f6f6',
     'surface-variation-secundary': '#eeeeee',
     'on-surface': '#121212',
+  },
+  variables: {
+    'disabled-opacity': 0.2,
   },
 }
 
@@ -64,6 +66,9 @@ const darkTheme: ThemeDefinition = {
     'surface-variation-secundary': '#303030',
     'on-surface': '#121212',
   },
+  variables: {
+    'disabled-opacity': 0.2,
+  },
 }
 
 const vuetify = createVuetify({
@@ -78,15 +83,16 @@ const vuetify = createVuetify({
     },
   },
   aliases: {
-    VDividerBiggerMargin: VDivider,
+    VDividerSettings: VDivider,
     VListItemSwitch: VListItem,
     VBtnIcon: VBtn,
     VBtnSubscribe: VBtn,
     VCardTextSelection: VCardText,
+    VColumn: VSheet,
   },
   defaults: {
     // Aliases
-    VDividerBiggerMargin: {
+    VDividerSettings: {
       class: 'my-6',
     },
     VListItemSwitch: {
@@ -103,6 +109,10 @@ const vuetify = createVuetify({
     VCardTextSelection: {
       class: 'pa-0',
     },
+    VColumn: {
+      class: 'bg-background mx-auto',
+      style: 'max-width: 35rem;',
+    },
 
     // Defaults
     VAppBar: {
@@ -113,6 +123,7 @@ const vuetify = createVuetify({
     },
     VTextField: {
       color: 'primary-variant',
+      class: 'text-uppercase',
     },
     VListItem: {
       class: 'text-text',
@@ -149,7 +160,7 @@ const vuetify = createVuetify({
       width: '25rem',
       scrollable: true,
       VCard: {
-        style: 'box-shadow: none',
+        class: 'elevation-10 text-text',
       },
       VCardItem: {
         class: 'bg-primary pa-3',
@@ -194,7 +205,6 @@ const vuetify = createVuetify({
     VBottomNavigation,
     VBtn,
     VCard,
-    VCardActions,
     VCardText,
     VCheckbox,
     VCol,
@@ -203,7 +213,6 @@ const vuetify = createVuetify({
     VDivider,
     VExpansionPanel,
     VExpansionPanels,
-    VExpansionPanelText,
     VInput,
     VList,
     VListItem,
@@ -219,9 +228,7 @@ const vuetify = createVuetify({
     VTabs,
     VTextField,
     VVirtualScroll,
-  },
-  directives: {
-    Touch,
+    VSheet,
   },
 })
 

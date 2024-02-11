@@ -1,28 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
 
-const props = defineProps<{ modelValue: boolean }>()
-
-const emit = defineEmits(['update:modelValue'])
-
-const setDataCollection = computed({
-  get() {
-    return props.modelValue
-  },
-  set(value) {
-    emit('update:modelValue', value)
-  },
-})
+const dialog = defineModel<boolean>()
 
 const { dataCollection } = storeToRefs(useSettingsStore())
 </script>
 
 <template>
-  <v-dialog v-model="setDataCollection">
+  <v-dialog v-model="dialog">
     <v-card title="Nastavite zbiranje podatkov">
-      <v-card-text>
+      <template #text>
         <p>
           Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in
           izboljšanja učinkovitosti. Podatki se ne uporabljajo za identfikacijo uporabnikov,
@@ -30,10 +18,10 @@ const { dataCollection } = storeToRefs(useSettingsStore())
         </p>
         <v-divider />
         <v-checkbox v-model="dataCollection" label="Zbiranje tehničnih podatkov" />
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="setDataCollection = false" text="V redu" />
-      </v-card-actions>
+      </template>
+      <template #actions>
+        <v-btn text="V redu" @click="dialog = false" />
+      </template>
     </v-card>
   </v-dialog>
 </template>

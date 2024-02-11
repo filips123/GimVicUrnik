@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-
+import TimetableLessonLink from '@/components/TimetableLessonLink.vue'
+import { EntityType, useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
 import { useUserStore } from '@/stores/user'
-import { useSettingsStore, EntityType } from '@/stores/settings'
-
-import TimetableLink from '@/components/TimetableLink.vue'
+import { storeToRefs } from 'pinia'
 
 const { lesson } = defineProps<{ lesson: MergedLesson }>()
 
@@ -13,61 +11,56 @@ const { entityType } = storeToRefs(useUserStore())
 
 const settingsStore = useSettingsStore()
 const { showSubstitutions } = settingsStore
+
+const subject =
+  showSubstitutions && lesson.substitution ? lesson.substitutionSubject : lesson.subject
+
+const links = {
+  teacher: {
+    entityTypeLink: EntityType.Teacher,
+    substitution: lesson.substitution,
+    originalEntity: lesson.teacher || '/',
+    substitutionEntity: lesson.substitutionTeacher || '/',
+  },
+  class: {
+    entityTypeLink: EntityType.Class,
+    substitution: lesson.substitution,
+    originalEntity: lesson.class || '/',
+    substitutionEntity: lesson.class || '/',
+  },
+  classroom: {
+    entityTypeLink: EntityType.Classroom,
+    substitution: lesson.substitution,
+    originalEntity: lesson.classroom || '/',
+    substitutionEntity: lesson.substitutionClassroom || '/',
+  },
+  emptyClassrooms: {
+    entityTypeLink: EntityType.EmptyClassrooms,
+    substitution: lesson.substitution,
+    originalEntity: lesson.classroom || '/',
+    substitutionEntity: lesson.substitutionClassroom || '/',
+  },
+}
 </script>
 
 <template>
   <td>
-    {{ showSubstitutions && lesson.substitution ? lesson.substitutionSubject : lesson.subject }}
+    {{ subject }}
   </td>
   <template v-if="entityType === EntityType.Class">
-    <TimetableLink
-      :entityType="EntityType.Teacher"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.teacher || ''"
-      :substitutionEntity="lesson.substitutionTeacher || ''"
-    />
-    <TimetableLink
-      :entityType="EntityType.Classroom"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.classroom || ''"
-      :substitutionEntity="lesson.substitutionClassroom || ''"
-    />
+    <TimetableLessonLink v-bind="links.teacher" />
+    <TimetableLessonLink v-bind="links.classroom" />
   </template>
   <template v-else-if="entityType === EntityType.Teacher">
-    <TimetableLink
-      :entityType="EntityType.Class"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.class || ''"
-      :substitutionEntity="lesson.class || ''"
-    />
-    <TimetableLink
-      :entityType="EntityType.Classroom"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.classroom || ''"
-      :substitutionEntity="lesson.substitutionClassroom || ''"
-    />
+    <TimetableLessonLink v-bind="links.class" />
+    <TimetableLessonLink v-bind="links.classroom" />
   </template>
   <template v-else-if="entityType === EntityType.Classroom">
-    <TimetableLink
-      :entityType="EntityType.Class"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.class || ''"
-      :substitutionEntity="lesson.class || ''"
-    />
-    <TimetableLink
-      :entityType="EntityType.Teacher"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.teacher || ''"
-      :substitutionEntity="lesson.substitutionTeacher || ''"
-    />
+    <TimetableLessonLink v-bind="links.class" />
+    <TimetableLessonLink v-bind="links.teacher" />
   </template>
   <template v-else>
-    <TimetableLink
-      :entityType="EntityType.EmptyClassrooms"
-      :substitution="lesson.substitution"
-      :originalEntity="lesson.classroom || ''"
-      :substitutionEntity="lesson.substitutionClassroom || ''"
-    />
+    <TimetableLessonLink v-bind="links.emptyClassrooms" />
     <div></div>
   </template>
 </template>

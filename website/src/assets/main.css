@@ -34,70 +34,14 @@ li {
   margin-left: 25px;
 }
 
-/* Custom classes */
-
-.column-layout {
-  margin: 0 auto;
-  max-width: 35rem;
-}
-
-.entities {
-  font-size: 0.775rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.touch {
-  min-height: calc(-180px + 100vh);
-  height: auto;
-}
-
-.current-time {
-  position: relative;
-  overflow: hidden;
-}
-
-.current-time:after {
-  content: '';
-  position: absolute;
-  margin: -20px;
-  width: 40px;
-  height: 40px;
-  transform: rotate(45deg);
-  background-color: rgb(var(--v-theme-primary));
-  left: 0;
-  top: 0;
-}
-
-/* Pull-to-refresh */
-
-.ptr--icon,
-.ptr--text {
-  color: rgb(var(--v-theme-text)) !important;
-}
-
 /* Vuetify overrides */
 
-.v-snackbar__wrapper {
-  min-width: 250px !important;
-}
-
-.v-snackbar__content {
-  text-align: center !important;
-  background-color: rgb(var(--v-theme-surface-variation-secundary)) !important;
-  color: rgb(var(--v-theme-text)) !important;
-}
-
-.v-expansion-panel-text__wrapper {
-  padding: 0 0 8px !important;
-}
-
 .v-dialog > .v-overlay__content {
-  max-height: calc(100% - 120px) !important;
+  max-height: calc(100% - 140px) !important;
   max-width: calc(100% - 10px) !important;
-  margin: 10px !important;
 }
 
-.v-checkbox > .v-input__details,
-.v-text-field > .v-input__details {
+.v-text-field > .v-input__details,
+.v-checkbox > .v-input__details {
   display: none;
 }

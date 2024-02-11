@@ -1,7 +1,7 @@
 import { EntityType } from '@/stores/settings'
 
-export function sortEntityList(entityType: EntityType, entityList: string[]) {
-  return entityList.sort((entity1, entity2) => {
+export function sortEntities(entityType: EntityType, entities: string[]): string[] {
+  return entities.sort((entity1, entity2) => {
     if (entityType != EntityType.Teacher) {
       if (entity1.length < entity2.length) {
         return -1

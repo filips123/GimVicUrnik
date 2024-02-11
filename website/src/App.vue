@@ -1,37 +1,49 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import AppSnackbar from '@/components/AppSnackbar.vue'
+import NavigationDay from '@/components/NavigationDay.vue'
+import NavigationDesktop from '@/components/NavigationDesktop.vue'
+import NavigationMobile from '@/components/NavigationMobile.vue'
+import { ThemeType, useSettingsStore } from '@/stores/settings'
+import { useUserStore } from '@/stores/user'
+import { updateAllData } from '@/utils/update'
+import { useSwipe } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-
+import PullToRefresh from 'pulltorefreshjs'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { useDisplay, useTheme } from 'vuetify'
 
-import { useUserStore } from '@/stores/user'
-import { useSettingsStore, ThemeType } from '@/stores/settings'
-
-import { sortEntityList } from '@/composables/entities'
-import { updateAllData } from '@/composables/update'
-
-import PullToRefresh from 'pulltorefreshjs'
-
-import NavigationDay from '@/components/NavigationDay.vue'
-import NavigationDesktop from '@/components/NavigationDesktop.vue'
-import Snackbar from '@/components/Snackbar.vue'
-import NavigationMobile from '@/components/NavigationMobile.vue'
-
+const router = useRouter()
 const { mobile } = useDisplay()
 const theme = useTheme()
 
-const router = useRouter()
-const routerTitle = computed(() => router.currentRoute.value.meta.title)
-const routerName = computed(() => router.currentRoute.value.name)
-
+const { entities, day } = storeToRefs(useUserStore())
 const userStore = useUserStore()
-const { entities, entityType } = storeToRefs(useUserStore())
+const { resetEntityToSettings } = userStore
+resetEntityToSettings()
+
 const { enablePullToRefresh, themeType } = storeToRefs(useSettingsStore())
 
-userStore.resetEntityToSettings()
+const routerTitle = computed(() => router.currentRoute.value.meta.title)
+const routerName = computed(() => router.currentRoute.value.name)
+const welcome = computed(() => routerName.value === 'welcome')
+const showDayNavigation = computed(
+  () => routerName.value === 'timetable' || routerName.value === 'menu',
+)
 
-const sortedEntityList = computed(() => sortEntityList(entityType.value, entities.value))
+const swipe = ref(null)
+const { direction } = useSwipe(swipe)
+
+watch(direction, () => {
+  switch (direction.value) {
+    case 'left':
+      day.value = Math.min(4, day.value + 1)
+      break
+    case 'right':
+      day.value = Math.max(0, day.value - 1)
+      break
+  }
+})
 
 onMounted(() => {
   PullToRefresh.init({
@@ -47,7 +59,9 @@ onMounted(() => {
     },
   })
 
-  // Set theme - here for now
+  // displaySnackbar('Nova posodobitev', 'Posodobi', () => (show.value = false), -1)
+
+  // Set theme
   if (themeType.value === ThemeType.System) {
     theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'darkTheme'
@@ -66,48 +80,51 @@ const pages: { title: string; link: string; icon: string }[] = [
 
 const navigation: { title: string; link: string; icon: string }[] = [
   { title: 'Urnik', link: 'timetable', icon: 'mdi-timetable' },
-  { title: 'Jedilnik', link: 'menus', icon: 'mdi-food' },
+  { title: 'Jedilnik', link: 'menu', icon: 'mdi-food' },
   { title: 'Okrožnice', link: 'circulars', icon: 'mdi-newspaper' },
 ]
-
-const welcome = computed(() => {
-  return routerName.value === 'welcome'
-})
 </script>
 
 <template>
   <v-app>
-    <v-app-bar app clipped-left extension-height="35">
+    <v-app-bar>
       <v-app-bar-title>
-        <span @click="userStore.resetEntityToSettings()">{{ routerTitle }}</span>
-        <template v-if="routerTitle === 'Urnik'">
-          <div class="entities">
-            {{ sortedEntityList.join(', ') }}
-          </div>
-        </template>
+        <div @click="resetEntityToSettings()">{{ routerTitle }}</div>
+        <div v-if="routerTitle === 'Urnik'" class="entities">
+          {{ entities.join(', ') }}
+        </div>
       </v-app-bar-title>
-      <template v-if="!welcome">
+      <div v-if="!welcome">
         <v-btn-icon
           v-for="page in pages"
-          :to="{ name: page.link }"
+          :key="page.title"
           :alt="page.title"
           :aria-label="page.title"
           :icon="page.icon"
+          :to="{ name: page.link }"
         />
-      </template>
-      <template
-        v-if="mobile && (routerName === 'timetable' || routerName === 'menus')"
-        v-slot:extension
-      >
+      </div>
+      <template v-if="mobile && showDayNavigation" #extension>
         <NavigationDay />
       </template>
     </v-app-bar>
     <NavigationDesktop v-if="!mobile && !welcome" :navigation="navigation" />
-    <v-main id="main">
-      <span class="bg-primary" id="ptr--target"></span>
+    <v-main id="main" ref="swipe">
+      <span id="ptr--target"></span>
       <v-container fluid><router-view /></v-container>
     </v-main>
-    <Snackbar />
+    <AppSnackbar />
     <NavigationMobile v-if="mobile && !welcome" :navigation="navigation" />
   </v-app>
 </template>
+<style>
+.entities {
+  font-size: 0.775rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ptr--icon,
+.ptr--text {
+  color: rgb(var(--v-theme-text)) !important;
+}
+</style>

@@ -3,8 +3,8 @@ const dialog = defineModel<boolean>()
 </script>
 
 <template>
-  <v-dialog v-model="dialog">
-    <v-card title="o aplikaciji">
+  <v-dialog v-model="dialog" persistent>
+    <v-card title="Aplikacija GimVič">
       <template #text>
         <p>
           Aplikacija GimVič prikazuje urnik, nadomeščanja, jedilnik ter razpored kosila za dijake in
@@ -16,26 +16,14 @@ const dialog = defineModel<boolean>()
           <a href="https://ucilnica.gimvic.org/"> Spletno učilnico Gimnazije Vič</a>.
         </p>
         <p>
-          V <a href="https://github.com/filips123/GimVicUrnik/wiki"> dokumentaciji projekta</a> so
+          V
+          <a href="https://github.com/filips123/GimVicUrnik/wiki"> dokumentaciji projekta</a> so
           dostopna navodila za namestitev in uporabo.
         </p>
         <p>
           Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in
           izboljšanja učinkovitosti. Podatki se ne uporabljajo za identfikacijo uporabnikov,
           oglaševanje ali druge namene.
-        </p>
-        Razvijalci:
-        <ul>
-          <li>Filip Štamcar</li>
-          <li>Jakob Kralj</li>
-          <li>Peter Jereb</li>
-        </ul>
-        <p>
-          Če ste odkrili napako v aplikaciji ali morda želite ponuditi povratne informacije, lahko
-          to naredite na
-          <a href="https://github.com/filips123/GimVicUrnik/issues/new/choose"
-            >uradnem repozitoriju</a
-          >.
         </p>
       </template>
       <template #actions>

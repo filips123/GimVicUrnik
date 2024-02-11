@@ -1,47 +1,33 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
+import { useSnackbarStore } from '@/composables/snackbar'
 import { useSettingsStore } from '@/stores/settings'
-import { useSnackbarStore } from '@/stores/snackbar'
-
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
-const props = defineProps<{ modelValue: boolean }>()
-const emit = defineEmits(['update:modelValue'])
-
-const setCircularsPassword = computed({
-  get() {
-    return props.modelValue
-  },
-  set(value) {
-    emit('update:modelValue', value)
-  },
-})
+const dialog = defineModel<boolean>()
 
 const { circularsPassword } = storeToRefs(useSettingsStore())
-const inputShow = ref(false)
-
 const snackbarStore = useSnackbarStore()
 const { displaySnackbar } = snackbarStore
+
+const inputShow = ref(false)
 
 function closeDialog() {
   if (circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD) {
     displaySnackbar('Geslo je pravilno')
-  } else {
-    if (circularsPassword.value !== '') {
-      displaySnackbar('Geslo je napačno')
-      circularsPassword.value = ''
-    }
+  } else if (circularsPassword.value !== '') {
+    displaySnackbar('Geslo je napačno')
+    circularsPassword.value = ''
   }
 
-  setCircularsPassword.value = false
+  dialog.value = false
 }
 </script>
 
 <template>
-  <v-dialog v-model="setCircularsPassword">
+  <v-dialog v-model="dialog">
     <v-card title="Vpišite geslo">
-      <v-card-text>
+      <template #text>
         <p>
           Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na
           <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
@@ -53,11 +39,13 @@ function closeDialog() {
           :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
           :type="inputShow ? 'text' : 'password'"
           @click:append="inputShow = !inputShow"
+          @keyup.enter="closeDialog()"
+          autofocus
         />
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="closeDialog()" text="V redu" />
-      </v-card-actions>
+      </template>
+      <template #actions>
+        <v-btn text="V redu" @click="closeDialog()" />
+      </template>
     </v-card>
   </v-dialog>
 </template>

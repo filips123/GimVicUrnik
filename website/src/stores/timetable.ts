@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia'
-import { fetchHandle, updateWrapper } from '@/composables/update'
-import { getWeekdays } from '@/composables/days'
 import { EntityType } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
+import { getWeekdays } from '@/utils/days'
+import { fetchHandle, updateWrapper } from '@/utils/update'
+import { defineStore } from 'pinia'
 
 export interface Lesson {
   day: number
@@ -92,7 +92,7 @@ export const useTimetableStore = defineStore('timetable', {
       const lessons: MergedLesson[] = []
 
       for (const lesson of timetable) {
-        let substitution = substitutions.find(
+        const substitution = substitutions.find(
           (substitution) =>
             substitution?.day === lesson.day &&
             substitution?.time === lesson.time &&

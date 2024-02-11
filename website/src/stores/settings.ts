@@ -1,5 +1,6 @@
+import { sortEntities } from '@/utils/entities'
+import { fetchHandle, updateWrapper } from '@/utils/update'
 import { defineStore } from 'pinia'
-import { fetchHandle, updateWrapper } from '@/composables/update'
 
 export enum EntityType {
   Class,
@@ -54,7 +55,7 @@ export const useSettingsStore = defineStore('settings', {
       enableUpdateOnLoad: true,
 
       dataCollection: true,
-      themeType: ThemeType.Light,
+      themeType: ThemeType.System,
       moodleToken: '',
       dataVersion: '',
 
@@ -74,9 +75,9 @@ export const useSettingsStore = defineStore('settings', {
         const [classesList, teachersList, classroomsList] = await Promise.all(
           responses.map((response) => response.json()),
         )
-        this.classesList = classesList
-        this.teachersList = teachersList
-        this.classroomsList = classroomsList
+        this.classesList = sortEntities(EntityType.Class, classesList)
+        this.teachersList = sortEntities(EntityType.Teacher, teachersList)
+        this.classroomsList = sortEntities(EntityType.Classroom, classroomsList)
       })
     },
   },

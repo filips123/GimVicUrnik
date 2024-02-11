@@ -1,41 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { LunchType, useSettingsStore } from '@/stores/settings'
+import { localizeLunchType } from '@/utils/localization'
 import { storeToRefs } from 'pinia'
 
-import { useSettingsStore, LunchType } from '@/stores/settings'
-
-import { localizeLunchType } from '@/composables/localization'
-
-const props = defineProps<{ modelValue: boolean }>()
-const emit = defineEmits(['update:modelValue'])
-
-const selectLunch = computed({
-  get() {
-    return props.modelValue
-  },
-  set(value) {
-    emit('update:modelValue', value)
-  },
-})
+const dialog = defineModel<boolean>()
 
 const { lunchType } = storeToRefs(useSettingsStore())
+
+const menus = Object.values(LunchType)
 </script>
 
 <template>
-  <v-dialog v-model="selectLunch">
+  <v-dialog v-model="dialog">
     <v-card title="Izberite kosilo">
       <v-card-text-selection>
         <v-radio-group v-model="lunchType">
           <v-radio
-            v-for="lunchTypeValue in Object.values(LunchType)"
-            :label="localizeLunchType(lunchTypeValue)"
-            :value="lunchTypeValue"
+            v-for="menu in menus"
+            :key="menu"
+            :label="localizeLunchType(menu)"
+            :value="menu"
           />
         </v-radio-group>
       </v-card-text-selection>
-      <v-card-actions>
-        <v-btn @click="selectLunch = false" text="V redu" />
-      </v-card-actions>
+      <template #actions>
+        <v-btn text="V redu" @click="dialog = false" />
+      </template>
     </v-card>
   </v-dialog>
 </template>

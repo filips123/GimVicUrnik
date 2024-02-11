@@ -1,10 +1,10 @@
-import { storeToRefs } from 'pinia'
-import { useMenuStore } from '@/stores/menu'
-import { useTimetableStore } from '@/stores/timetable'
+import { useSnackbarStore } from '@/composables/snackbar'
 import { useDocumentsStore } from '@/stores/documents'
+import { useMenuStore } from '@/stores/menu'
+import { EntityType, useSettingsStore } from '@/stores/settings'
+import { useTimetableStore } from '@/stores/timetable'
 import { useUserStore } from '@/stores/user'
-import { useSettingsStore, EntityType } from '@/stores/settings'
-import { useSnackbarStore } from '@/stores/snackbar'
+import { storeToRefs } from 'pinia'
 
 class HTTPError extends Error {
   status: number
@@ -30,11 +30,11 @@ export async function fetchHandle(input: RequestInfo, init?: RequestInit): Promi
 export async function updateAllData(): Promise<void> {
   const documentsStore = useDocumentsStore()
   const menuStore = useMenuStore()
-  const settingsStore = useSettingsStore()
-  const { entityType } = storeToRefs(useSettingsStore())
-
   const timetableStore = useTimetableStore()
   const userStore = useUserStore()
+
+  const settingsStore = useSettingsStore()
+  const { entityType } = storeToRefs(useSettingsStore())
 
   const snackbarStore = useSnackbarStore()
   const { displaySnackbar } = snackbarStore

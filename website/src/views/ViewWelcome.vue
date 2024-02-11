@@ -1,0 +1,18 @@
+<script setup lang="ts">
+import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
+import WelcomeInformation from '@/components/WelcomeInformation.vue'
+import { updateAllData } from '@/utils/update'
+import { ref, watch } from 'vue'
+
+const welcomeDialog = ref(true)
+const settingsDialog = ref(false)
+
+watch(welcomeDialog, () => (settingsDialog.value = true))
+
+updateAllData()
+</script>
+
+<template>
+  <WelcomeInformation v-model="welcomeDialog" />
+  <SettingsSelectEntity v-model="settingsDialog" welcome />
+</template>

@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useDisplay } from 'vuetify'
-
-import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
-import { useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
-
-import { lessonTimes, getCurrentTime } from '@/composables/times'
-import { getCurrentDay } from '@/composables/days'
-import { localizedWeekdays } from '@/composables/localization'
-
-import TimetableLesson from '@/components/TimetableLesson.vue'
 import TimetableDetails from '@/components/TimetableDetails.vue'
+import TimetableLesson from '@/components/TimetableLesson.vue'
+import { useSettingsStore } from '@/stores/settings'
+import type { MergedLesson } from '@/stores/timetable'
+import { useTimetableStore } from '@/stores/timetable'
+import { useUserStore } from '@/stores/user'
+import { getCurrentDay } from '@/utils/days'
+import { localizedWeekdays } from '@/utils/localization'
+import { getCurrentTime, lessonTimes } from '@/utils/times'
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
+import { useDisplay } from 'vuetify'
 
 const { mobile } = useDisplay()
 
@@ -29,6 +27,10 @@ const { showHoursInTimetable, showSubstitutions, showCurrentTime, enableShowingD
 
 const lessonDetailsDialog = ref(false)
 
+const isWeekday = computed(() => {
+  const now = new Date().getDay()
+  return now === 0 || now === 6
+})
 const currentDay = computed(() => getCurrentDay())
 const currentTime = computed(() => getCurrentTime())
 
@@ -92,21 +94,16 @@ function styleMobile(timeIndex: number) {
   }
 }
 
-import { useTheme } from 'vuetify'
-
-const theme = useTheme()
-
-theme.global.current.value.dark
-
 function styleDesktop(dayIndex: number, timeIndex: number) {
   return {
     'bg-surface-variation-secundary':
       !mobile.value &&
       showSubstitutions &&
       lessonsArray.value[dayIndex][timeIndex].find((lesson) => lesson.substitution),
-    'bg-surface-variation': !mobile.value && dayIndex - 1 === currentDay.value,
-    'current-time':
+    'bg-surface-variation': !mobile.value && !isWeekday.value && dayIndex - 1 === currentDay.value,
+    'current-time-marker':
       showCurrentTime &&
+      !isWeekday.value &&
       !mobile.value &&
       dayIndex - 1 === currentDay.value &&
       timeIndex === currentTime.value,
@@ -115,83 +112,82 @@ function styleDesktop(dayIndex: number, timeIndex: number) {
 
 function styleMobileCurrentTime(timeIndex: number) {
   return {
-    'current-time':
+    'current-time-marker':
       showCurrentTime &&
+      !isWeekday.value &&
       mobile.value &&
       day.value === currentDay.value &&
       timeIndex === currentTime.value,
   }
 }
-
-function swipe(direction: string) {
-  if (!mobile.value) return
-
-  switch (direction) {
-    case 'left':
-      day.value = Math.min(4, day.value + 1)
-      break
-    case 'right':
-      day.value = Math.max(0, day.value - 1)
-      break
-  }
-}
 </script>
+
 <template>
-  <div
-    v-touch="{
-      left: () => swipe('left'),
-      right: () => swipe('right'),
-    }"
-    class="touch"
-  >
-    <v-table>
-      <thead>
-        <tr v-if="!mobile" class="bg-surface-variation">
-          <th :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
-          <th
-            v-for="(weekday, index) in localizedWeekdays"
-            :key="index"
-            :class="{ 'bg-primary': index === getCurrentDay() }"
-          >
-            {{ weekday }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="timeIndex in maxLessonTime"
-          :key="timeIndex"
-          :class="styleMobile(timeIndex)"
-          @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
+  <v-table>
+    <thead>
+      <tr v-if="!mobile" class="bg-surface-variation">
+        <th :colspan="showHoursInTimetable ? 2 : 1">Ura</th>
+        <th
+          v-for="(weekday, index) in localizedWeekdays"
+          :key="index"
+          :class="{ 'bg-primary': index === getCurrentDay() && !isWeekday }"
         >
-          <template v-if="timeIndex >= minLessonTime">
-            <td :class="styleMobileCurrentTime(timeIndex)">
-              {{ timeIndex === 0 ? 'Predura' : timeIndex + '.' }}
-            </td>
-            <template v-if="!mobile">
-              <td v-if="showHoursInTimetable">
-                {{ lessonTimes[timeIndex][0] }} - {{ lessonTimes[timeIndex][1] }}
-              </td>
-            </template>
-            <td
-              v-for="dayIndex in mobile ? 1 : 5"
-              :key="dayIndex"
-              :class="styleDesktop(dayIndex, timeIndex)"
-              @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
-            >
-              <tr
-                v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
-                :key="lesson.day + lesson.class + lesson.time + lesson.teacher"
-                class="d-flex"
-                :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
-              >
-                <TimetableLesson :lesson="lesson" />
-              </tr>
+          {{ weekday }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        v-for="(n, timeIndex) in maxLessonTime"
+        :key="timeIndex"
+        :class="styleMobile(timeIndex)"
+        @click="mobile ? handleDetails(lessonsArray[day + 1][timeIndex], $event) : null"
+      >
+        <template v-if="timeIndex >= minLessonTime">
+          <td :class="styleMobileCurrentTime(timeIndex)">
+            {{ timeIndex === 0 ? 'PU' : timeIndex + '.' }}
+          </td>
+          <template v-if="!mobile">
+            <td v-if="showHoursInTimetable">
+              {{ lessonTimes[timeIndex].join(' - ') }}
             </td>
           </template>
-        </tr>
-      </tbody>
-    </v-table>
-    <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
-  </div>
+          <td
+            v-for="dayIndex in mobile ? 1 : 5"
+            :key="dayIndex"
+            :class="styleDesktop(dayIndex, timeIndex)"
+            @click="!mobile ? handleDetails(lessonsArray[dayIndex][timeIndex], $event) : null"
+          >
+            <tr
+              v-for="lesson in lessonsArray[mobile ? day + 1 : dayIndex][timeIndex]"
+              :key="lesson.day + lesson.class + lesson.time + lesson.teacher"
+              class="d-flex"
+              :class="{ 'justify-space-between': mobile, 'justify-space-evenly': !mobile }"
+            >
+              <TimetableLesson :lesson="lesson" />
+            </tr>
+          </td>
+        </template>
+      </tr>
+    </tbody>
+  </v-table>
+  <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
 </template>
+<style>
+.current-time-marker {
+  position: relative;
+  overflow: hidden;
+}
+
+.current-time-marker:after {
+  content: '';
+  position: absolute;
+  margin: -20px;
+  width: 40px;
+  height: 40px;
+  transform: rotate(45deg);
+  background-color: rgb(var(--v-theme-primary));
+  left: 0;
+  top: 0;
+}
+</style>

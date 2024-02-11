@@ -1,6 +1,6 @@
+import { getWeekdays } from '@/utils/days'
+import { fetchHandle, updateWrapper } from '@/utils/update'
 import { defineStore } from 'pinia'
-import { getWeekdays } from '@/composables/days'
-import { fetchHandle, updateWrapper } from '@/composables/update'
 
 export interface Menu {
   date: string
@@ -52,7 +52,7 @@ export const useMenuStore = defineStore('menu', {
     async updateLunchSchedules() {
       updateWrapper(async () => {
         this.lunchSchedules = await Promise.all(
-          getWeekdays(new Date('2023-10-24')).map(async (date): Promise<LunchSchedule[]> => {
+          getWeekdays(new Date()).map(async (date): Promise<LunchSchedule[]> => {
             const response = await fetchHandle(
               import.meta.env.VITE_API + '/schedule/date/' + date.toISOString().split('T')[0],
             )

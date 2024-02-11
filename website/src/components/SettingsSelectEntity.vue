@@ -1,79 +1,41 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { useSnackbarStore } from '@/composables/snackbar'
+import { EntityType, useSettingsStore } from '@/stores/settings'
+import { useUserStore } from '@/stores/user'
+import { sortEntities } from '@/utils/entities'
+import { localizeSelectEntityNotSelected, localizeSelectEntityTitle } from '@/utils/localization'
+import { storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
-import { useSettingsStore, EntityType } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
-import { useSnackbarStore } from '@/stores/snackbar'
-
-import { sortEntityList } from '@/composables/entities'
-import { storeToRefs } from 'pinia'
-
-const props = defineProps<{
-  modelValue: boolean
-  welcome?: boolean
-}>()
-const emit = defineEmits(['update:modelValue'])
-
-const selectEntityType = computed({
-  get() {
-    return props.modelValue
-  },
-  set(value) {
-    emit('update:modelValue', value)
-  },
-})
+const entityTypeDialog = defineModel<boolean>()
+const { welcome } = defineProps<{ welcome?: boolean }>()
 
 const router = useRouter()
-const { mobile } = useDisplay()
+const { mobile, width } = useDisplay()
 
 const userStore = useUserStore()
-const settingsStore = useSettingsStore()
 
-settingsStore.updateLists()
 const { classesList, teachersList, classroomsList } = storeToRefs(useSettingsStore())
+const settingsStore = useSettingsStore()
+const { updateLists } = settingsStore
+updateLists()
 
 const snackbarStore = useSnackbarStore()
 const { displaySnackbar } = snackbarStore
 
-const saveSelection = ref(true)
-
-const selectEntityList = ref([] as string[])
-const selectEntity = ref(false)
+const emptyClassrooms = ref(false)
+const selectedEntities = ref([] as string[])
+const entitiesDialog = ref(false)
 const entityType = ref(EntityType.None)
 
-function handleSelectEntityType(selectedEntity: EntityType) {
-  selectEntityList.value = []
-  entityType.value = selectedEntity
-  selectEntity.value = true
-  selectEntityType.value = false
-}
-
-const title = computed(() => {
-  switch (entityType.value) {
-    case EntityType.Class:
-      return 'Izberite razred'
-    case EntityType.Teacher:
-      return 'Izberite profesorje'
-    case EntityType.Classroom:
-      return 'Izberite učilnice'
-  }
-})
-
+const title = computed(() => localizeSelectEntityTitle(entityType.value))
 const subtitle = computed(() => {
-  if (selectEntityList.value.length) {
-    return sortedSelectEntityList.value.join(', ')
+  if (selectedEntities.value.length) {
+    return selectedEntities.value.join(', ')
   }
-
-  switch (entityType.value) {
-    case EntityType.Class:
-      return 'Ni izbranega razreda'
-    case EntityType.Teacher:
-      return 'Ni izbranega profesorja'
-    case EntityType.Classroom:
-      return 'Ni izbrane učilnice'
-  }
+  return localizeSelectEntityNotSelected(entityType.value)
 })
 
 const entityList = computed(() => {
@@ -83,35 +45,19 @@ const entityList = computed(() => {
     case EntityType.Teacher:
       return teachersList.value
     case EntityType.Classroom:
+    case EntityType.EmptyClassrooms:
       return classroomsList.value
+    default:
+      return []
   }
-
-  return []
 })
 
-const sortedEntityList = computed(() => sortEntityList(entityType.value, entityList.value))
-const sortedSelectEntityList = computed(() =>
-  sortEntityList(entityType.value, selectEntityList.value),
+watch(
+  selectedEntities,
+  () => (selectedEntities.value = sortEntities(entityType.value, selectedEntities.value)),
 )
 
-function handleSelectEntity() {
-  if (selectEntityList.value.length) {
-    selectEntity.value = false
-
-    userStore.entityType = entityType.value
-    userStore.entities = selectEntityList.value
-
-    if (saveSelection.value) {
-      settingsStore.entityType = entityType.value
-      settingsStore.entities = selectEntityList.value
-    } else {
-      router.push({ name: 'timetable' })
-    }
-
-    saveSelection.value = true
-    return
-  }
-
+function displayNoneSelected() {
   switch (entityType.value) {
     case EntityType.Class:
       displaySnackbar('Izberite vsaj en razred')
@@ -121,89 +67,119 @@ function handleSelectEntity() {
       return
     case EntityType.Classroom:
       displaySnackbar('Izberite vsaj eno učilnico')
+      return
   }
 }
 
-function backToSelectEntityType() {
-  selectEntity.value = false
-  selectEntityType.value = true
+function handleSelectEntityType(selectedEntity: EntityType) {
+  selectedEntities.value = []
+  entityType.value = selectedEntity
+  emptyClassrooms.value = false
+  entitiesDialog.value = true
+  entityTypeDialog.value = false
 }
 
-function handleEmptyClassrooms() {
-  selectEntity.value = false
-  userStore.entityType = EntityType.EmptyClassrooms
-  userStore.entities = ['Proste učilnice']
+function backToEntityTypeDialog() {
+  entitiesDialog.value = false
+  entityTypeDialog.value = true
+}
 
-  if (saveSelection.value) {
-    settingsStore.entityType = EntityType.EmptyClassrooms
-    settingsStore.entities = ['Proste učilnice']
+watch(emptyClassrooms, () => {
+  if (emptyClassrooms.value) {
+    selectedEntities.value = ['Proste učilnice']
+    entityType.value = EntityType.EmptyClassrooms
   } else {
-    router.push({ name: 'timetable' })
+    selectedEntities.value = []
+    entityType.value = EntityType.Classroom
   }
+})
 
-  saveSelection.value = true
+function handleViewEntities() {
+  if (selectedEntities.value.length) {
+    entitiesDialog.value = false
+
+    userStore.entityType = entityType.value
+    userStore.entities = selectedEntities.value
+
+    router.push({ name: 'timetable' })
+  } else {
+    displayNoneSelected()
+  }
 }
 
-function handleViewEntity() {
-  saveSelection.value = false
-  handleSelectEntity()
+function handleSelectEntity() {
+  if (selectedEntities.value.length) {
+    entitiesDialog.value = false
+
+    userStore.entityType = entityType.value
+    userStore.entities = selectedEntities.value
+
+    settingsStore.entityType = entityType.value
+    settingsStore.entities = selectedEntities.value
+
+    if (welcome) {
+      router.push({ name: 'timetable' })
+    }
+  } else {
+    displayNoneSelected()
+  }
 }
 </script>
 
 <template>
-  <v-dialog v-model="selectEntityType">
+  <v-dialog v-model="entityTypeDialog" :persistent="welcome">
     <v-card title="izberite pogled">
-      <v-card-text class="justify-center">
-        <v-btn @click="handleSelectEntityType(EntityType.Class)" text="Razred" />
-        <v-btn @click="handleSelectEntityType(EntityType.Teacher)" text="Profesor" />
-        <v-btn @click="handleSelectEntityType(EntityType.Classroom)" text="Učilnica" />
-      </v-card-text>
-      <v-card-actions v-if="!welcome">
-        <v-btn @click="selectEntityType = false" text="Zapri" />
-      </v-card-actions>
+      <template #text>
+        <v-btn text="Razred" @click="handleSelectEntityType(EntityType.Class)" />
+        <v-btn text="Profesor" @click="handleSelectEntityType(EntityType.Teacher)" />
+        <v-btn text="Učilnica" @click="handleSelectEntityType(EntityType.Classroom)" />
+      </template>
+      <template v-if="!welcome" #actions>
+        <v-btn text="Zapri" @click="entityTypeDialog = false" />
+      </template>
     </v-card>
   </v-dialog>
-  <v-dialog v-model="selectEntity" height="25rem" persistent>
-    <v-card :title="title" :subtitle="subtitle">
-      <v-btn
-        v-if="entityType === EntityType.Classroom"
-        @click="handleEmptyClassrooms()"
-        text="Proste učilnice"
-        class="bg-surface-variation"
+  <v-dialog v-model="entitiesDialog" height="25rem" persistent>
+    <v-card :title :subtitle>
+      <v-checkbox
+        v-if="entityType === EntityType.Classroom || entityType === EntityType.EmptyClassrooms"
+        v-model="emptyClassrooms"
+        label="Proste učilnice"
       />
       <v-card-text-selection>
         <v-checkbox
-          v-for="entity in sortedEntityList"
-          v-model="selectEntityList"
-          :label="entity.toString()"
+          v-for="entity in entityList"
+          :key="entity"
+          v-model="selectedEntities"
+          :label="entity"
           :value="entity"
+          :disabled="emptyClassrooms"
         />
       </v-card-text-selection>
-      <v-card-actions>
+      <template #actions>
+        <v-btn
+          v-if="width >= 270"
+          text="Nazaj"
+          :class="{ 'mobile-buttons': mobile }"
+          @click="backToEntityTypeDialog()"
+        />
         <template v-if="!welcome">
           <v-btn
-            :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-            @click="handleViewEntity"
-            text="Oglej"
-          />
-          <v-btn
-            :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-            @click="selectEntity = false"
             text="Zapri"
+            :class="{ 'mobile-buttons': mobile }"
+            @click="entitiesDialog = false"
           />
+          <v-btn text="Oglej" :class="{ 'mobile-buttons': mobile }" @click="handleViewEntities()" />
         </template>
-        <v-btn
-          v-if="welcome"
-          :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="backToSelectEntityType"
-          text="Nazaj"
-        />
-        <v-btn
-          :class="{ 'ma-0': mobile, 'pa-0': mobile }"
-          @click="handleSelectEntity"
-          text="Shrani"
-        />
-      </v-card-actions>
+        <v-btn text="Shrani" :class="{ 'mobile-buttons': mobile }" @click="handleSelectEntity()" />
+      </template>
     </v-card>
   </v-dialog>
 </template>
+
+<style>
+.mobile-buttons {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+</style>

@@ -1,5 +1,5 @@
+import { fetchHandle, updateWrapper } from '@/utils/update'
 import { defineStore } from 'pinia'
-import { fetchHandle, updateWrapper } from '@/composables/update'
 
 export interface Document {
   type: string
@@ -24,6 +24,10 @@ export const useDocumentsStore = defineStore('documents', {
         const response = await fetchHandle(import.meta.env.VITE_API + '/documents')
         this.documents = await response.json()
       })
+    },
+
+    filterDocuments(documentTypes: string[]) {
+      return this.documents?.filter((document) => documentTypes.includes(document.type)).reverse()
     },
   },
 

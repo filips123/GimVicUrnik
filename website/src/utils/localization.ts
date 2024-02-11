@@ -1,6 +1,6 @@
-import { EntityType, SnackType, LunchType, ThemeType, MenuType } from '@/stores/settings'
+import { EntityType, LunchType, MenuType, SnackType, ThemeType } from '@/stores/settings'
 
-// Days localization
+// Day localization
 export function localizeDay(date: string): string {
   const day = new Date(date).toLocaleDateString('sl', { weekday: 'long' })
   return day.charAt(0).toUpperCase() + day.slice(1)
@@ -13,15 +13,41 @@ export function localizeDate(date: string): string {
 export const localizedWeekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek']
 
 // Entity localization
-export function localizeEntityType(entityType: EntityType) {
+export function localizeEntityLabel(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
-      return 'razred'
+      return 'Izbran razred'
     case EntityType.Teacher:
-      return 'profesor'
+      return 'Izbran profesor'
     case EntityType.Classroom:
     case EntityType.EmptyClassrooms:
-      return 'učilnica'
+      return 'Izbrana učilnica'
+    default:
+      return ''
+  }
+}
+
+export function localizeSelectEntityTitle(entityType: EntityType) {
+  switch (entityType) {
+    case EntityType.Class:
+      return 'Izberite razred'
+    case EntityType.Teacher:
+      return 'Izberite profesorje'
+    case EntityType.Classroom:
+    case EntityType.EmptyClassrooms:
+      return 'Izberite učilnice'
+  }
+}
+
+export function localizeSelectEntityNotSelected(entityType: EntityType) {
+  switch (entityType) {
+    case EntityType.Class:
+      return 'Ni izbranega razreda'
+    case EntityType.Teacher:
+      return 'Ni izbranega profesorja'
+    case EntityType.Classroom:
+    case EntityType.EmptyClassrooms:
+      return 'Ni izbrane učilnice'
   }
 }
 

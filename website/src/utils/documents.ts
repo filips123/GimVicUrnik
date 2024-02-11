@@ -1,10 +1,4 @@
-import { useSettingsStore } from '@/stores/settings'
-
-// Add moodle token if set
-export function tokenizeUrl(url: string): string {
-  const settingsStore = useSettingsStore()
-  const { moodleToken } = settingsStore
-
+export function tokenizeUrl(url: string, moodleToken: string): string {
   const pluginFileWebserviceUrl = import.meta.env.VITE_ECLASSROOM_WEBSERVICE
   const pluginFileNormalUrl = import.meta.env.VITE_ECLASSROOM_NORMAL
 
