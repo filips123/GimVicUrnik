@@ -46,47 +46,30 @@ export const useTimetableStore = defineStore('timetable', {
   getters: {
     lessons(state) {
       const userStore = useUserStore()
+      const { entities, entityType } = userStore
 
       let timetable: Lesson[] = []
       let substitutions: Substitution[] = []
 
-      switch (userStore.entityType) {
-        case EntityType.Class:
-          for (const class_ of userStore.entities) {
-            timetable = timetable.concat(state.timetable.filter((lesson) => lesson.class == class_))
-            for (const substitutionsDay of state.substitutions) {
-              substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.class == class_),
-              )
-            }
-          }
-          break
-        case EntityType.Teacher:
-          for (const teacher of userStore.entities) {
-            timetable = timetable.concat(
-              state.timetable.filter((lesson) => lesson.teacher == teacher),
+      if (entityType == EntityType.None) {
+        return []
+      } else if (entityType == EntityType.EmptyClassrooms) {
+        timetable = state.emptyClassrooms
+      } else {
+        for (const entity of entities) {
+          timetable = timetable.concat(
+            state.timetable.filter(
+              (lesson: Lesson) => lesson[entityType as keyof Lesson] == entity,
+            ),
+          )
+          for (const substitutionsDay of state.substitutions) {
+            substitutions = substitutions.concat(
+              substitutionsDay.filter(
+                (substitution) => substitution[entityType as keyof Substitution] == entity,
+              ),
             )
-            for (const substitutionsDay of state.substitutions) {
-              substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.teacher == teacher),
-              )
-            }
           }
-          break
-        case EntityType.Classroom:
-          for (const classroom of userStore.entities) {
-            timetable = timetable.concat(
-              state.timetable.filter((lesson) => lesson.classroom == classroom),
-            )
-            for (const substitutionsDay of state.substitutions) {
-              substitutions = substitutions.concat(
-                substitutionsDay.filter((substitution) => substitution.classroom == classroom),
-              )
-            }
-          }
-          break
-        case EntityType.EmptyClassrooms:
-          timetable = state.emptyClassrooms
+        }
       }
 
       const lessons: MergedLesson[] = []

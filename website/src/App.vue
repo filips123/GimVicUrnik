@@ -48,6 +48,7 @@ watch(direction, () => {
 onMounted(() => {
   PullToRefresh.init({
     mainElement: '#ptr--target',
+    triggerElement: '#main',
 
     instructionsPullToRefresh: 'Povlecite za posodobitev',
     instructionsReleaseToRefresh: 'Izpustite za posodobitev',
@@ -90,7 +91,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
     <v-app-bar>
       <v-app-bar-title>
         <div @click="resetEntityToSettings()">{{ routerTitle }}</div>
-        <div v-if="routerTitle === 'Urnik'" class="entities">
+        <div v-if="routerName === 'timetable'" class="entities">
           {{ entities.join(', ') }}
         </div>
       </v-app-bar-title>

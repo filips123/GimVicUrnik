@@ -19,15 +19,20 @@ updateLunchSchedules()
 function entitiesLunchSchedules(lunchSchedules: LunchSchedule[]) {
   return lunchSchedules?.filter((schedule) => entities.value.includes(schedule.class))
 }
+
+const isData = menus.flat().length || lunchSchedules.flat(Infinity).length
 </script>
 
 <template>
-  <div v-if="mobile">
-    <MenuDay :menu="menus[day]" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[day])" />
-  </div>
-  <v-row v-else no-gutters>
-    <v-col v-for="(menu, dayIndex) in menus" :key="dayIndex">
-      <MenuDay :menu="menu" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])" />
-    </v-col>
-  </v-row>
+  <template v-if="isData">
+    <div v-if="mobile">
+      <MenuDay :menu="menus[day]" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[day])" />
+    </div>
+    <v-row v-else no-gutters>
+      <v-col v-for="(menu, dayIndex) in menus" :key="dayIndex">
+        <MenuDay :menu="menu" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])" />
+      </v-col>
+    </v-row>
+  </template>
+  <template v-else>Podatkov ni bilo mogoče pridobiti.</template>
 </template>

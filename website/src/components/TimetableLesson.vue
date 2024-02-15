@@ -16,17 +16,17 @@ const subject =
   showSubstitutions && lesson.substitution ? lesson.substitutionSubject : lesson.subject
 
 const links = {
-  teacher: {
-    entityTypeLink: EntityType.Teacher,
-    substitution: lesson.substitution,
-    originalEntity: lesson.teacher || '/',
-    substitutionEntity: lesson.substitutionTeacher || '/',
-  },
   class: {
     entityTypeLink: EntityType.Class,
     substitution: lesson.substitution,
     originalEntity: lesson.class || '/',
     substitutionEntity: lesson.class || '/',
+  },
+  teacher: {
+    entityTypeLink: EntityType.Teacher,
+    substitution: lesson.substitution,
+    originalEntity: lesson.teacher || '/',
+    substitutionEntity: lesson.substitutionTeacher || '/',
   },
   classroom: {
     entityTypeLink: EntityType.Classroom,
@@ -44,9 +44,7 @@ const links = {
 </script>
 
 <template>
-  <td>
-    {{ subject }}
-  </td>
+  <td>{{ subject }}</td>
   <template v-if="entityType === EntityType.Class">
     <TimetableLessonLink v-bind="links.teacher" />
     <TimetableLessonLink v-bind="links.classroom" />

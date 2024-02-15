@@ -39,7 +39,7 @@ const router = createRouter({
       component: Settings,
     },
     {
-      path: '/timetable/:type?/:value?',
+      path: '/timetable/',
       name: 'timetable',
       meta: { title: 'Urnik' },
       component: Timetable,

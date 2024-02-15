@@ -47,9 +47,11 @@ const lightTheme: ThemeDefinition = {
     'surface-variation': '#f6f6f6',
     'surface-variation-secundary': '#eeeeee',
     'on-surface': '#121212',
+    'current-time': '#369d36',
   },
   variables: {
     'disabled-opacity': 0.2,
+    'current-time-opacity': 0.1,
   },
 }
 
@@ -65,9 +67,11 @@ const darkTheme: ThemeDefinition = {
     'surface-variation': '#222222',
     'surface-variation-secundary': '#303030',
     'on-surface': '#121212',
+    'current-time': '#121212',
   },
   variables: {
     'disabled-opacity': 0.2,
+    'current-time-opacity': 0.7,
   },
 }
 

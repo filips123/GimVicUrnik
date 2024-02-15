@@ -3,11 +3,11 @@ import { fetchHandle, updateWrapper } from '@/utils/update'
 import { defineStore } from 'pinia'
 
 export enum EntityType {
-  Class,
-  Teacher,
-  Classroom,
-  EmptyClassrooms,
-  None,
+  Class = 'class',
+  Teacher = 'teacher',
+  Classroom = 'classroom',
+  EmptyClassrooms = 'emptyClassrooms',
+  None = 'none',
 }
 
 export enum SnackType {
@@ -48,7 +48,7 @@ export const useSettingsStore = defineStore('settings', {
 
       showSubstitutions: true,
       showLinksInTimetable: true,
-      showHoursInTimetable: true,
+      showHoursInTimetable: false,
       showCurrentTime: true,
       enableShowingDetails: true,
       enablePullToRefresh: true,
