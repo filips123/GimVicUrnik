@@ -20,7 +20,7 @@
     "pulltorefreshjs": "^0.1.22",
     "vue": "^3.4.18",
     "vue-router": "^4.2.4",
-    "vuetify": "^3.3.17"
+    "vuetify": "^3.5.4"
   },
   "devDependencies": {
     "@mdi/font": "^7.2.96",

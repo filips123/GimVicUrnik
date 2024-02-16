@@ -88,7 +88,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
 
 <template>
   <v-app>
-    <v-app-bar>
+    <v-app-bar class="pr-2">
       <v-app-bar-title>
         <div @click="resetEntityToSettings()">{{ routerTitle }}</div>
         <div v-if="routerName === 'timetable'" class="entities">

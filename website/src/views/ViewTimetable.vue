@@ -40,16 +40,16 @@ const timeInterval = computed(() => {
 
 const lessonsArray = computed(() => {
   const days = 5
-    const times = 10
-  
-    let lessonsArray: MergedLesson[][][] = Array.from(Array(times), () => new Array(days).fill([]))
-  
-    for (const lesson of timetableStore.lessons) {
-      lessonsArray[lesson.time][lesson.day - 1] =
-        lessonsArray[lesson.time][lesson.day - 1].concat(lesson)
-    }
-  
-    return lessonsArray
+  const times = 10
+
+  let lessonsArray: MergedLesson[][][] = Array.from(Array(times), () => new Array(days).fill([]))
+
+  for (const lesson of timetableStore.lessons) {
+    lessonsArray[lesson.time][lesson.day - 1] =
+      lessonsArray[lesson.time][lesson.day - 1].concat(lesson)
+  }
+
+  return lessonsArray
 })
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
