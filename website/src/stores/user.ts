@@ -1,6 +1,7 @@
+import { defineStore } from 'pinia'
+
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { getCurrentDay } from '@/utils/days'
-import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', {
   state: () => {

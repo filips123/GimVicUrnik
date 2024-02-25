@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import MenuDay from '@/components/MenuDay.vue'
-import { useMenuStore, type LunchSchedule } from '@/stores/menu'
-import { useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
+
+import MenuDay from '@/components/MenuDay.vue'
+import { type LunchSchedule, useMenuStore } from '@/stores/menu'
+import { useSettingsStore } from '@/stores/settings'
+import { useUserStore } from '@/stores/user'
 
 const { mobile } = useDisplay()
 
@@ -17,7 +18,7 @@ updateMenus()
 updateLunchSchedules()
 
 function entitiesLunchSchedules(lunchSchedules: LunchSchedule[]) {
-  return lunchSchedules?.filter((schedule) => entities.value.includes(schedule.class))
+  return lunchSchedules?.filter(schedule => entities.value.includes(schedule.class))
 }
 
 const isData = menus.flat().length || lunchSchedules.flat(Infinity).length

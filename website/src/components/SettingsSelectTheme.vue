@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ThemeType, useSettingsStore } from '@/stores/settings'
-import { localizeThemeType } from '@/utils/localization'
 import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 import { useTheme } from 'vuetify'
+
+import { ThemeType, useSettingsStore } from '@/stores/settings'
+import { localizeThemeType } from '@/utils/localization'
 
 const dialog = defineModel<boolean>()
 

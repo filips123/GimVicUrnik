@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
+
 import { useSnackbarStore } from '@/composables/snackbar'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 import { sortEntities } from '@/utils/entities'
 import { localizeSelectEntityNotSelected, localizeSelectEntityTitle } from '@/utils/localization'
-import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useDisplay } from 'vuetify'
 
 const entityTypeDialog = defineModel<boolean>()
 const { welcome } = defineProps<{ welcome?: boolean }>()

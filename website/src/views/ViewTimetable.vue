@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
+import { useDisplay } from 'vuetify'
+
 import TimetableDetails from '@/components/TimetableDetails.vue'
 import TimetableLesson from '@/components/TimetableLesson.vue'
 import { useSettingsStore } from '@/stores/settings'
@@ -8,9 +12,6 @@ import { useUserStore } from '@/stores/user'
 import { getCurrentDay } from '@/utils/days'
 import { localizedWeekdays } from '@/utils/localization'
 import { getCurrentTime, lessonTimes } from '@/utils/times'
-import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
-import { useDisplay } from 'vuetify'
 
 const { mobile } = useDisplay()
 
@@ -31,7 +32,7 @@ const lessonsDetails = ref([] as MergedLesson[])
 const timeInterval = computed(() => {
   const lessons = !mobile.value
     ? timetableStore.lessons
-    : timetableStore.lessons.filter((lesson) => lesson.day == day.value + 1)
+    : timetableStore.lessons.filter(lesson => lesson.day == day.value + 1)
   return [
     lessons.reduce((minTime, lesson) => (lesson.time < minTime ? lesson.time : minTime), 10),
     lessons.reduce((maxTime, lesson) => (lesson?.time > maxTime ? lesson?.time : maxTime), 0),
@@ -79,7 +80,7 @@ function styleDesktop(dayIndex: number, timeIndex: number) {
   return {
     'bg-surface-variation-secundary':
       showSubstitutions &&
-      lessonsArray.value[timeIndex][dayIndex]?.find((lesson) => lesson.substitution),
+      lessonsArray.value[timeIndex][dayIndex]?.find(lesson => lesson.substitution),
     'current-time':
       showCurrentTime && !isWeekday && timeIndex === currentTime && dayIndex === currentDay,
   }
@@ -90,7 +91,7 @@ function styleMobile(timeIndex: number) {
   return {
     'bg-surface-variation-secundary':
       showSubstitutions &&
-      lessonsArray.value[timeIndex][day.value]?.find((lesson) => lesson.substitution),
+      lessonsArray.value[timeIndex][day.value]?.find(lesson => lesson.substitution),
     'current-time':
       showCurrentTime && !isWeekday && day.value === currentDay && timeIndex === currentTime,
   }

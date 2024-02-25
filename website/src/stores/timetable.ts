@@ -1,8 +1,9 @@
+import { defineStore } from 'pinia'
+
 import { EntityType } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 import { getWeekdays } from '@/utils/days'
 import { fetchHandle, updateWrapper } from '@/utils/update'
-import { defineStore } from 'pinia'
 
 export interface Lesson {
   day: number
@@ -65,7 +66,7 @@ export const useTimetableStore = defineStore('timetable', {
           for (const substitutionsDay of state.substitutions) {
             substitutions = substitutions.concat(
               substitutionsDay.filter(
-                (substitution) => substitution[entityType as keyof Substitution] == entity,
+                substitution => substitution[entityType as keyof Substitution] == entity,
               ),
             )
           }
@@ -76,7 +77,7 @@ export const useTimetableStore = defineStore('timetable', {
 
       for (const lesson of timetable) {
         const substitution = substitutions.find(
-          (substitution) =>
+          substitution =>
             substitution?.day === lesson.day &&
             substitution?.time === lesson.time &&
             substitution?.['original-teacher'] === lesson.teacher,
@@ -112,13 +113,13 @@ export const useTimetableStore = defineStore('timetable', {
     async updateSubstitutions() {
       updateWrapper(async () => {
         const responses = await Promise.all(
-          getWeekdays(new Date()).map((date) =>
+          getWeekdays(new Date()).map(date =>
             fetchHandle(
               import.meta.env.VITE_API + '/substitutions/date/' + date.toISOString().split('T')[0],
             ),
           ),
         )
-        this.substitutions = await Promise.all(responses.map((response) => response.json()))
+        this.substitutions = await Promise.all(responses.map(response => response.json()))
       })
     },
 

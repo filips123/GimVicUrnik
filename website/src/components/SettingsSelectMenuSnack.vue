@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 import { SnackType, useSettingsStore } from '@/stores/settings'
 import { localizeSnackType } from '@/utils/localization'
-import { storeToRefs } from 'pinia'
 
 const dialog = defineModel<boolean>()
 

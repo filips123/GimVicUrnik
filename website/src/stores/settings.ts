@@ -1,6 +1,7 @@
+import { defineStore } from 'pinia'
+
 import { sortEntities } from '@/utils/entities'
 import { fetchHandle, updateWrapper } from '@/utils/update'
-import { defineStore } from 'pinia'
 
 export enum EntityType {
   Class = 'class',
@@ -73,7 +74,7 @@ export const useSettingsStore = defineStore('settings', {
         ])
 
         const [classesList, teachersList, classroomsList] = await Promise.all(
-          responses.map((response) => response.json()),
+          responses.map(response => response.json()),
         )
         this.classesList = sortEntities(EntityType.Class, classesList)
         this.teachersList = sortEntities(EntityType.Teacher, teachersList)

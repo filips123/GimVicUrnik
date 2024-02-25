@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+
 import { EntityType } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
 import { useUserStore } from '@/stores/user'
 import { localizedWeekdays } from '@/utils/localization'
 import { lessonTimes } from '@/utils/times'
-import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
 
 const dialog = defineModel<boolean>()
 const props = defineProps<{ lessons: MergedLesson[] }>()
@@ -19,7 +20,7 @@ const lessonTime = computed(() => lessonTimes[props.lessons[0].time].join(' - ')
 const subtitle = computed(() => `${day.value}, ${lessonTime.value}`)
 
 const substitutionLessons = computed(() =>
-  props.lessons.filter((lesson) => lesson.substitution === true),
+  props.lessons.filter(lesson => lesson.substitution === true),
 )
 </script>
 

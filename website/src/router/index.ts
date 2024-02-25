@@ -1,5 +1,6 @@
-import { EntityType, useSettingsStore } from '@/stores/settings'
 import { createRouter, createWebHistory } from 'vue-router'
+
+import { EntityType, useSettingsStore } from '@/stores/settings'
 
 const Home = () => import('../views/ViewHome.vue')
 const Welcome = () => import('../views/ViewWelcome.vue')
@@ -71,7 +72,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async to => {
   const settingsStore = useSettingsStore()
   const { entityType } = settingsStore
 

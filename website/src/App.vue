@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { useSwipe } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import PullToRefresh from 'pulltorefreshjs'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import { useDisplay, useTheme } from 'vuetify'
+
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
 import NavigationDesktop from '@/components/NavigationDesktop.vue'
@@ -6,12 +13,6 @@ import NavigationMobile from '@/components/NavigationMobile.vue'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 import { updateAllData } from '@/utils/update'
-import { useSwipe } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
-import PullToRefresh from 'pulltorefreshjs'
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
-import { useDisplay, useTheme } from 'vuetify'
 
 const router = useRouter()
 const { mobile } = useDisplay()

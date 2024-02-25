@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
+
 import CircularsPassword from '@/components/CircularsPassword.vue'
-import { useDocumentsStore, type Document } from '@/stores/documents'
+import { type Document, useDocumentsStore } from '@/stores/documents'
 import { useSettingsStore } from '@/stores/settings'
 import { tokenizeUrl } from '@/utils/documents'
 import { localizeDate } from '@/utils/localization'
-import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 
 const documentsStore = useDocumentsStore()
 const { filterDocuments, updateDocuments } = documentsStore

@@ -1,10 +1,11 @@
+import { storeToRefs } from 'pinia'
+
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useDocumentsStore } from '@/stores/documents'
 import { useMenuStore } from '@/stores/menu'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { useTimetableStore } from '@/stores/timetable'
 import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
 
 class HTTPError extends Error {
   status: number

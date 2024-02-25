@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 import TimetableLessonLink from '@/components/TimetableLessonLink.vue'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
 import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
 
 const { lesson } = defineProps<{ lesson: MergedLesson }>()
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useSnackbarStore } from '@/composables/snackbar'
 import { storeToRefs } from 'pinia'
+
+import { useSnackbarStore } from '@/composables/snackbar'
 
 const { action, buttonText, show, text, timeout } = storeToRefs(useSnackbarStore())
 </script>

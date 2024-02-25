@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useSettingsStore } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
+
+import { useSettingsStore } from '@/stores/settings'
 
 const dialog = defineModel<boolean>()
 

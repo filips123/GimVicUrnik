@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
 
 const props = defineProps<{
   entityTypeLink: EntityType

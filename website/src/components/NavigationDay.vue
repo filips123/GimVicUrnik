@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 import { useUserStore } from '@/stores/user'
 import { localizedWeekdays } from '@/utils/localization'
-import { storeToRefs } from 'pinia'
 
 const { day } = storeToRefs(useUserStore())
 </script>

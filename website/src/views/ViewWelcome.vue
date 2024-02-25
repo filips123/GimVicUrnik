@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+
 import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
 import WelcomeInformation from '@/components/WelcomeInformation.vue'
 import { updateAllData } from '@/utils/update'
-import { ref, watch } from 'vue'
 
 const welcomeDialog = ref(true)
 const settingsDialog = ref(false)

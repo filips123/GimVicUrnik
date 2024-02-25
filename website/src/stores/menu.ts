@@ -1,6 +1,7 @@
+import { defineStore } from 'pinia'
+
 import { getWeekdays } from '@/utils/days'
 import { fetchHandle, updateWrapper } from '@/utils/update'
-import { defineStore } from 'pinia'
 
 export interface Menu {
   date: string

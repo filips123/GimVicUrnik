@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
+
 import SettingsAbout from '@/components/SettingsAbout.vue'
 import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
 import SettingsBaseSwitch from '@/components/SettingsBaseSwitch.vue'
@@ -16,8 +19,6 @@ import {
   localizeThemeType,
 } from '@/utils/localization'
 import { updateAllData } from '@/utils/update'
-import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 
 const {
   entities,

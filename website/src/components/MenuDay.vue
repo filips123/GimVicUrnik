@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
+
 import type { LunchSchedule, Menu } from '@/stores/menu'
 import { useSettingsStore } from '@/stores/settings'
 import { localizeDate, localizeDay } from '@/utils/localization'
-import { computed } from 'vue'
-import { useDisplay } from 'vuetify'
 
 const props = defineProps<{ menu: Menu; lunchSchedules?: LunchSchedule[] }>()
 

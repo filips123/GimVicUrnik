@@ -1,5 +1,6 @@
-import { fetchHandle, updateWrapper } from '@/utils/update'
 import { defineStore } from 'pinia'
+
+import { fetchHandle, updateWrapper } from '@/utils/update'
 
 export interface Document {
   type: string
@@ -27,7 +28,7 @@ export const useDocumentsStore = defineStore('documents', {
     },
 
     filterDocuments(documentTypes: string[]) {
-      return this.documents?.filter((document) => documentTypes.includes(document.type)).reverse()
+      return this.documents?.filter(document => documentTypes.includes(document.type)).reverse()
     },
   },
 
