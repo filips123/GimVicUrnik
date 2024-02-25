@@ -4,19 +4,37 @@
 
 root = true
 
-# General
 [*]
 charset = utf-8
 end_of_line = lf
 indent_style = space
-indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-# Web & Data
-[*.{html,css,sass,scss,xml,js,jsx,jsm,ts,tsx,vue,json,yaml,yml,webmanifest}]
+# == Native
+
+# Programs
+[*.py]
+indent_size = 4
+
+# Data
+[*.toml]
+indent_size = 4
+
+# == Web
+
+# HTML
+[*.{html,svelte,vue}]
 indent_size = 2
 
-# Configuration
-[.*rc]
+# Scripts
+[*.{js,jsx,cjs,mjs,ts,tsx,cts,mts}]
+indent_size = 2
+
+# Stylesheets
+[*.{css,sass,scss}]
+indent_size = 2
+
+# Data
+[*.{json,yaml,yml,xml,webmanifest}]
 indent_size = 2

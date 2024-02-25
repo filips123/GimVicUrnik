@@ -10,12 +10,22 @@
     <meta name="description" content="%VITE_DESCRIPTION%" />
     <meta name="keywords" content="%VITE_KEYWORDS%" />
 
+    <meta name="theme-color" content="#007300" />
+    <meta name="application-name" content="%VITE_TITLE%" />
+    <meta name="apple-mobile-web-app-title" content="%VITE_TITLE%" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
     <link rel="alternate" type="application/atom+xml" title="Okrožnice - Gimnazija Vič" href="%VITE_API%/feed/circulars.atom" />
     <link rel="alternate" type="application/atom+xml" title="Nadomeščanja - Gimnazija Vič" href="%VITE_API%/feed/substitutions.atom" />
     <link rel="alternate" type="application/atom+xml" title="Jedilniki - Gimnazija Vič" href="%VITE_API%/feed/menus.atom" />
     <link rel="alternate" type="application/atom+xml" title="Razporedi kosila - Gimnazija Vič" href="%VITE_API%/feed/schedules.atom" />
 
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/img/icons/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/img/icons/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/icons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/img/icons/safari-pinned-tab.svg" color="#007300" />
   </head>
 
   <body>
@@ -23,8 +33,6 @@
       <h1>Urnik Gimnazije Vič</h1>
       <p>Spletna stran za delovanje potrebuje JavaScript. Prosimo vas, da ga omogočite, če jo želite uporabljati.</p>
     </noscript>
-    
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

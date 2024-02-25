@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /$
+Allow: /img/
+Allow: /api/feed/
+Allow: /api/calendar/
+Allow: /favicon.ico$
+Allow: /robots.txt$
+Allow: /sitemap.xml$
+Disallow: /
