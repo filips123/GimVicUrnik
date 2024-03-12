@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 def keep_visible_lines(obj: dict[str, Any]) -> bool:
     if obj["object_type"] == "rect":
-        visible: bool = obj["non_stroking_color"] == (0, 0, 0)
+        visible = obj["non_stroking_color"] in ((0,), (0, 0, 0))
         return visible
     return True
 
