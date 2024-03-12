@@ -1834,7 +1834,7 @@
 
 "@vue/cli-plugin-pwa@https://gitpkg.now.sh/filips123/vue-cli/packages/@vue/cli-plugin-pwa?support-48x48-favicon":
   version "5.0.1"
-  resolved "https://gitpkg.now.sh/filips123/vue-cli/packages/@vue/cli-plugin-pwa?support-48x48-favicon#eba7af3050044a5b8b4759fccd1ba0fac21e4cd2"
+  resolved "https://gitpkg.now.sh/filips123/vue-cli/packages/@vue/cli-plugin-pwa?support-48x48-favicon#3da4a54d25df977843037491f9fc6710ba69b899"
   dependencies:
     "@vue/cli-shared-utils" "^5.0.1"
     html-webpack-plugin "^5.1.0"
