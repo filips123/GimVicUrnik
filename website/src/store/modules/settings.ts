@@ -70,6 +70,7 @@ class Settings extends VuexModule {
   theme: ThemeType = ThemeType.System
 
   moodleToken: string | null = null
+  documentsPassword: string | null = null
 
   @Mutation
   setSelectedEntity (selectedEntity: SelectedEntity): void {
@@ -146,6 +147,11 @@ class Settings extends VuexModule {
   @Mutation
   setMoodleToken (moodleToken: string | null): void {
     this.moodleToken = moodleToken
+  }
+
+  @Mutation
+  setDocumentsPassword (documentsPassword: string | null): void {
+    this.documentsPassword = documentsPassword
   }
 }
 
