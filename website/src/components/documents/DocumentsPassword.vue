@@ -3,12 +3,11 @@
     <v-toolbar class="text-uppercase" color="#009300" dark>
       Vpišite geslo
     </v-toolbar>
-    <v-card-text class="text--primary my-4">
+    <v-card-text class="text--primary mt-4">
       <p>
-        Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno v
-        <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
+        Za ogled okrožnic znotraj aplikacije je potrebno geslo.
+        Geslo je dostopno v <a href="https://ucilnica.gimvic.org/course/view.php?id=118" target="_blank">spletni učilnici</a>.
       </p>
-    <v-divider />
     <v-text-field
         v-model="documentsPassword"
         label="Geslo"
