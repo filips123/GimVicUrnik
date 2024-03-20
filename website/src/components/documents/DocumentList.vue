@@ -7,7 +7,13 @@
       <v-expansion-panel-content>
         <v-list>
           <v-item-group>
-            <v-list-item v-for="(document, id) in documents" :key="id" :href="tokenizeUrl(document.url)" two-line>
+            <v-list-item
+              v-for="(document, id) in documents"
+              :key="id"
+              @click="handleSubstitutionDocumentsPassword(document.type)"
+              :href="tokenizeUrl(document.url, document.type)"
+              two-line
+            >
               <v-list-item-content>
                 <v-list-item-title class="pl-1">{{ document.title }}</v-list-item-title>
                 <v-list-item-subtitle>{{ displayDate(document) }}</v-list-item-subtitle>
@@ -18,8 +24,9 @@
                     <v-tooltip top>
                       <template #activator="{ on: tooltip }">
                         <v-btn icon
-                          v-on="{ ...tooltip, ...dialog }"
+                          v-on="hasDocumentsPassword() && { ...tooltip, ...dialog }"
                           aria-label="Odpri besedilo dokumenta"
+                          @click="handleDocumentsPassword()"
                           @click.prevent
                           @click.stop
                           @mousedown.stop
@@ -49,6 +56,9 @@
             </v-list-item>
           </v-item-group>
         </v-list>
+        <v-dialog v-model="documentsPasswordDialog" width="35rem">
+          <documents-password v-if="documentsPasswordDialog" @closeDialog=closeDocumentsPasswordDialog />
+        </v-dialog>
       </v-expansion-panel-content>
     </v-expansion-panel>
   </v-expansion-panels>
@@ -88,11 +98,16 @@ import { mdiTextBoxOutline } from '@mdi/js'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import App from '@/App.vue'
+import DocumentsPassword from '@/components/documents/DocumentsPassword.vue'
 import { SettingsModule } from '@/store/modules/settings'
 import { Document } from '@/store/modules/storage'
 import { getWeekDays } from '@/utils/days'
 
-@Component
+@Component({
+  components: {
+    DocumentsPassword
+  }
+})
 export default class DocumentList extends Vue {
   mdiTextBoxOutline = mdiTextBoxOutline
 
@@ -104,6 +119,8 @@ export default class DocumentList extends Vue {
 
   documentDialogs = {}
   pullToRefresh = true
+
+  documentsPasswordDialog = false
 
   displayDate (document: Document): string {
     let date
@@ -134,7 +151,11 @@ export default class DocumentList extends Vue {
     return getWeekDays(new Date(date))[4].toLocaleDateString('sl')
   }
 
-  tokenizeUrl (url: string): string {
+  tokenizeUrl (url: string, type: string): string {
+    if (!this.shouldOpenSubstitution(type)) {
+      return ''
+    }
+
     const pluginFileWebserviceUrl = process.env.VUE_APP_ECLASSROOM_WEBSERVICE
     const pluginFileNormalUrl = process.env.VUE_APP_ECLASSROOM_NORMAL
     const moodleToken = SettingsModule.moodleToken
@@ -151,6 +172,36 @@ export default class DocumentList extends Vue {
   handlePTR (): void {
     this.pullToRefresh = !this.pullToRefresh;
     (this.$root.$children[0] as App).isPullToRefreshAllowed = this.pullToRefresh
+  }
+
+  handleSubstitutionDocumentsPassword (type: string): void {
+    if (!this.shouldOpenSubstitution(type)) {
+      this.handleDocumentsPassword()
+    }
+  }
+
+  shouldOpenSubstitution (type: string): boolean {
+    if (type === 'substitutions' && !this.hasDocumentsPassword()) {
+      return false
+    }
+    return true
+  }
+
+  hasDocumentsPassword (): boolean {
+    if (SettingsModule.documentsPassword === process.env.VUE_APP_DOCUMENTS_PASSWORD) {
+      return true
+    }
+    return false
+  }
+
+  handleDocumentsPassword (): void {
+    if (!this.hasDocumentsPassword()) {
+      this.documentsPasswordDialog = true
+    }
+  }
+
+  closeDocumentsPasswordDialog (): void {
+    this.documentsPasswordDialog = false
   }
 }
 </script>
