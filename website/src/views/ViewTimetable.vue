@@ -5,17 +5,17 @@ import { useDisplay } from 'vuetify'
 
 import TimetableDetails from '@/components/TimetableDetails.vue'
 import TimetableLesson from '@/components/TimetableLesson.vue'
+import { useSessionStore } from '@/stores/session'
 import { useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
 import { useTimetableStore } from '@/stores/timetable'
-import { useUserStore } from '@/stores/user'
 import { getCurrentDay } from '@/utils/days'
 import { localizedWeekdays } from '@/utils/localization'
 import { getCurrentTime, lessonTimes } from '@/utils/times'
 
 const { mobile } = useDisplay()
 
-const { day } = storeToRefs(useUserStore())
+const { day } = storeToRefs(useSessionStore())
 
 const timetableStore = useTimetableStore()
 timetableStore.updateTimetable()
@@ -23,7 +23,7 @@ timetableStore.updateSubstitutions()
 timetableStore.updateEmptyClassrooms()
 
 const settingsStore = useSettingsStore()
-const { showHoursInTimetable, showSubstitutions, showCurrentTime, enableShowingDetails } =
+const { showHoursInTimetable, showSubstitutions, showCurrentTime, enableLessonDetails } =
   settingsStore
 
 const lessonDetailsDialog = ref(false)
@@ -55,7 +55,7 @@ const lessonsArray = computed(() => {
 
 function handleDetails(lessons: MergedLesson[], event: Event) {
   if (
-    !enableShowingDetails ||
+    !enableLessonDetails ||
     (event?.target as HTMLInputElement)?.classList.contains('text-primary-variant')
   )
     return
@@ -110,7 +110,7 @@ const isData = lessonsArray.value.flat(Infinity).length
           :key="index"
           :class="{ 'bg-primary': index === currentDay && !isWeekday }"
           v-text="weekday"
-        ></th>
+        />
       </tr>
     </thead>
     <tbody>
@@ -121,9 +121,9 @@ const isData = lessonsArray.value.flat(Infinity).length
         @click="mobile ? handleDetails(lessonsArray[timeIndex][day], $event) : null"
       >
         <template v-if="timeIndex >= timeInterval[0] && timeIndex <= timeInterval[1]">
-          <td v-text="timeIndex === 0 ? 'PU' : timeIndex + '.'"></td>
+          <td v-text="timeIndex === 0 ? 'PU' : timeIndex + '.'" />
           <template v-if="!mobile">
-            <td v-if="showHoursInTimetable" v-text="lessonTimes[timeIndex].join(' - ')"></td>
+            <td v-if="showHoursInTimetable" v-text="lessonTimes[timeIndex].join(' - ')" />
           </template>
           <td
             v-for="(lessonsDay, dayIndex) in getLessonsDay(lessonsTime)"
@@ -143,7 +143,7 @@ const isData = lessonsArray.value.flat(Infinity).length
       </tr>
     </tbody>
   </v-table>
-  <template v-else>Podatkov ni bilo mogoče pridobiti.</template>
+  <template v-else> Podatkov ni bilo mogoče pridobiti. </template>
   <TimetableDetails v-model="lessonDetailsDialog" :lessons="lessonsDetails" />
 </template>
 

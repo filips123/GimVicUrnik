@@ -2,13 +2,13 @@
 import { storeToRefs } from 'pinia'
 
 import TimetableLessonLink from '@/components/TimetableLessonLink.vue'
+import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
-import { useUserStore } from '@/stores/user'
 
 const { lesson } = defineProps<{ lesson: MergedLesson }>()
 
-const { entityType } = storeToRefs(useUserStore())
+const { entityType } = storeToRefs(useSessionStore())
 
 const settingsStore = useSettingsStore()
 const { showSubstitutions } = settingsStore
@@ -60,6 +60,6 @@ const links = {
   </template>
   <template v-else>
     <TimetableLessonLink v-bind="links.emptyClassrooms" />
-    <div></div>
+    <div />
   </template>
 </template>

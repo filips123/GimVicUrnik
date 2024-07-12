@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { mdiEye, mdiEyeOff } from '@mdi/js'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
@@ -6,24 +7,27 @@ import { useSnackbarStore } from '@/composables/snackbar'
 import { useSettingsStore } from '@/stores/settings'
 
 const dialog = defineModel<boolean>()
+const callback = defineModel<boolean>('callback', { default: undefined })
 
 const { circularsPassword } = storeToRefs(useSettingsStore())
-const snackbarStore = useSnackbarStore()
-const { displaySnackbar } = snackbarStore
+const { displaySnackbar } = useSnackbarStore()
 
 const inputShow = ref(false)
 
 function closeDialog() {
+  dialog.value = false
+
   if (circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD) {
     displaySnackbar('Geslo je pravilno')
+    callback.value = true
   } else if (circularsPassword.value !== '') {
     displaySnackbar('Geslo je napačno')
     circularsPassword.value = ''
   }
-
-  dialog.value = false
 }
 </script>
+
+<!-- TODO: Styling, etc -->
 
 <template>
   <v-dialog v-model="dialog">
@@ -31,17 +35,16 @@ function closeDialog() {
       <template #text>
         <p>
           Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na
-          <a href="https://ucilnica.gimvic.org/">spletni učilnici</a>.
+          <a href="https://ucilnica.gimvic.org/" target="_blank">spletni učilnici</a>.
         </p>
-        <v-divider />
         <v-text-field
           v-model="circularsPassword"
           label="Geslo"
-          :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="inputShow ? mdiEye : mdiEyeOff"
           :type="inputShow ? 'text' : 'password'"
+          autofocus
           @click:append="inputShow = !inputShow"
           @keyup.enter="closeDialog()"
-          autofocus
         />
       </template>
       <template #actions>

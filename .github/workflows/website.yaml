@@ -32,6 +32,7 @@ jobs:
           path: |
             ~/.cache/yarn
             ./node_modules/.cache
+            ./node_modules/.vite
           key: ${{ runner.os }}-yarn-lint-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-lint-
 
@@ -47,7 +48,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Lint the project
-        run: yarn lint --mode production
+        run: yarn lint
 
   build:
     name: Building
@@ -63,6 +64,7 @@ jobs:
           path: |
             ~/.cache/yarn
             ./node_modules/.cache
+            ./node_modules/.vite
           key: ${{ runner.os }}-yarn-build-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-build-
 
@@ -78,4 +80,4 @@ jobs:
         run: yarn install
 
       - name: Build the project
-        run: yarn build --mode production
+        run: yarn build

@@ -1,5 +1,14 @@
 # GimVičUrnik Frontend
 
+TODO: PWA stuff (service worker + service worker name, refreshing/updating app, app version ...)
+TODO: Build stuff (preloading/prefetching ...)
+TODO: Sentry stuff (Sentry integration)
+TODO: Some changes to functionalities and styles (see discord)
+TODO: Router for timetable
+TODO: Repo files (README, GimVicDeploy ...)
+TODO: GitHub Actions (typechecking, linting, formatting, deploying, update to Node.js 20 ...)
+TODO: Nadomeščanja ne delajo (učilnice) ko refreshaš s pull to refresh
+
 This is the frontend part of the GimVičUrnik system.
 
 ## Installation

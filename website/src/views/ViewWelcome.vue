@@ -10,7 +10,7 @@ const settingsDialog = ref(false)
 
 watch(welcomeDialog, () => (settingsDialog.value = true))
 
-updateAllData()
+updateAllData(false)
 </script>
 
 <template>

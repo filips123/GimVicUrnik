@@ -2,36 +2,50 @@
 import { storeToRefs } from 'pinia'
 import { useDisplay } from 'vuetify'
 
-import MenuDay from '@/components/MenuDay.vue'
-import { type LunchSchedule, useMenuStore } from '@/stores/menu'
+import MenuDisplay from '@/components/MenuDisplay.vue'
+import { type LunchSchedule, useFoodStore } from '@/stores/food'
+import { useSessionStore } from '@/stores/session'
 import { useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
 
 const { mobile } = useDisplay()
 
-const { day } = storeToRefs(useUserStore())
-const { entities } = storeToRefs(useSettingsStore())
+const { day } = storeToRefs(useSessionStore())
+const { entityList } = storeToRefs(useSettingsStore())
 
-const menuStore = useMenuStore()
-const { menus, lunchSchedules, updateMenus, updateLunchSchedules } = menuStore
+const foodStore = useFoodStore()
+const { menus, lunchSchedules, hasData } = storeToRefs(foodStore)
+const { updateMenus, updateLunchSchedules } = foodStore
+
 updateMenus()
 updateLunchSchedules()
 
 function entitiesLunchSchedules(lunchSchedules: LunchSchedule[]) {
-  return lunchSchedules?.filter(schedule => entities.value.includes(schedule.class))
+  return lunchSchedules?.filter(schedule => entityList.value.includes(schedule.class))
 }
 
-const isData = menus.flat().length || lunchSchedules.flat(Infinity).length
+// Stop stopping event propagation on touch handlers
+const touchOptions = {
+  start: () => {},
+  end: () => {},
+}
 </script>
 
 <template>
-  <template v-if="isData">
-    <div v-if="mobile">
-      <MenuDay :menu="menus[day]" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[day])" />
-    </div>
+  <template v-if="hasData">
+    <v-window v-if="mobile" v-model="day" :touch="touchOptions" class="h-100">
+      <v-window-item v-for="(menu, dayIndex) in menus" :key="dayIndex" :value="dayIndex">
+        <MenuDisplay
+          :menu="menu"
+          :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])"
+        />
+      </v-window-item>
+    </v-window>
     <v-row v-else no-gutters>
       <v-col v-for="(menu, dayIndex) in menus" :key="dayIndex">
-        <MenuDay :menu="menu" :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])" />
+        <MenuDisplay
+          :menu="menu"
+          :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])"
+        />
       </v-col>
     </v-row>
   </template>

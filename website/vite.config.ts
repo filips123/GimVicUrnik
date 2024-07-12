@@ -1,10 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import { sentryVitePlugin as SentryVite } from '@sentry/vite-plugin'
 import Vue, { Options as VueOptions } from '@vitejs/plugin-vue'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, PluginOption } from 'vite'
 import { createHtmlPlugin as Html } from 'vite-plugin-html'
 import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+
+import { version as appVersion } from './package.json'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -14,15 +17,19 @@ export default defineConfig(({ mode }) => {
     throw Error('Environment variables are not set, make sure you have copied the config file')
   }
 
+  // Use Vuetify's template to resolve asset URLs passed to Vuetify components
   const vueConfig: VueOptions = {
     template: { transformAssetUrls },
   }
 
+  // Use HTML plugin to minify built HTML and autoinject scripts
   const htmlConfig = {
     entry: 'src/main.ts',
     template: 'index.html',
     minify: true,
   }
+
+  // TODO FIXME: Manifest not included in development build?
 
   const pwaConfig: Partial<VitePWAOptions & { manifest: { keywords: string[] } }> = {
     manifestFilename: 'site.webmanifest',
@@ -60,8 +67,8 @@ export default defineConfig(({ mode }) => {
         },
         {
           name: 'Jedilnik',
-          url: '/menus',
-          icons: [{ src: '/img/shortcuts/menus.png', type: 'image/png', sizes: '192x192' }],
+          url: '/menu',
+          icons: [{ src: '/img/shortcuts/menu.png', type: 'image/png', sizes: '192x192' }],
         },
         {
           name: 'Okrožnice',
@@ -72,21 +79,79 @@ export default defineConfig(({ mode }) => {
     },
   }
 
+  const plugins: PluginOption = [
+    Vue(vueConfig),
+    Vuetify(),
+    Html(htmlConfig),
+    VitePWA(pwaConfig),
+  ]
+
+  // Upload sourcemaps for the current release to Sentry if enabled
+  if (env.SENTRY_UPLOAD_SOURCEMAPS === 'true') {
+    const releasePrefix = env.VITE_SENTRY_RELEASE_PREFIX || ''
+    const releaseSuffix = env.VITE_SENTRY_RELEASE_SUFFIX || ''
+    const releaseVersion = releasePrefix + appVersion + releaseSuffix
+
+    plugins.push(SentryVite({
+      org: env.SENTRY_ORG,
+      project: env.SENTRY_PROJECT,
+      authToken: env.SENTRY_AUTH_TOKEN,
+      release: { name: releaseVersion, create: false, finalize: false },
+    }))
+  }
+
   return {
-    plugins: [
-      Vue(vueConfig),
-      Vuetify(),
-      Html(htmlConfig),
-      VitePWA(pwaConfig),
-    ],
+    plugins,
+
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
         '$': fileURLToPath(new URL('./public', import.meta.url)),
       },
     },
+
+    define: {
+      'import.meta.env.VITE_VERSION': JSON.stringify(appVersion),
+      'import.meta.env.VITE_BUILDTIME': new Date(),
+    },
+
     build: {
       sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks: id => {
+            // TODO TEST
+            // if (id.includes('sentry')) {
+            //   return 'sentry';
+            // }
+            // if (id.includes('node_modules')) {
+            //   return 'vendor';
+            // }
+            // const pkgName = id.match(/node_modules\/([^/]+)/)?.[1];
+            // return `npm-${pkgName}` || undefined;
+          },
+
+          // TODO TEST
+          // sourcemapPathTransform: (file) => {
+          //   console.log(file)
+          //   return `webpack://${file}`
+          // },
+
+          // Use HEX hashing because it looks nicer
+          hashCharacters: 'hex',
+
+          // Split assets into directory per type for easier server config
+          entryFileNames: 'js/[name].[hash].js',
+          chunkFileNames: 'js/[name].[hash].js',
+          assetFileNames: ({ name }) => {
+            const extension = name!.split('.').at(1)
+            if (extension === 'css') return 'css/[name].[hash][extname]'
+            if (/svg|png|jpe?g|gif|ico|bmp|tiff|webp/.test(extension!)) return 'img/[name].[hash][extname]'
+            if (/woff|woff2|eot|ttf|otf/.test(extension!)) return 'font/[name].[hash][extname]'
+            return 'assets/[name].[hash][extname]'
+          },
+        },
+      },
     },
   }
 })

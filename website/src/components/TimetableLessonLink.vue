@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
+import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
 
 const props = defineProps<{
   entityTypeLink: EntityType
@@ -11,7 +11,7 @@ const props = defineProps<{
   substitutionEntity: string
 }>()
 
-const { entityType, entities } = storeToRefs(useUserStore())
+const { entityType, entityList: entities } = storeToRefs(useSessionStore())
 
 const settingsStore = useSettingsStore()
 const { showLinksInTimetable, showSubstitutions } = settingsStore
@@ -35,5 +35,5 @@ function changeEntity() {
     :class="{ 'text-primary-variant': showLink }"
     @click="showLink ? changeEntity() : null"
     v-text="entity"
-  ></td>
+  />
 </template>

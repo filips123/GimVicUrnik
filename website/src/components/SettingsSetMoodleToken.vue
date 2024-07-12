@@ -38,9 +38,9 @@ const inputShow = ref(false)
           label="Moodle žeton"
           :append-icon="inputShow ? 'mdi-eye' : 'mdi-eye-off'"
           :type="inputShow ? 'text' : 'password'"
+          autofocus
           @click:append="inputShow = !inputShow"
           @keyup.enter="dialog = false"
-          autofocus
         />
       </template>
       <template #actions>

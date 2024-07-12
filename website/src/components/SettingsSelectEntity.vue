@@ -5,8 +5,9 @@ import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import { useSnackbarStore } from '@/composables/snackbar'
+import { useListsStore } from '@/stores/lists'
+import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
 import { sortEntities } from '@/utils/entities'
 import { localizeSelectEntityNotSelected, localizeSelectEntityTitle } from '@/utils/localization'
 
@@ -16,10 +17,10 @@ const { welcome } = defineProps<{ welcome?: boolean }>()
 const router = useRouter()
 const { mobile, width } = useDisplay()
 
-const userStore = useUserStore()
+const sessionStore = useSessionStore()
 
-const { classesList, teachersList, classroomsList } = storeToRefs(useSettingsStore())
-const settingsStore = useSettingsStore()
+const { classesList, teachersList, classroomsList } = storeToRefs(useListsStore())
+const settingsStore = useListsStore()
 const { updateLists } = settingsStore
 updateLists()
 
@@ -99,8 +100,8 @@ function handleViewEntities() {
   if (selectedEntities.value.length) {
     entitiesDialog.value = false
 
-    userStore.entityType = entityType.value
-    userStore.entities = selectedEntities.value
+    sessionStore.entityType = entityType.value
+    sessionStore.entities = selectedEntities.value
 
     router.push({ name: 'timetable' })
   } else {
@@ -112,8 +113,8 @@ function handleSelectEntity() {
   if (selectedEntities.value.length) {
     entitiesDialog.value = false
 
-    userStore.entityType = entityType.value
-    userStore.entities = selectedEntities.value
+    sessionStore.entityType = entityType.value
+    sessionStore.entities = selectedEntities.value
 
     settingsStore.entityType = entityType.value
     settingsStore.entities = selectedEntities.value

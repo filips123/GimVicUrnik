@@ -1,72 +1,72 @@
 import { defineStore } from 'pinia'
 
-import { EntityType } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
-import { getWeekdays } from '@/utils/days'
+import { EntityType, useSettingsStore } from '@/stores/settings'
+import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
 import { fetchHandle, updateWrapper } from '@/utils/update'
 
 export interface Lesson {
   day: number
   time: number
-  subject: string
-  class: string
-  teacher: string
-  classroom: string
+  subject: string | null
+  class: string | null
+  teacher: string | null
+  classroom: string | null
 }
 
 export interface Substitution extends Lesson {
   date: string
-  notes: string
-  'original-teacher': string
-  'original-classroom': string
+  notes: string | null
+  'original-teacher': string | null
+  'original-classroom': string | null
 }
 
 export interface MergedLesson {
   day: number
   time: number
-  class: string
-  classroom: string
-  subject: string
-  teacher: string
+  subject: string | null
+  class: string | null
+  teacher: string | null
+  classroom: string | null
   substitution: boolean
-  substitutionClassroom: string
-  substitutionSubject: string
-  substitutionTeacher: string
-  notes: string
+  substitutionSubject: string | null
+  substitutionTeacher: string | null
+  substitutionClassroom: string | null
+  notes: string | null
 }
 
 export const useTimetableStore = defineStore('timetable', {
-  state: () => {
-    return {
-      timetable: [] as Lesson[],
-      emptyClassrooms: [] as Lesson[],
-      substitutions: [] as Substitution[][],
-    }
-  },
+  state: () => ({
+    timetable: [] as Lesson[],
+    substitutions: [] as Substitution[][],
+
+    emptyClassrooms: [] as Lesson[],
+  }),
 
   getters: {
-    lessons(state) {
-      const userStore = useUserStore()
-      const { entities, entityType } = userStore
+    lessons(state): MergedLesson[] {
+      const sessionStore = useSettingsStore()
+      const { entityList: entities, entityType: type } = sessionStore
+
+      if (type === EntityType.None) {
+        return []
+      }
 
       let timetable: Lesson[] = []
       let substitutions: Substitution[] = []
 
-      if (entityType == EntityType.None) {
+      if (type == EntityType.None) {
         return []
-      } else if (entityType == EntityType.EmptyClassrooms) {
+      } else if (type == EntityType.EmptyClassrooms) {
         timetable = state.emptyClassrooms
       } else {
         for (const entity of entities) {
           timetable = timetable.concat(
-            state.timetable.filter(
-              (lesson: Lesson) => lesson[entityType as keyof Lesson] == entity,
-            ),
+            state.timetable.filter((lesson: Lesson) => lesson[type as keyof Lesson] == entity),
           )
           for (const substitutionsDay of state.substitutions) {
             substitutions = substitutions.concat(
               substitutionsDay.filter(
-                substitution => substitution[entityType as keyof Substitution] == entity,
+                substitution => substitution[type as keyof Substitution] == entity,
               ),
             )
           }
@@ -112,13 +112,9 @@ export const useTimetableStore = defineStore('timetable', {
 
     async updateSubstitutions() {
       updateWrapper(async () => {
-        const responses = await Promise.all(
-          getWeekdays(new Date()).map(date =>
-            fetchHandle(
-              import.meta.env.VITE_API + '/substitutions/date/' + date.toISOString().split('T')[0],
-            ),
-          ),
-        )
+        const dates = getWeekdays(getCurrentDate()).map(date => getISODate(date))
+        const urls = dates.map(date => import.meta.env.VITE_API + '/substitutions/date/' + date)
+        const responses = await Promise.all(urls.map(url => fetchHandle(url)))
         this.substitutions = await Promise.all(responses.map(response => response.json()))
       })
     },

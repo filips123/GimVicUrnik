@@ -9,6 +9,7 @@ export const lessonTimes: [string, string][] = [
   ['13:25', '14:10'],
   ['14:15', '15:00'],
   ['15:05', '15:50'],
+  ['15:55', '16:40'],
 ]
 
 export function getCurrentTime(): number {
@@ -17,6 +18,7 @@ export function getCurrentTime(): number {
   const endDateTime = new Date()
 
   let timeIndex = 0
+
   for (const [startTime, endTime] of lessonTimes) {
     const startTimes = startTime.split(':').map(Number)
     const endTimes = endTime.split(':').map(Number)
@@ -24,9 +26,7 @@ export function getCurrentTime(): number {
     startDateTime.setHours(startTimes[0], startTimes[1], 0)
     endDateTime.setHours(endTimes[0], endTimes[1] + 5, 0)
 
-    if (startDateTime <= time && time <= endDateTime) {
-      return timeIndex
-    }
+    if (startDateTime <= time && time <= endDateTime) return timeIndex
     timeIndex++
   }
 

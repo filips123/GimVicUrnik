@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 import SubscribeDisplay from '@/components/SubscribeDisplay.vue'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 
-const settingsStore = useSettingsStore()
-const { entities, entityType } = settingsStore
+const { entityList, entityType } = storeToRefs(useSettingsStore())
 
 const api = import.meta.env.VITE_API
 const feed = `${api}/feed`
 const calendar = `${api}/calendar`
 </script>
+
+<!-- TODO: Styling -->
 
 <template>
   <v-column>
@@ -19,10 +22,10 @@ const calendar = `${api}/calendar`
       <SubscribeDisplay label="Razporedi kosila" :url="`${feed}/schedules.atom`" />
     </div>
     <div v-if="entityType === EntityType.Class" class="mt-16">
-      <SubscribeDisplay label="Urnik in Nadomeščanja" :url="`${calendar}/combined/${entities}`" />
-      <SubscribeDisplay label="Urnik" :url="`${calendar}/timetable/${entities}`" />
-      <SubscribeDisplay label="Nadomeščanja" :url="`${calendar}/substitutions/${entities}`" />
-      <SubscribeDisplay label="Razporedi kosila" :url="`${calendar}/schedules/${entities}`" />
+      <SubscribeDisplay label="Urnik in Nadomeščanja" :url="`${calendar}/combined/${entityList}`" />
+      <SubscribeDisplay label="Urnik" :url="`${calendar}/timetable/${entityList}`" />
+      <SubscribeDisplay label="Nadomeščanja" :url="`${calendar}/substitutions/${entityList}`" />
+      <SubscribeDisplay label="Razporedi kosila" :url="`${calendar}/schedules/${entityList}`" />
     </div>
   </v-column>
 </template>

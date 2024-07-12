@@ -21,7 +21,7 @@ import {
 import { updateAllData } from '@/utils/update'
 
 const {
-  entities,
+  entityList,
   entityType,
   snackType,
   lunchType,
@@ -29,13 +29,10 @@ const {
   showLinksInTimetable,
   showHoursInTimetable,
   showCurrentTime,
-  enableShowingDetails,
+  enableLessonDetails,
   enablePullToRefresh,
-  enableUpdateOnLoad,
   themeType,
   moodleToken,
-  dataCollection,
-  dataVersion,
 } = storeToRefs(useSettingsStore())
 
 const selectEntity = ref(false)
@@ -47,7 +44,7 @@ const setDataCollection = ref(false)
 const about = ref(false)
 
 function updateApp() {
-  return
+  return // TODO
 }
 </script>
 
@@ -56,7 +53,7 @@ function updateApp() {
     <SettingsBaseAction
       v-model="selectEntity"
       :label="localizeEntityLabel(entityType)"
-      :messages="entities.join(', ')"
+      :messages="entityList.join(', ')"
       icon="mdi-tune-variant"
     />
 
@@ -80,9 +77,8 @@ function updateApp() {
     <SettingsBaseSwitch v-model="showLinksInTimetable" title="Prikaži povezave v urniku" />
     <SettingsBaseSwitch v-model="showHoursInTimetable" title="Prikaži ure v urniku" />
     <SettingsBaseSwitch v-model="showCurrentTime" title="Prikaži trenutno uro" />
-    <SettingsBaseSwitch v-model="enableShowingDetails" title="Klikni za podrobnosti" />
+    <SettingsBaseSwitch v-model="enableLessonDetails" title="Klikni za podrobnosti" />
     <SettingsBaseSwitch v-model="enablePullToRefresh" title="Potegni za posodobitev" />
-    <SettingsBaseSwitch v-model="enableUpdateOnLoad" title="Samodejno posodabljanje" />
 
     <v-divider-settings />
 
