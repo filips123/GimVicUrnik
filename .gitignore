@@ -13,6 +13,7 @@ $RECYCLE.BIN/
 .nfs*
 .project
 .settings
+.vim
 .vs
 .vscode
 *.iml
@@ -87,6 +88,8 @@ tmp/
 .nyc_output
 .ruff_cache
 .yarn-integrity
+vite.config.js.timestamp*
+vite.config.ts.timestamp*
 *.tmp
 
 # Test reports & Coverage reports
@@ -109,6 +112,14 @@ bower_components/
 jspm_packages/
 node_modules/
 web_modules/
+
+# Yarn Modern
+*/.yarn/*
+!*/.yarn/patches
+!*/.yarn/plugins
+!*/.yarn/releases
+!*/.yarn/versions
+.pnp.*
 
 # GimVicUrnik Configuration & Database
 config.yaml

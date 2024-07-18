@@ -8,44 +8,21 @@
 *.css   diff=css
 *.htm   diff=html
 *.html  diff=html
-*.php   diff=php
+*.vue   diff=html
+*.py    diff=python
+*.md    diff=markdown
+*.sh    diff=bash
 
-# Declare files that are binary
-*.pdf   binary
-*.bmp   binary
-*.gif   binary
-*.ico   binary
-*.jpg   binary
-*.jpeg  binary
-*.png   binary
-*.tif   binary
-*.tiff  binary
-*.wbmp  binary
-*.webp  binary
-*.mp3   binary
-*.ogg   binary
-*.mov   binary
-*.mp4   binary
-*.mpeg  binary
-*.webm  binary
-*.tar   binary
-*.zip   binary
-*.phar  binary
-
-# Declare files that must have CRLF line endings
-*.bat   text eol=crlf
-*.cmd   text eol=crlf
-*.ps1   text eol=crlf
+# Mark Yarn files as generated
+*/.yarn/**            linguist-vendored
+*/.yarn/releases/*    binary
+*/.yarn/plugins/**/*  binary
+*/.pnp.*              binary linguist-generated
 
 # Exclude unused files in archive
+.editorconfig       export-ignore
 .gitattributes      export-ignore
 .gitignore          export-ignore
-.editorconfig       export-ignore
-.scrutinizer.yml    export-ignore
-.travis.yml         export-ignore
 .github             export-ignore
-phpunit.xml.dist    export-ignore
-phpcs.xml.dist      export-ignore
-phpdoc.xml.dist     export-ignore
-box.json.dist       export-ignore
+benches             export-ignore
 tests               export-ignore
