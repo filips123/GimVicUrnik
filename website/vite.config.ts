@@ -67,8 +67,8 @@ export default defineConfig(({ mode }) => {
         },
         {
           name: 'Jedilnik',
-          url: '/menus',
-          icons: [{ src: '/img/shortcuts/menus.png', type: 'image/png', sizes: '192x192' }],
+          url: '/menu',
+          icons: [{ src: '/img/shortcuts/menu.png', type: 'image/png', sizes: '192x192' }],
         },
         {
           name: 'Okrožnice',

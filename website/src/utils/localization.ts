@@ -1,6 +1,7 @@
 import { EntityType, LunchType, MenuType, SnackType, ThemeType } from '@/stores/settings'
 
-// Day localization
+// Day Localization
+
 export function localizeDay(date: string): string {
   const day = new Date(date).toLocaleDateString('sl', { weekday: 'long' })
   return day.charAt(0).toUpperCase() + day.slice(1)
@@ -12,7 +13,8 @@ export function localizeDate(date: string): string {
 
 export const localizedWeekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek']
 
-// Entity localization
+// Entity Localization
+
 export function localizeEntityLabel(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
@@ -22,8 +24,6 @@ export function localizeEntityLabel(entityType: EntityType) {
     case EntityType.Classroom:
     case EntityType.EmptyClassrooms:
       return 'Izbrana učilnica'
-    default:
-      return ''
   }
 }
 
@@ -51,7 +51,8 @@ export function localizeSelectEntityNotSelected(entityType: EntityType) {
   }
 }
 
-// Menu localization
+// Menu Localization
+
 export function localizeSnackType(snackType: SnackType) {
   switch (snackType) {
     case SnackType.Normal:
@@ -83,15 +84,8 @@ export function localizeMenu(menuType: MenuType) {
   }
 }
 
-export const localizedSnackTypeList = [
-  'Navadna',
-  'Vegetarijanska',
-  'Vegetarijanska s perutnino in ribo',
-  'Sadnozelenjavna',
-]
-export const localizedLunchTypeList = ['Navadno', 'Vegetarijansko']
+// Settings Localization
 
-// Settings localization
 export function localizeThemeType(themeType: ThemeType) {
   switch (themeType) {
     case ThemeType.System:
@@ -102,15 +96,3 @@ export function localizeThemeType(themeType: ThemeType) {
       return 'Temna'
   }
 }
-
-export const localizedSwitchSettings = [
-  'Prikaži nadomešanja',
-  'Prikaži povezave v urniku',
-  'Prikaži ure v urniku',
-  'Prikaži trenutno uro',
-  'Klikni za podrobnosti',
-  'Potegni za posodobitev',
-  'Samodejno posodabljanje',
-]
-
-export const localizedThemeTypeList = ['Sistemska', 'Svetla', 'Temna']

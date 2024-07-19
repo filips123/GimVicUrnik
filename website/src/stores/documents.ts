@@ -13,10 +13,16 @@ export interface Document {
 }
 
 export const useDocumentsStore = defineStore('documents', {
-  state: () => {
-    return {
-      documents: [] as Document[],
-    }
+  state: () => ({
+    documents: [] as Document[],
+  }),
+
+  getters: {
+    filterDocuments: state => {
+      return (types: string[]): Document[] => {
+        return state.documents?.filter(document => types.includes(document.type)).reverse()
+      }
+    },
   },
 
   actions: {
@@ -25,10 +31,6 @@ export const useDocumentsStore = defineStore('documents', {
         const response = await fetchHandle(import.meta.env.VITE_API + '/documents')
         this.documents = await response.json()
       })
-    },
-
-    filterDocuments(documentTypes: string[]) {
-      return this.documents?.filter(document => documentTypes.includes(document.type)).reverse()
     },
   },
 

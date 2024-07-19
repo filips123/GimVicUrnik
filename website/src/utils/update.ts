@@ -1,11 +1,8 @@
-import { storeToRefs } from 'pinia'
-
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useDocumentsStore } from '@/stores/documents'
-import { useMenuStore } from '@/stores/menu'
-import { EntityType, useSettingsStore } from '@/stores/settings'
+import { useFoodStore } from '@/stores/food'
+import { useListsStore } from '@/stores/lists'
 import { useTimetableStore } from '@/stores/timetable'
-import { useUserStore } from '@/stores/user'
 
 class HTTPError extends Error {
   status: number
@@ -19,6 +16,8 @@ class HTTPError extends Error {
 }
 
 export async function fetchHandle(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  // TODO: Maybe replace with proper Sentry integration
+
   const response = await fetch(input, init)
 
   if (!response.ok) {
@@ -28,17 +27,13 @@ export async function fetchHandle(input: RequestInfo, init?: RequestInit): Promi
   return response
 }
 
-export async function updateAllData(): Promise<void> {
+export async function updateAllData(showSuccess: boolean = true): Promise<void> {
   const documentsStore = useDocumentsStore()
-  const menuStore = useMenuStore()
+  const foodStore = useFoodStore()
   const timetableStore = useTimetableStore()
-  const userStore = useUserStore()
+  const listsStore = useListsStore()
 
-  const settingsStore = useSettingsStore()
-  const { entityType } = storeToRefs(useSettingsStore())
-
-  const snackbarStore = useSnackbarStore()
-  const { displaySnackbar } = snackbarStore
+  const { displaySnackbar } = useSnackbarStore()
 
   if (!navigator.onLine) {
     displaySnackbar('Internetna povezava ni na voljo')
@@ -47,16 +42,15 @@ export async function updateAllData(): Promise<void> {
 
   await Promise.all([
     documentsStore.updateDocuments(),
-    menuStore.updateMenus(),
-    menuStore.updateLunchSchedules(),
-    settingsStore.updateLists(),
+    foodStore.updateMenus(),
+    foodStore.updateLunchSchedules(),
     timetableStore.updateTimetable(),
     timetableStore.updateSubstitutions(),
     timetableStore.updateEmptyClassrooms(),
-    userStore.resetEntityToSettings(),
+    listsStore.updateLists(),
   ])
 
-  if (entityType.value !== EntityType.None) {
+  if (showSuccess) {
     displaySnackbar('Podatki posodobljeni')
   }
 }
@@ -65,7 +59,10 @@ export function updateWrapper(updateFunction: () => any) {
   const snackbarStore = useSnackbarStore()
   const { displaySnackbar } = snackbarStore
 
-  const { dataVersion } = storeToRefs(useSettingsStore())
+  // TODO: Update data version displayed in settings
+  // TODO: Configure Sentry error capturing
+
+  // const { dataVersion } = storeToRefs(useSettingsStore())
 
   if (!navigator.onLine) {
     displaySnackbar('Internetna povezava ni na voljo')
@@ -74,8 +71,9 @@ export function updateWrapper(updateFunction: () => any) {
 
   try {
     updateFunction()
-    dataVersion.value = new Date().toLocaleDateString('sl', { hour: 'numeric', minute: 'numeric' })
+    // dataVersion.value = new Date().toLocaleDateString('sl', { hour: 'numeric', minute: 'numeric' })
   } catch (error) {
+    alert(1)
     displaySnackbar('Napaka pri pridobivanju podatkov')
     console.error(error)
 
