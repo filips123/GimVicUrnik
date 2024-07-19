@@ -51,6 +51,7 @@ venv.bak/
 # Distribution & Packaging
 build/
 develop-eggs/
+dev-dist/
 dist/
 docs/_build/
 downloads/
