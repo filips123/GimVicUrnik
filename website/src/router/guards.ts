@@ -1,0 +1,119 @@
+import { storeToRefs } from 'pinia'
+import type { NavigationGuardReturn, RouteLocationNormalizedGeneric } from 'vue-router'
+
+import { useListsStore } from '@/stores/lists'
+import { useSessionStore } from '@/stores/session'
+import { EntityType, useSettingsStore } from '@/stores/settings'
+
+export function homeGuard(): NavigationGuardReturn {
+  const { entityType } = useSettingsStore()
+
+  // Redirect the user either to the timetable or welcome page
+  if (entityType === EntityType.None) return { name: 'welcome', replace: true }
+  else return { name: 'timetable', replace: true }
+}
+
+export async function timetableGuard(
+  route: RouteLocationNormalizedGeneric,
+): Promise<NavigationGuardReturn> {
+  const sessionStore = useSessionStore()
+  const { entityType, entityList } = storeToRefs(sessionStore)
+  const { resetEntityToSettings } = sessionStore
+
+  const listsStore = useListsStore()
+  const { classesList, teachersList, classroomsList } = storeToRefs(listsStore)
+  const { updateLists } = listsStore
+
+  if (!route.params.type) {
+    if (entityType.value === EntityType.None) {
+      // The entity is not stored yet, show the welcome page
+      return { name: 'welcome', replace: true }
+    }
+
+    // Load the stored entity from settings
+    resetEntityToSettings()
+
+    // Get the correct params for entity
+    let paramType
+    let paramValue = entityList.value.join(',')
+
+    switch (entityType.value) {
+      case EntityType.Class:
+        paramType = 'classes'
+        break
+      case EntityType.Teacher:
+        paramType = 'teachers'
+        break
+      case EntityType.Classroom:
+        paramType = 'classrooms'
+        break
+      case EntityType.EmptyClassrooms:
+        paramType = 'classrooms'
+        paramValue = 'empty'
+    }
+
+    // Navigate to the correct timetable page
+    return {
+      name: 'timetable',
+      params: { type: paramType, value: paramValue },
+      replace: true,
+    }
+  }
+
+  if (route.params.value) {
+    // Try to get an entity based on the route params
+    const routeType = route.params.type as string
+    const routeValue = (route.params.value as string).split(',')
+
+    // Update the entity lists asynchronously
+    const updatingLists = updateLists()
+
+    // Only wait until lists are ready if they have not been set yet
+    // This improves load performance but has a small possibility of outdated lists
+    // This should not matter much because it lists should not frequently change
+    if (!classesList.value.length || !teachersList.value.length || !classesList.value.length) {
+      await updatingLists
+    }
+
+    // If the entity matches correctly, set it in the session
+    if (
+      routeType === 'classes' && //
+      routeValue.some(elem => classesList.value.includes(elem))
+    ) {
+      entityType.value = EntityType.Class
+      entityList.value = routeValue
+      return
+    } else if (
+      routeType === 'teachers' && //
+      routeValue.some(elem => teachersList.value.includes(elem))
+    ) {
+      entityType.value = EntityType.Teacher
+      entityList.value = routeValue
+      return
+    } else if (
+      routeType === 'classrooms' && //
+      routeValue.some(elem => classroomsList.value.includes(elem))
+    ) {
+      entityType.value = EntityType.Classroom
+      entityList.value = routeValue
+      return
+    } else if (
+      routeType === 'classrooms' && //
+      routeValue.length === 1 && //
+      routeValue[0] === 'empty'
+    ) {
+      entityType.value = EntityType.EmptyClassrooms
+      entityList.value = []
+      return
+    }
+  }
+
+  // We could not get a valid entity from params
+  return {
+    name: 'notFound',
+    params: { pathMatch: route.path.substring(1).split('/') },
+    query: route.query,
+    hash: route.hash,
+    replace: true,
+  }
+}
