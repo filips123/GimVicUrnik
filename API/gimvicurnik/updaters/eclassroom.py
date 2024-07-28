@@ -270,10 +270,6 @@ class EClassroomUpdater(BaseMultiUpdater):
         match (document.type, document.extension):
             case (DocumentType.SUBSTITUTIONS, "pdf"):
                 self._parse_substitutions_pdf(stream, effective)
-            case (DocumentType.LUNCH_SCHEDULE, "pdf"):
-                self._parse_lunch_schedule_pdf(stream, effective)
-            case (DocumentType.SUBSTITUTIONS, "xlsx"):
-                self._parse_substitutions_xlsx(stream, effective)
             case (DocumentType.LUNCH_SCHEDULE, "xlsx"):
                 self._parse_lunch_schedule_xlsx(stream, effective)
             case (DocumentType.SUBSTITUTIONS, _):
@@ -647,118 +643,31 @@ class EClassroomUpdater(BaseMultiUpdater):
         if substitutions:
             self.session.execute(insert(Substitution), substitutions)
 
-    def _parse_substitutions_xlsx(self, stream: BytesIO, effective: date) -> None:
-        """Parse the substitutions xlsx document."""
-        # Currently not useful.
-        pass
-
-    def _parse_lunch_schedule_pdf(self, stream: BytesIO, effective: date) -> None:
-        """Parse the lunch schedule pdf document."""
-
-        schedule = []
-
-        # Extract all tables from a PDF stream
-        tables = with_span(op="extract")(extract_tables)(stream)
-
-        for table in tables:
-            # Skip instructions
-            if not table[0][0] or "Dijaki prihajate v jedilnico" in table[0][0]:
-                continue
-
-            for index, row in enumerate(table):
-                # Handle incorrectly connected cells
-                if row[0] and "\n" in row[0] and len(row) == 4:
-                    time, notes = row[0].split("\n", 1)
-                    row[0] = time
-                    row.insert(1, notes)
-
-                # Handle incorrectly connected cells
-                if row[0] and " " in row[0] and len(row) == 4:
-                    time, notes = row[0].split(" ", 1)
-                    row[0] = time
-                    row.insert(1, notes)
-
-                # Skip the header
-                if row[0] and "ura" in row[0]:
-                    continue
-
-                # Skip empty rows
-                if len(row) != 5 or not row[0]:
-                    continue
-
-                # Skip invalid time formats
-                if "odj." in row[0]:
-                    continue
-
-                # Handle multiple times in the same cell
-                times = row[0].split("\n", 1)
-                if len(times) == 2:
-                    row[0] = times[0]
-                    table[index + 1][0] = times[1]
-
-                # Handle incorrectly connected cells
-                if row[1] is None and len(row[0].split(" ", 1)) == 2:
-                    row[0], row[1] = row[0].split(" ", 1)
-
-                # Parse time format
-                time = re.sub("cca|do", "", row[0]).replace(".", ":").strip()
-                time = datetime.strptime(time, "%H:%M").time()  # type: ignore[assignment]
-
-                # Get notes, classes and location if they are specified
-                notes = row[1].strip() if row[1] else None  # type: ignore[assignment]
-                classes = re.sub("[().]", "", row[2]).split(",") if row[2] else []
-                location = row[4].strip() if row[4] else None
-
-                # Handle special format for multiple classes
-                if len(classes) == 1 and isinstance(classes[0], str):
-                    if search := re.search(r"(\d)\.? ?[lL]?(?:\.|$)", classes[0]):
-                        class_letters = ["A", "B", "C", "D", "E", "F"]
-                        classes = [search.group(1) + class_ for class_ in class_letters]
-
-                for class_ in classes:
-                    if not class_.strip():
-                        continue
-
-                    class_id = get_or_create(self.session, model=Class, name=class_.strip())[0].id
-
-                    schedule.append(
-                        {
-                            "class_id": class_id,
-                            "date": effective,
-                            "time": time,
-                            "location": location,
-                            "notes": notes,
-                        }
-                    )
-
-        # Store schedule to a database
-        self.session.query(LunchSchedule).filter(LunchSchedule.date == effective).delete()
-        self.session.execute(insert(LunchSchedule), schedule)
-
     def _parse_lunch_schedule_xlsx(self, stream: BytesIO, effective: date) -> None:
         """
         Parse the lunch schedule xlsx document.
 
-        Columns should be:
+        Columns:
         - Time (Ura)
         - Notes (Opombe/Prilagoditev)
         - Class (Razred)
-        * number of students (stevilo dijakov) [ignored]
+        - Number of students (Stevilo dijakov)
         - Location (Prostor)
         """
 
         # Extract workbook from an XLSX stream
-        wb = with_span(op="extract")(load_workbook)(stream, read_only=True, data_only=True)
+        wb = with_span(op="extract")(load_workbook)(stream, data_only=True)
 
         lunch_schedule = []
 
         # Parse lunch schedule
         for ws in wb:
-            if ws.title != "kosilo":
-                continue
+            for column in ws.column_dimensions.values():
+                if column.hidden:
+                    ws.delete_cols(1)
 
             for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[0].value:
+                if not wr[3].value and wr[3].value != 0:
                     break
 
                 # Check for correct cell value type
@@ -768,24 +677,26 @@ class EClassroomUpdater(BaseMultiUpdater):
                     assert isinstance(wr[2].value, str)
                     assert isinstance(wr[4].value, str)
 
+                # Ignore rows that do not contain a class name
+                if not wr[2].value or "raz" in wr[2].value:
+                    continue
+
                 schedule: dict[str, Any] = {}
 
                 # Time in format H:M
-                schedule["time"] = wr[0].value
+                schedule["time"] = wr[0].value if wr[0].value else None
 
-                # Notes
                 schedule["notes"] = wr[1].value.strip() if wr[1].value else None
 
-                # Class name (class id)
                 if wr[2].value:
-                    schedule["class_id"] = get_or_create(self.session, model=Class, name=wr[2].value.strip())[
-                        0
-                    ].id
+                    # fmt: off
+                    schedule["class_id"] = get_or_create(
+                        self.session, model=Class, name=wr[2].value.strip()
+                    )[0].id
+                    # fmt: on
 
-                # Location
                 schedule["location"] = wr[4].value.strip() if wr[4].value else None
 
-                # Effective date
                 schedule["date"] = effective
                 lunch_schedule.append(schedule)
 
