@@ -1,6 +1,6 @@
 <template>
-  <h2>
+  <div class="text-h6">
     Strani, ki ste jo zahtevali, ni bilo mogoče najti. Preverite, ali je vnešen naslov pravilen ter
     poskusite znova.
-  </h2>
+  </div>
 </template>

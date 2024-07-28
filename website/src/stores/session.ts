@@ -7,16 +7,16 @@ export const useSessionStore = defineStore('session', {
   state: () => ({
     day: getCurrentDay(),
 
-    entityType: EntityType.None,
-    entityList: [] as string[],
+    currentEntityType: EntityType.None,
+    currentEntityList: [] as string[],
   }),
 
   actions: {
     resetEntityToSettings() {
       const settingsStore = useSettingsStore()
 
-      this.entityType = settingsStore.entityType
-      this.entityList = settingsStore.entityList
+      this.currentEntityType = settingsStore.entityType
+      this.currentEntityList = settingsStore.entityList
     },
   },
 })

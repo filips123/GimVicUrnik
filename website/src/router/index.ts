@@ -33,12 +33,12 @@ const router = createRouter({
 
 // Call the correct route navigation guards
 // They need to be global to make sure they are called early
-router.beforeEach(to => {
+router.beforeEach((to, from) => {
   // Call home guard that redirects the user either to welcome or timetable
   if (to.name === 'home') return homeGuard()
 
   // Call timetable guard that redirects the user to the correct entity
-  if (to.name === 'timetable') return timetableGuard(to)
+  if (to.name === 'timetable') return timetableGuard(to, from)
 })
 
 // Change the document title to the current route title

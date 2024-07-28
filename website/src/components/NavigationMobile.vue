@@ -5,10 +5,10 @@ const { navigation } = defineProps<{
 </script>
 
 <template>
-  <v-bottom-navigation grow>
+  <v-bottom-navigation grow role="navigation">
     <v-btn
       v-for="page in navigation"
-      :key="page.title"
+      :key="page.link"
       :text="page.title"
       :aria-label="page.title"
       :prepend-icon="page.icon"

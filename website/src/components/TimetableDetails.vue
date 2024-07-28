@@ -1,69 +1,64 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
-import { EntityType } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
-import { useUserStore } from '@/stores/user'
 import { localizedWeekdays } from '@/utils/localization'
 import { lessonTimes } from '@/utils/times'
 
 const dialog = defineModel<boolean>()
-const props = defineProps<{ lessons: MergedLesson[] }>()
+const props = defineProps<{ day: number; time: number; lessons: MergedLesson[] }>()
 
-const { entityType } = storeToRefs(useUserStore())
+const lessonDay = computed(() => localizedWeekdays[props.day])
+const lessonDuration = computed(() => lessonTimes[props.time].join('–'))
 
-const title = computed(() => (props.lessons[0].time !== 0 ? `${props.lessons[0].time}. ura` : 'pu'))
+const title = computed(() => (props.time ? `${props.time}. ura` : 'Predura'))
+const subtitle = computed(() => `${lessonDay.value}, ${lessonDuration.value}`)
 
-const day = computed(() => localizedWeekdays[props.lessons[0].day - 1])
-const lessonTime = computed(() => lessonTimes[props.lessons[0].time].join(' - '))
-const subtitle = computed(() => `${day.value}, ${lessonTime.value}`)
+const substitutions = computed(() => props.lessons.filter(lesson => lesson.isSubstitution))
 
-const substitutionLessons = computed(() =>
-  props.lessons.filter(lesson => lesson.substitution === true),
-)
+function displayDifferent(value1: string | null, value2: string | null): string {
+  if (!value1) value1 = '/'
+  if (!value2) value2 = '/'
+
+  if (value1 === value2) return value1
+  return `${value1} → ${value2}`
+}
 </script>
+
+<!-- TODO: Styling -->
 
 <template>
   <v-dialog v-model="dialog">
     <v-card :title :subtitle>
-      <template v-if="substitutionLessons.length" #text>
+      <template v-if="substitutions.length" #text>
         <div
-          v-for="(lesson, index) in substitutionLessons"
+          v-for="(substitution, index) in substitutions"
           :key="index"
-          :class="{ 'mb-3': index !== substitutionLessons.length - 1 }"
+          :class="{ 'mb-3': index !== substitutions.length - 1 }"
         >
-          <template v-if="entityType === EntityType.Class">
-            <div class="text-primary-variant">{{ lesson.class }}</div>
-            <div
-              v-if="lesson.teacher !== lesson.substitutionTeacher"
-              v-text="'Profesor: ' + lesson.teacher + ' → ' + lesson.substitutionTeacher"
-            ></div>
-            <div
-              v-if="lesson.classroom !== lesson.substitutionClassroom"
-              v-text="'Razred: ' + lesson.classroom + ' → ' + lesson.substitutionClassroom"
-            ></div>
-          </template>
-          <template v-else-if="entityType === EntityType.Teacher">
-            <div class="text-primary-variant">{{ lesson.teacher }}</div>
-            <div>Razred: {{ lesson.class }}</div>
-            <div
-              v-if="lesson.classroom !== lesson.substitutionClassroom"
-              v-text="'Razred: ' + lesson.classroom + ' → ' + lesson.substitutionClassroom"
-            ></div>
-          </template>
-          <template v-else>
-            <div class="text-primary-variant">{{ lesson.classroom }}</div>
-            <div>Razred: {{ lesson.class }}</div>
-            <div
-              v-if="lesson.teacher !== lesson.substitutionTeacher"
-              v-text="'Profesor: ' + lesson.teacher + ' → ' + lesson.substitutionTeacher"
-            ></div>
-          </template>
-          <div
-            v-if="lesson.subject !== lesson.substitutionSubject"
-            v-text="'Predmet: ' + lesson.subject + ' → ' + lesson.substitutionSubject"
-          ></div>
+          <!-- prettier-ignore -->
+          <v-list dense class="lesson-details">
+            <v-list-item class="px-0">
+              <v-list-item-title>Predmet</v-list-item-title>
+              <v-list-item-subtitle>{{ displayDifferent(substitution.subject, substitution.substitutionSubject) }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item class="px-0">
+              <v-list-item-title>Razred</v-list-item-title>
+              <v-list-item-subtitle>{{ substitution.class }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item class="px-0">
+              <v-list-item-title>Profesor</v-list-item-title>
+              <v-list-item-subtitle>{{ displayDifferent(substitution.teacher, substitution.substitutionTeacher) }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item class="px-0">
+              <v-list-item-title>Učilnica</v-list-item-title>
+              <v-list-item-subtitle>{{ displayDifferent(substitution.classroom, substitution.substitutionClassroom) }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item v-if="substitution.notes" class="px-0">
+              <v-list-item-title>Opombe</v-list-item-title>
+              <v-list-item-subtitle>{{ substitution.notes }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
         </div>
       </template>
       <template #actions>
@@ -72,3 +67,13 @@ const substitutionLessons = computed(() =>
     </v-card>
   </v-dialog>
 </template>
+
+<style>
+.lesson-details .v-list-item-title {
+  max-width: 5rem;
+}
+
+.lesson-details .v-list-item-subtitle {
+  white-space: break-spaces;
+}
+</style>

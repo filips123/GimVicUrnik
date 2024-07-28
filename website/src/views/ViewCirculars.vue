@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { mdiOpenInNew } from '@mdi/js'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import CircularsPassword from '@/components/CircularsPassword.vue'
 import { type Document, useDocumentsStore } from '@/stores/documents'
@@ -8,26 +9,31 @@ import { useSettingsStore } from '@/stores/settings'
 import { tokenizeUrl } from '@/utils/documents'
 import { localizeDate } from '@/utils/localization'
 
-const documentsStore = useDocumentsStore()
-const { filterDocuments, updateDocuments } = documentsStore
+const { circularsPassword, moodleToken } = storeToRefs(useSettingsStore())
+const { filterDocuments, updateDocuments } = useDocumentsStore()
+
 updateDocuments()
 
-const { circularsPassword, moodleToken } = storeToRefs(useSettingsStore())
-
-const dialog = ref(false)
+const contentDialog = ref(false)
 const passwordDialog = ref(false)
 const circular = ref({} as Document)
 
 function handleDialog(clickedCircular: Document) {
-  if (circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD) {
-    circular.value = clickedCircular
-    dialog.value = true
+  circular.value = clickedCircular
+
+  if (
+    !import.meta.env.VITE_CIRCULARS_PASSWORD ||
+    circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD
+  ) {
+    passwordDialog.value = false
+    contentDialog.value = true
   } else {
+    contentDialog.value = false
     passwordDialog.value = true
   }
 }
 
-const circulars = filterDocuments(['circular', 'other'])
+const circulars = computed(() => filterDocuments(['circular', 'other']))
 </script>
 
 <template>
@@ -35,31 +41,42 @@ const circulars = filterDocuments(['circular', 'other'])
     <v-virtual-scroll :items="circulars">
       <template #default="{ item }">
         <v-list-item
-          :key="item.title"
+          :key="item.url"
           :title="item.title"
           :subtitle="localizeDate(item.created)"
-          @click="handleDialog(item)"
+          :aria-label="item.title"
+          :href="item.content ? undefined : tokenizeUrl(item.url, moodleToken)"
+          :target="item.content ? undefined : '_blank'"
+          @[item.content&&`click`]="handleDialog(item)"
         >
-          <template #append>
+          <template v-if="item.content" #append>
             <v-btn-icon
-              icon="mdi-open-in-new"
+              :icon="mdiOpenInNew"
               :href="tokenizeUrl(item.url, moodleToken)"
               target="_blank"
+              alt="Odpri dokument"
+              title="Odpri dokument"
+              aria-label="Odpri dokument"
               @click.stop
+              @keydown.stop
             />
           </template>
         </v-list-item>
       </template>
     </v-virtual-scroll>
   </v-column>
-  <CircularsPassword v-model="passwordDialog" />
-  <v-dialog v-model="dialog">
+
+  <CircularsPassword v-model="passwordDialog" v-model:callback="contentDialog" />
+
+  <v-dialog v-model="contentDialog">
     <v-card :title="circular.title">
       <template #text>
-        <div v-html="circular.content"></div>
+        <!-- This is fine because we assume circulars content is safe -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div v-html="circular.content" />
       </template>
       <template #actions>
-        <v-btn text="V redu" @click="dialog = false" />
+        <v-btn text="V redu" @click="contentDialog = false" />
       </template>
     </v-card>
   </v-dialog>

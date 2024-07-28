@@ -8,9 +8,12 @@ import { updateAllData } from '@/utils/update'
 const welcomeDialog = ref(true)
 const settingsDialog = ref(false)
 
+// TODO: Display welcome wizard without dialogs
+// TODO: Check if this can be on the root URL
+
 watch(welcomeDialog, () => (settingsDialog.value = true))
 
-updateAllData()
+updateAllData(false)
 </script>
 
 <template>

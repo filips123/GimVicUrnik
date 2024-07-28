@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
-import { useUserStore } from '@/stores/user'
+import { useSessionStore } from '@/stores/session'
 import { localizedWeekdays } from '@/utils/localization'
 
-const { day } = storeToRefs(useUserStore())
+const { day } = storeToRefs(useSessionStore())
 </script>
 
 <template>
-  <v-tabs v-model="day" center-active>
-    <v-tab v-for="day in localizedWeekdays" :key="day" :text="day" />
+  <v-tabs v-model="day" center-active role="tablist">
+    <v-tab v-for="weekday in localizedWeekdays" :key="weekday" :text="weekday" />
   </v-tabs>
 </template>

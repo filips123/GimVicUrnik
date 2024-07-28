@@ -31,12 +31,6 @@ export const useFoodStore = defineStore('food', {
     lunchSchedules: [] as LunchSchedule[][],
   }),
 
-  getters: {
-    hasData(state): boolean {
-      return !!(state.menus.flat().length || state.lunchSchedules.flat(Infinity).length)
-    },
-  },
-
   actions: {
     async updateMenus() {
       updateWrapper(async () => {

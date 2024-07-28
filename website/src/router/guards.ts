@@ -15,9 +15,10 @@ export function homeGuard(): NavigationGuardReturn {
 
 export async function timetableGuard(
   route: RouteLocationNormalizedGeneric,
+  source: RouteLocationNormalizedGeneric,
 ): Promise<NavigationGuardReturn> {
   const sessionStore = useSessionStore()
-  const { entityType, entityList } = storeToRefs(sessionStore)
+  const { currentEntityType, currentEntityList } = storeToRefs(sessionStore)
   const { resetEntityToSettings } = sessionStore
 
   const listsStore = useListsStore()
@@ -25,9 +26,12 @@ export async function timetableGuard(
   const { updateLists } = listsStore
 
   if (!route.params.type) {
-    if (entityType.value === EntityType.None) {
+    // We only want to replace routes if coming from home
+    const replace = source.name === 'home'
+
+    if (currentEntityType.value === EntityType.None) {
       // The entity is not stored yet, show the welcome page
-      return { name: 'welcome', replace: true }
+      return { name: 'welcome', replace }
     }
 
     // Load the stored entity from settings
@@ -35,9 +39,9 @@ export async function timetableGuard(
 
     // Get the correct params for entity
     let paramType
-    let paramValue = entityList.value.join(',')
+    let paramValue = currentEntityList.value.join(',')
 
-    switch (entityType.value) {
+    switch (currentEntityType.value) {
       case EntityType.Class:
         paramType = 'classes'
         break
@@ -56,7 +60,7 @@ export async function timetableGuard(
     return {
       name: 'timetable',
       params: { type: paramType, value: paramValue },
-      replace: true,
+      replace,
     }
   }
 
@@ -80,30 +84,30 @@ export async function timetableGuard(
       routeType === 'classes' && //
       routeValue.some(elem => classesList.value.includes(elem))
     ) {
-      entityType.value = EntityType.Class
-      entityList.value = routeValue
+      currentEntityType.value = EntityType.Class
+      currentEntityList.value = routeValue
       return
     } else if (
       routeType === 'teachers' && //
       routeValue.some(elem => teachersList.value.includes(elem))
     ) {
-      entityType.value = EntityType.Teacher
-      entityList.value = routeValue
+      currentEntityType.value = EntityType.Teacher
+      currentEntityList.value = routeValue
       return
     } else if (
       routeType === 'classrooms' && //
       routeValue.some(elem => classroomsList.value.includes(elem))
     ) {
-      entityType.value = EntityType.Classroom
-      entityList.value = routeValue
+      currentEntityType.value = EntityType.Classroom
+      currentEntityList.value = routeValue
       return
     } else if (
       routeType === 'classrooms' && //
       routeValue.length === 1 && //
       routeValue[0] === 'empty'
     ) {
-      entityType.value = EntityType.EmptyClassrooms
-      entityList.value = []
+      currentEntityType.value = EntityType.EmptyClassrooms
+      currentEntityList.value = []
       return
     }
   }

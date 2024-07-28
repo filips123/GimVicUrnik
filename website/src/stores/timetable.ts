@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
-import { EntityType, useSettingsStore } from '@/stores/settings'
+import { useSessionStore } from '@/stores/session'
+import { EntityType } from '@/stores/settings'
 import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
 import { fetchHandle, updateWrapper } from '@/utils/update'
 
@@ -27,7 +28,7 @@ export interface MergedLesson {
   class: string | null
   teacher: string | null
   classroom: string | null
-  substitution: boolean
+  isSubstitution: boolean
   substitutionSubject: string | null
   substitutionTeacher: string | null
   substitutionClassroom: string | null
@@ -43,28 +44,31 @@ export const useTimetableStore = defineStore('timetable', {
   }),
 
   getters: {
-    lessons(state): MergedLesson[] {
-      const sessionStore = useSettingsStore()
-      const { entityList: entities, entityType: type } = sessionStore
+    lessonsList(state): MergedLesson[] {
+      const sessionStore = useSessionStore()
+      const { currentEntityType, currentEntityList } = sessionStore
 
-      if (type === EntityType.None) {
+      if (currentEntityType === EntityType.None) {
         return []
       }
 
       let timetable: Lesson[] = []
       let substitutions: Substitution[] = []
 
-      if (type === EntityType.EmptyClassrooms) {
+      if (currentEntityType === EntityType.EmptyClassrooms) {
+        // TODO: Substitutions for empty classrooms
         timetable = state.emptyClassrooms
       } else {
-        for (const entity of entities) {
+        for (const entity of currentEntityList) {
           timetable = timetable.concat(
-            state.timetable.filter((lesson: Lesson) => lesson[type as keyof Lesson] === entity),
+            state.timetable.filter(
+              (lesson: Lesson) => lesson[currentEntityType as keyof Lesson] === entity,
+            ),
           )
           for (const substitutionsDay of state.substitutions) {
             substitutions = substitutions.concat(
               substitutionsDay.filter(
-                substitution => substitution[type as keyof Substitution] === entity,
+                substitution => substitution[currentEntityType as keyof Substitution] === entity,
               ),
             )
           }
@@ -88,7 +92,7 @@ export const useTimetableStore = defineStore('timetable', {
           classroom: lesson.classroom,
           subject: lesson.subject,
           teacher: lesson.teacher,
-          substitution: !!substitution,
+          isSubstitution: !!substitution,
           substitutionClassroom: substitution?.classroom || '',
           substitutionSubject: substitution?.subject || '',
           substitutionTeacher: substitution?.teacher || '',
@@ -96,7 +100,30 @@ export const useTimetableStore = defineStore('timetable', {
         })
       }
 
+      // TODO: Substitutions when there are no initial lessons
+
       return lessons
+    },
+
+    /**
+     * Computes a 3D tensor of lessons organized by time and day.
+     *
+     * The data are calculated for the currently selected entity and include substitutions.
+     *
+     * @returns A 3D tensor where the first dimension represents time slots, the second dimension
+     * represents days, and the third dimension contains lessons for that time and day.
+     */
+    lessonsTensor(): MergedLesson[][][] {
+      const days = 5
+      const times = 11
+
+      const tensor: MergedLesson[][][] = Array.from(Array(times), () => new Array(days).fill([]))
+
+      for (const lesson of this.lessonsList) {
+        tensor[lesson.time][lesson.day - 1] = tensor[lesson.time][lesson.day - 1].concat(lesson)
+      }
+
+      return tensor
     },
   },
 
