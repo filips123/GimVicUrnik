@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { useSessionStore } from '@/stores/session'
-import { EntityType } from '@/stores/settings'
+import { EntityType, useSettingsStore } from '@/stores/settings'
 import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
 import { fetchHandle, updateWrapper } from '@/utils/update'
 
@@ -45,8 +45,8 @@ export const useTimetableStore = defineStore('timetable', {
 
   getters: {
     lessonsList(state): MergedLesson[] {
-      const sessionStore = useSessionStore()
-      const { currentEntityType, currentEntityList } = sessionStore
+      const { currentEntityType, currentEntityList } = useSessionStore()
+      const { showSubstitutions } = useSettingsStore()
 
       if (currentEntityType === EntityType.None) {
         return []
@@ -58,49 +58,80 @@ export const useTimetableStore = defineStore('timetable', {
       if (currentEntityType === EntityType.EmptyClassrooms) {
         // TODO: Substitutions for empty classrooms
         timetable = state.emptyClassrooms
+        substitutions = [] // state.substitutions.flat()
       } else {
         for (const entity of currentEntityList) {
-          timetable = timetable.concat(
-            state.timetable.filter(
+          // Get all base lessons that affect the current entity
+          timetable.push(
+            ...state.timetable.filter(
               (lesson: Lesson) => lesson[currentEntityType as keyof Lesson] === entity,
             ),
           )
-          for (const substitutionsDay of state.substitutions) {
-            substitutions = substitutions.concat(
-              substitutionsDay.filter(
-                substitution => substitution[currentEntityType as keyof Substitution] === entity,
+
+          // Get all substitutions that affect the current entity
+          substitutions.push(
+            ...state.substitutions
+              .flat()
+              .filter(
+                substitution =>
+                  substitution[currentEntityType as keyof Substitution] === entity ||
+                  substitution[`original-${currentEntityType}` as keyof Substitution] === entity,
               ),
-            )
-          }
+          )
         }
       }
 
       const lessons: MergedLesson[] = []
 
       for (const lesson of timetable) {
-        const substitution = substitutions.find(
-          substitution =>
-            substitution?.day === lesson.day &&
-            substitution?.time === lesson.time &&
-            substitution?.['original-teacher'] === lesson.teacher,
-        )
+        // Find a substitution that matches with the current lesson
+        const substitution = showSubstitutions
+          ? substitutions.find(
+              substitution =>
+                substitution?.day === lesson.day &&
+                substitution?.time === lesson.time &&
+                substitution?.['original-teacher'] === lesson.teacher,
+            )
+          : null
 
+        // Add the lesson with optional substitution to the list
         lessons.push({
           day: lesson.day,
           time: lesson.time,
-          class: lesson.class,
-          classroom: lesson.classroom,
           subject: lesson.subject,
+          class: lesson.class,
           teacher: lesson.teacher,
+          classroom: lesson.classroom,
           isSubstitution: !!substitution,
-          substitutionClassroom: substitution?.classroom || '',
-          substitutionSubject: substitution?.subject || '',
-          substitutionTeacher: substitution?.teacher || '',
-          notes: substitution?.notes || '',
+          substitutionSubject: substitution?.subject || null,
+          substitutionTeacher: substitution?.teacher || null,
+          substitutionClassroom: substitution?.classroom || null,
+          notes: substitution?.notes || null,
         })
       }
 
-      // TODO: Substitutions when there are no initial lessons
+      // Add substitutions for new lessons
+      if (showSubstitutions) {
+        for (const substitution of substitutions) {
+          if (!substitution['original-teacher']) {
+            lessons.push({
+              day: substitution.day,
+              time: substitution.time,
+              subject: null,
+              class: substitution.class,
+              teacher: substitution['original-teacher'],
+              classroom: substitution['original-classroom'],
+              isSubstitution: true,
+              substitutionSubject: substitution.subject,
+              substitutionTeacher: substitution.teacher,
+              substitutionClassroom: substitution.classroom,
+              notes: substitution.notes,
+            })
+          }
+        }
+      }
+
+      // TODO: Fix displaying substitutions for teachers and classrooms
 
       return lessons
     },
@@ -108,7 +139,8 @@ export const useTimetableStore = defineStore('timetable', {
     /**
      * Computes a 3D tensor of lessons organized by time and day.
      *
-     * The data are calculated for the currently selected entity and include substitutions.
+     * The data are calculated for the currently selected entity and include substitutions
+     * if they are enabled.
      *
      * @returns A 3D tensor where the first dimension represents time slots, the second dimension
      * represents days, and the third dimension contains lessons for that time and day.

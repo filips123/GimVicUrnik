@@ -3,7 +3,8 @@ import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
 import TimetableLesson from '@/components/TimetableLesson.vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useSessionStore } from '@/stores/session'
+import { EntityType, useSettingsStore } from '@/stores/settings'
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
 import { getCurrentDay } from '@/utils/days'
 import { localizedWeekdays } from '@/utils/localization'
@@ -17,9 +18,10 @@ const detailsProps = defineModel<{ day: number; time: number; lessons: MergedLes
   'detailsProps',
 )
 
+const { currentEntityType } = storeToRefs(useSessionStore())
 const { lessonsList, lessonsTensor } = storeToRefs(useTimetableStore())
 
-const { showHoursInTimetable, showSubstitutions, showCurrentTime, enableLessonDetails } =
+const { showHoursInTimetable, showCurrentTime, enableLessonDetails } =
   storeToRefs(useSettingsStore())
 
 const isWeekend = [0, 6].includes(new Date().getDay())
@@ -42,12 +44,10 @@ const timeInterval = computed(() => {
 })
 
 function lessonStyles(dayIndex: number, timeIndex: number) {
+  // prettier-ignore
   return {
-    'bg-surface-variation-secondary':
-      showSubstitutions.value &&
-      lessonsTensor.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
-    'current-time':
-      showCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
+    'bg-surface-variation-secondary': lessonsTensor.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
+    'current-time': showCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
   }
 }
 
@@ -64,7 +64,7 @@ function handleDetails(dayIndex: number, timeIndex: number, event: Event) {
   detailsDialog.value = true
 }
 
-function filterLessons(lessonsTime: MergedLesson[][]) {
+function filterForTargetDay(lessonsTime: MergedLesson[][]) {
   if (typeof targetDay !== 'undefined') return [lessonsTime[targetDay]]
   return lessonsTime
 }
@@ -98,19 +98,28 @@ function filterLessons(lessonsTime: MergedLesson[][]) {
             v-text="lessonTimes[timeIndex].join('–')"
           />
           <td
-            v-for="(lessonsDay, dayIndex) in filterLessons(lessonsTime)"
+            v-for="(lessonsTimeDay, dayIndex) in filterForTargetDay(lessonsTime)"
             :key="`${timeIndex}-${dayIndex}`"
             :class="!daySpecific ? lessonStyles(dayIndex, timeIndex) : null"
             @click="!daySpecific ? handleDetails(dayIndex, timeIndex, $event) : null"
           >
-            <table>
+            <table v-if="currentEntityType !== EntityType.EmptyClassrooms">
               <tr
-                v-for="lesson in lessonsDay"
+                v-for="lesson in lessonsTimeDay"
                 :key="`${lesson.time}-${lesson.day}-${lesson.class}-${lesson.teacher}-${lesson.classroom}`"
               >
                 <TimetableLesson :lesson="lesson" />
               </tr>
             </table>
+            <template v-else>
+              <template
+                v-for="(lesson, index) in lessonsTimeDay"
+                :key="`${lesson.time}-${lesson.day}-${lesson.classroom}`"
+              >
+                <template v-if="index > 0"> - </template>
+                <TimetableLesson :lesson="lesson" />
+              </template>
+            </template>
           </td>
         </template>
       </tr>

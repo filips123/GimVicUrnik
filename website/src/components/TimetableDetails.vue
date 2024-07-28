@@ -39,12 +39,12 @@ function displayDifferent(value1: string | null, value2: string | null): string 
           <!-- prettier-ignore -->
           <v-list dense class="lesson-details">
             <v-list-item class="px-0">
-              <v-list-item-title>Predmet</v-list-item-title>
-              <v-list-item-subtitle>{{ displayDifferent(substitution.subject, substitution.substitutionSubject) }}</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item class="px-0">
               <v-list-item-title>Razred</v-list-item-title>
               <v-list-item-subtitle>{{ substitution.class }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-list-item class="px-0">
+              <v-list-item-title>Predmet</v-list-item-title>
+              <v-list-item-subtitle>{{ displayDifferent(substitution.subject, substitution.substitutionSubject) }}</v-list-item-subtitle>
             </v-list-item>
             <v-list-item class="px-0">
               <v-list-item-title>Profesor</v-list-item-title>

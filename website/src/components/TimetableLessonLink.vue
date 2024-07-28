@@ -1,31 +1,22 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
 
 import { useSettingsStore } from '@/stores/settings'
 
-const link = defineProps<{
+const { linkType, linkValue } = defineProps<{
   linkType: string
-  isSubstitution: boolean
-  originalEntity: string
-  substitutionEntity: string
+  linkValue: string | null
 }>()
 
-const { showLinksInTimetable, showSubstitutions } = storeToRefs(useSettingsStore())
-
-const entityName = computed(() =>
-  showSubstitutions.value && link.isSubstitution ? link.substitutionEntity : link.originalEntity,
-)
+const { showLinksInTimetable } = storeToRefs(useSettingsStore())
 </script>
 
 <template>
-  <td>
-    <router-link
-      v-if="showLinksInTimetable && entityName !== '/'"
-      :to="{ name: 'timetable', params: { type: link.linkType, value: entityName } }"
-      class="text-primary-variant text-decoration-none"
-      >{{ entityName }}</router-link
-    >
-    <span v-else>{{ entityName }}</span>
-  </td>
+  <router-link
+    v-if="showLinksInTimetable && linkValue"
+    :to="{ name: 'timetable', params: { type: linkType, value: linkValue } }"
+    class="text-primary-variant text-decoration-none"
+    >{{ linkValue }}</router-link
+  >
+  <template v-else>{{ linkValue }}</template>
 </template>
