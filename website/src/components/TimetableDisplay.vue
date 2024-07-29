@@ -19,7 +19,7 @@ const detailsProps = defineModel<{ day: number; time: number; lessons: MergedLes
 )
 
 const { currentEntityType } = storeToRefs(useSessionStore())
-const { lessonsList, lessonsTensor } = storeToRefs(useTimetableStore())
+const { lessons } = storeToRefs(useTimetableStore())
 
 const { showHoursInTimetable, showCurrentTime, enableLessonDetails } =
   storeToRefs(useSettingsStore())
@@ -35,18 +35,18 @@ const currentTime = getCurrentTime()
  * it calculates the result based on all lessons.
  */
 const timeInterval = computed(() => {
-  const lessons = daySpecific.value
-    ? lessonsList.value.filter(lesson => lesson.day === targetDay! + 1)
-    : lessonsList.value
-  const minTime = lessons.reduce((min, lesson) => (lesson.time < min ? lesson.time : min), Infinity)
-  const maxTime = lessons.reduce((max, lesson) => (lesson?.time > max ? lesson?.time : max), 0)
+  const flat = daySpecific.value
+    ? lessons.value.map(timeSlot => timeSlot[targetDay!]).flat()
+    : lessons.value.flat(2)
+  const minTime = flat.reduce((min, lesson) => (lesson.time < min ? lesson.time : min), Infinity)
+  const maxTime = flat.reduce((max, lesson) => (lesson?.time > max ? lesson?.time : max), 0)
   return [minTime, maxTime]
 })
 
 function lessonStyles(dayIndex: number, timeIndex: number) {
   // prettier-ignore
   return {
-    'bg-surface-variation-secondary': lessonsTensor.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
+    'bg-surface-variation-secondary': lessons.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
     'current-time': showCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
   }
 }
@@ -58,7 +58,7 @@ function handleDetails(dayIndex: number, timeIndex: number, event: Event) {
   detailsProps.value = {
     day: dayIndex,
     time: timeIndex,
-    lessons: lessonsTensor.value?.[timeIndex]?.[dayIndex] || [],
+    lessons: lessons.value?.[timeIndex]?.[dayIndex] || [],
   }
 
   detailsDialog.value = true
@@ -86,7 +86,7 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
 
     <tbody>
       <tr
-        v-for="(lessonsTime, timeIndex) in lessonsTensor"
+        v-for="(lessonsTime, timeIndex) in lessons"
         :key="timeIndex"
         :class="daySpecific ? lessonStyles(targetDay!, timeIndex) : null"
         @click="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : null"

@@ -7,34 +7,36 @@ import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
 
-const { lesson } = defineProps<{ lesson: MergedLesson }>()
+const props = defineProps<{ lesson: MergedLesson }>()
 
 const { currentEntityType, currentEntityList } = storeToRefs(useSessionStore())
 const { showSubstitutions } = storeToRefs(useSettingsStore())
 
 const subjectName = computed(() =>
-  showSubstitutions.value && lesson.isSubstitution ? lesson.substitutionSubject : lesson.subject,
+  showSubstitutions.value && props.lesson.isSubstitution
+    ? props.lesson.substitutionSubject
+    : props.lesson.subject,
 )
 
 const classLink = computed(() => ({
   linkType: 'classes',
-  linkValue: lesson.class,
+  linkValue: props.lesson.class,
 }))
 
 const teacherLink = computed(() => ({
   linkType: 'teachers',
   linkValue:
-    showSubstitutions.value && lesson.isSubstitution //
-      ? lesson.substitutionTeacher
-      : lesson.teacher,
+    showSubstitutions.value && props.lesson.isSubstitution
+      ? props.lesson.substitutionTeacher
+      : props.lesson.teacher,
 }))
 
 const classroomLink = computed(() => ({
   linkType: 'classrooms',
   linkValue:
-    showSubstitutions.value && lesson.isSubstitution //
-      ? lesson.substitutionClassroom
-      : lesson.classroom,
+    showSubstitutions.value && props.lesson.isSubstitution
+      ? props.lesson.substitutionClassroom
+      : props.lesson.classroom,
 }))
 
 const isEmpty = computed(() => {

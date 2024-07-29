@@ -44,7 +44,18 @@ export const useTimetableStore = defineStore('timetable', {
   }),
 
   getters: {
-    lessonsList(state): MergedLesson[] {
+    /**
+     * Computes a 3D array of lessons organized by time and day.
+     *
+     * The lessons are filtered based on whether they affect the currently selected entity.
+     *
+     * If enabled, substitutions are also included in the array, merged with the base lessons
+     * if possible.
+     *
+     * @returns A 3D array where the first dimension represents time slots, the second dimension
+     * represents days, and the third dimension contains lessons for that time and day.
+     */
+    lessons(state): MergedLesson[][][] {
       const { currentEntityType, currentEntityList } = useSessionStore()
       const { showSubstitutions } = useSettingsStore()
 
@@ -58,7 +69,7 @@ export const useTimetableStore = defineStore('timetable', {
       if (currentEntityType === EntityType.EmptyClassrooms) {
         // TODO: Substitutions for empty classrooms
         timetable = state.emptyClassrooms
-        substitutions = [] // state.substitutions.flat()
+        substitutions = []
       } else {
         for (const entity of currentEntityList) {
           // Get all base lessons that affect the current entity
@@ -81,10 +92,21 @@ export const useTimetableStore = defineStore('timetable', {
         }
       }
 
-      const lessons: MergedLesson[] = []
+      // Calculate the maximum time of any lessons
+      const maxTime = Math.max(
+        ...timetable.map(lesson => lesson.time),
+        ...substitutions.map(substitution => substitution.time),
+      )
+
+      // Create a 3D array of lessons organized by time and day
+      const array: MergedLesson[][][] = Array.from({ length: maxTime + 1 }, () =>
+        Array.from({ length: 5 }, () => []),
+      )
 
       for (const lesson of timetable) {
-        // Find a substitution that matches with the current lesson
+        // Find a substitution that matches with the current lesson (teacher)
+        // Note that there may be multiple matching substitutions, but we only take the first one
+        // This should be fine since they should be equivalent, apart from minor details
         const substitution = showSubstitutions
           ? substitutions.find(
               substitution =>
@@ -94,8 +116,8 @@ export const useTimetableStore = defineStore('timetable', {
             )
           : null
 
-        // Add the lesson with optional substitution to the list
-        lessons.push({
+        // Add the lesson with the optional substitution to the array
+        array[lesson.time][lesson.day - 1].push({
           day: lesson.day,
           time: lesson.time,
           subject: lesson.subject,
@@ -110,52 +132,52 @@ export const useTimetableStore = defineStore('timetable', {
         })
       }
 
-      // Add substitutions for new lessons
       if (showSubstitutions) {
+        // Add all effective substitutions to the array
+        // This probably includes duplicates, but we handle that below
         for (const substitution of substitutions) {
-          if (!substitution['original-teacher']) {
-            lessons.push({
-              day: substitution.day,
-              time: substitution.time,
-              subject: null,
-              class: substitution.class,
-              teacher: substitution['original-teacher'],
-              classroom: substitution['original-classroom'],
-              isSubstitution: true,
-              substitutionSubject: substitution.subject,
-              substitutionTeacher: substitution.teacher,
-              substitutionClassroom: substitution.classroom,
-              notes: substitution.notes,
-            })
+          array[substitution.time][substitution.day - 1].push({
+            day: substitution.day,
+            time: substitution.time,
+            subject: substitution['original-teacher'] ? substitution.subject : null,
+            class: substitution.class,
+            teacher: substitution['original-teacher'],
+            classroom: substitution['original-classroom'],
+            isSubstitution: true,
+            substitutionSubject: substitution.subject,
+            substitutionTeacher: substitution.teacher,
+            substitutionClassroom: substitution.classroom,
+            notes: substitution.notes,
+          })
+        }
+
+        // Deduplicate all lessons and substitutions
+        for (let timeIndex = 0; timeIndex < array.length; timeIndex++) {
+          for (let dayIndex = 0; dayIndex < array[timeIndex].length; dayIndex++) {
+            const uniqueLessons = new Map<string, MergedLesson>()
+
+            for (const [index, lesson] of array[timeIndex][dayIndex].entries()) {
+              // We want to keep normal lessons as they are
+              if (!lesson.isSubstitution) {
+                uniqueLessons.set(`NORMAL-${index}`, lesson)
+                continue
+              }
+
+              // We want to deduplicate substitutions that have the original teacher and displayed data
+              const key = `SUBSTITUTION-${lesson.class}-${lesson.teacher}-${lesson.substitutionSubject}-${lesson.substitutionTeacher}-${lesson.substitutionClassroom}`
+
+              // We want to keep the first lesson with notes if any of them has notes, otherwise the first one overall
+              if (!uniqueLessons.has(key) || uniqueLessons.get(key)?.notes === null) {
+                uniqueLessons.set(key, lesson)
+              }
+            }
+
+            array[timeIndex][dayIndex] = Array.from(uniqueLessons.values())
           }
         }
       }
 
-      // TODO: Fix displaying substitutions for teachers and classrooms
-
-      return lessons
-    },
-
-    /**
-     * Computes a 3D tensor of lessons organized by time and day.
-     *
-     * The data are calculated for the currently selected entity and include substitutions
-     * if they are enabled.
-     *
-     * @returns A 3D tensor where the first dimension represents time slots, the second dimension
-     * represents days, and the third dimension contains lessons for that time and day.
-     */
-    lessonsTensor(): MergedLesson[][][] {
-      const days = 5
-      const times = 11
-
-      const tensor: MergedLesson[][][] = Array.from(Array(times), () => new Array(days).fill([]))
-
-      for (const lesson of this.lessonsList) {
-        tensor[lesson.time][lesson.day - 1] = tensor[lesson.time][lesson.day - 1].concat(lesson)
-      }
-
-      return tensor
+      return array
     },
   },
 
