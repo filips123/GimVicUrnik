@@ -1,4 +1,5 @@
 import {
+  addEventProcessor,
   browserTracingIntegration as originalBrowserTracingIntegration,
   captureException,
   getActiveSpan,
@@ -6,6 +7,7 @@ import {
   getRootSpan,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
+  setHttpStatus,
   spanToJSON,
   startBrowserTracingNavigationSpan,
 } from '@sentry/browser'
@@ -18,6 +20,11 @@ import {
   reportingObserverIntegration,
   thirdPartyErrorFilterIntegration,
 } from '@sentry/vue'
+import {
+  usePreferredColorScheme,
+  usePreferredContrast,
+  usePreferredReducedMotion,
+} from '@vueuse/core'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 
@@ -28,6 +35,11 @@ export default function registerSentry(app: App, router: Router) {
 
   const { dataCollectionCrashes, dataCollectionPerformance } = useSettingsStore()
   if (!dataCollectionCrashes && !dataCollectionPerformance) return
+
+  // Initialize stores for some interesting media queries
+  const preferredColor = usePreferredColorScheme()
+  const preferredContrast = usePreferredContrast()
+  const preferredMotion = usePreferredReducedMotion()
 
   // Release prefixes and suffixes from config
   const releasePrefix = import.meta.env.VITE_SENTRY_RELEASE_PREFIX || ''
@@ -68,6 +80,61 @@ export default function registerSentry(app: App, router: Router) {
     trackComponents: dataCollectionPerformance,
 
     integrations,
+  })
+
+  // Add event processor to collect a few more useful metrics
+  addEventProcessor(function (event) {
+    // Make sure the context and tags objects exists
+    if (!event.contexts) event.contexts = {}
+    if (!event.tags) event.tags = {}
+
+    // Add context from user settings that can be useful when debugging errors
+
+    const settingsStore = useSettingsStore()
+
+    event.contexts['Settings - General'] = {
+      'Show Substitutions': settingsStore.showSubstitutions,
+      'Show Links in Timetable': settingsStore.showLinksInTimetable,
+      'Show Hours in Timetable': settingsStore.showHoursInTimetable,
+      'Highlight Current Time': settingsStore.highlightCurrentTime,
+      'Enable Lesson Details': settingsStore.enableLessonDetails,
+      'Enable Pull To Refresh': settingsStore.enablePullToRefresh,
+      'Theme Type': settingsStore.themeType,
+    }
+
+    event.contexts['Settings - Entity'] = {
+      'Entity Type': settingsStore.entityType,
+      'Entity List': settingsStore.entityList,
+    }
+
+    event.contexts['Settings - Food'] = {
+      'Snack Type': settingsStore.snackType,
+      'Lunch Type': settingsStore.lunchType,
+    }
+
+    // Add tags based on a few relevant media queries
+
+    const displayModes = [
+      'browser',
+      'standalone',
+      'fullscreen',
+      'minimal-ui',
+      'window-controls-overlay',
+      'picture-in-picture',
+    ]
+    for (const mode of displayModes) {
+      if (window.matchMedia(`(display-mode: ${mode})`).matches) {
+        event.tags['media.display_mode'] = mode
+        break
+      }
+    }
+
+    event.tags['media.color_scheme'] = preferredColor.value
+    event.tags['media.contrast'] = preferredContrast.value
+    event.tags['media.reduced_motion'] = preferredMotion.value
+
+    // Return the modified event
+    return event
   })
 }
 
@@ -115,6 +182,7 @@ function browserTracingIntegration(router: Router): Integration {
         // Determine a name for the routing transaction
         let transactionName: string = to.path
         let transactionSource: TransactionSource = 'route'
+        let transactionHttpStatus: number | undefined = undefined
 
         // Parametrize timetable transactions in the same style as backend
         if (
@@ -130,6 +198,7 @@ function browserTracingIntegration(router: Router): Integration {
         } else if ((to.name === 'timetable' && to.params.type) || to.name === 'notFound') {
           transactionName = 'generic 404 request'
           transactionSource = 'custom'
+          transactionHttpStatus = 404
         }
 
         getCurrentScope().setTransactionName(transactionName)
@@ -153,6 +222,11 @@ function browserTracingIntegration(router: Router): Integration {
               ...attributes,
               [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.pageload.vue',
             })
+
+            // Set the HTTP status if it was specified
+            if (transactionHttpStatus) {
+              setHttpStatus(activeRootSpan, transactionHttpStatus)
+            }
           }
         }
 
@@ -161,11 +235,16 @@ function browserTracingIntegration(router: Router): Integration {
           attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN] = 'auto.navigation.vue'
 
           // Start a new navigation transaction
-          startBrowserTracingNavigationSpan(client, {
+          const navigationSpan = startBrowserTracingNavigationSpan(client, {
             name: transactionName,
             op: 'navigation',
             attributes,
           })
+
+          // Set the HTTP status if it was specified
+          if (navigationSpan && transactionHttpStatus) {
+            setHttpStatus(navigationSpan, transactionHttpStatus)
+          }
         }
       })
     },
