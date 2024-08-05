@@ -51,10 +51,12 @@ class EClassroomUpdater(BaseMultiUpdater):
     source = "eclassroom"
     error = ClassroomApiError
 
-    def __init__(self, config: ConfigSourcesEClassroom, session: Session) -> None:
+    def __init__(self, config: ConfigSourcesEClassroom, session: Session, parse_substitutions: bool) -> None:
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.session = session
+
+        self.parse_substitutions = parse_substitutions
 
         super().__init__()
 
@@ -253,6 +255,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
         """Return whether the document needs parsing."""
+
+        if document.type == DocumentType.SUBSTITUTIONS and not self.parse_substitutions:
+            return False
 
         if document.type == DocumentType.SUBSTITUTIONS or document.type == DocumentType.LUNCH_SCHEDULE:
             return True

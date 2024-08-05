@@ -29,15 +29,16 @@ def update_timetable_command() -> None:
 
 
 @click.command("update-eclassroom", help="Update the e-classroom data.")
+@click.option("--parse-substitutions", "-p", help="Parse substitutions.", is_flag=True)
 @with_transaction(name="update-eclassroom", op="command")
-def update_eclassroom_command() -> None:
+def update_eclassroom_command(parse_substitutions: bool) -> None:
     """Update data from the e-classroom."""
 
     logging.getLogger(__name__).info("Updating the e-classroom data")
 
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
-        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session)
+        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session, parse_substitutions)
         updater.update()
 
 
