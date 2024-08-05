@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import and_, or_
 
 from ..database import Base, SessionFactory, Document, DocumentType
-from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater
+from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, SolsisUpdater
 from ..utils.sentry import with_transaction
 
 if typing.TYPE_CHECKING:
@@ -51,6 +51,32 @@ def update_menu_command() -> None:
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
         updater = MenuUpdater(gimvicurnik.config.sources.menu, session)
+        updater.update()
+
+
+@click.command("update-solsis", help="Update the Solsis data.")
+@click.option("--date-span", "-s", nargs=2, type=str, help="Start and end date for the api call.")
+@with_transaction(name="update-solsis", op="command")
+def update_solsis_command(date_span: tuple[str, str]) -> None:
+    """Update data from Solsis."""
+
+    # Default span is 7 days inclusive
+    date_from = datetime.now()
+    date_to = date_from + timedelta(days=6)
+
+    if date_span:
+        date_from = datetime.strptime(date_span[0], "%Y-%m-%d")
+        date_to = datetime.strptime(date_span[1], "%Y-%m-%d")
+
+    formated_dates = (date_from.strftime("%Y-%m-%d"), date_to.strftime("%Y-%m-%d"))
+
+    logging.getLogger(__name__).info(
+        f"Updating the Solsis data (from {formated_dates[0]} to {formated_dates[1]})"
+    )
+
+    with SessionFactory.begin() as session:
+        gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
+        updater = SolsisUpdater(gimvicurnik.config.sources.solsis, session, date_from, date_to)
         updater.update()
 
 

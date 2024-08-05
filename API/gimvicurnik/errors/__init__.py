@@ -10,4 +10,5 @@ from .eclassroom import (
     LunchScheduleFormatError,
 )
 from .menu import MenuApiError, MenuDateError, MenuFormatError
+from .solsis import SolsisApiError
 from .timetable import TimetableApiError
