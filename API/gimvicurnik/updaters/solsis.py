@@ -5,6 +5,7 @@ import typing
 
 from datetime import timedelta, date as date_
 from hashlib import sha256
+from itertools import product
 from random import getrandbits
 import json
 
@@ -91,13 +92,19 @@ class SolsisUpdater:
                     subject = normalize_subject_name(substitution_lesson["predmet"])
                     notes = normalize_other_names(substitution_lesson["opomba"])
 
+                    # New teacher
                     teacher = normalize_teacher_name(substitution_lesson["nadomesca_full_name"])
-                    classroom = normalize_classroom_name(substitution_lesson["ucilnica"])
+
+                    # Handle multiple classrooms
+                    # fmt: off
+                    classrooms = [normalize_classroom_name(name) for name in substitution_lesson["ucilnica"].split(", ")]
+                    # fmt: on
 
                     # Handle multiple classes
                     classes = substitution_lesson["class_name"].replace(". ", "").split(" - ")
+                    classes = classes[:-1] if len(classes) > 1 else classes
 
-                    for class_ in classes:
+                    for class_, classroom in product(classes, classrooms):
                         substitutions.append(
                             format_substitution(
                                 self.session,
@@ -121,12 +128,17 @@ class SolsisUpdater:
                 notes = normalize_other_names(substitution["opomba"])
 
                 teacher = normalize_teacher_name(substitution["ucitelj"])
-                classroom = normalize_classroom_name(substitution["ucilnica"])
+
+                # Handle multiple classrooms
+                # fmt: off
+                classrooms = [normalize_classroom_name(name) for name in substitution["ucilnica"].split(", ")]
+                # fmt: on
 
                 # Handle multiple classes
                 classes = substitution["class_name"].replace(". ", "").split(" - ")
+                classes = classes[:-1] if len(classes) > 1 else classes
 
-                for class_ in classes:
+                for class_, classroom in product(classes, classrooms):
                     substitutions.append(
                         format_substitution(
                             self.session,
@@ -143,25 +155,37 @@ class SolsisUpdater:
                         )
                     )
 
-            # Time change
+            # Lesson change
             for substitution in solsis_substitutions["menjava_ur"]:
-                time = int(substitution_lesson["ura"][:-1]) if substitution["ura"] != "PU" else 0
+                time = int(substitution["ura"][:-1]) if substitution["ura"] != "PU" else 0
                 subject = normalize_subject_name(substitution["predmet"].split(" -> ")[1])
                 notes = normalize_other_names(substitution["opomba"])
 
-                teachers = substitution["zamenjava_uciteljev"].split(" -> ")
-                classrooms = substitution["ucilnica"].split(" -> ")
+                # Handle teacher change
+                split_teachers = substitution["zamenjava_uciteljev"].split(" -> ")
 
-                original_teacher = normalize_teacher_name(teachers[0])
-                teacher = normalize_teacher_name(teachers[1])
+                original_teacher = normalize_teacher_name(split_teachers[0])
+                teacher = normalize_teacher_name(split_teachers[1])
 
-                original_classroom = normalize_teacher_name(classrooms[0])
-                classroom = normalize_teacher_name(classrooms[1] if len(classrooms) == 2 else classrooms[0])
+                # Handle classrooms change
+                split_classrooms = substitution["ucilnica"].split(" -> ")
+
+                # fmt: off
+                original_classrooms = [normalize_classroom_name(name) for name in split_classrooms[0].split(", ")]
+                # fmt: on
+
+                # Check if the classrooms have changed
+                if len(split_classrooms) == 2:
+                    classrooms = [normalize_classroom_name(name) for name in split_classrooms[1].split(", ")]
+                else:
+                    classrooms = original_classrooms
 
                 # Handle multiple classes
                 classes = substitution["class_name"].replace(". ", "").split(" - ")
+                classes = classes[:-1] if len(classes) > 1 else classes
 
-                for class_ in classes:
+                # fmt: off
+                for class_, original_classroom, classroom in product(classes, original_classrooms, classrooms):
                     substitutions.append(
                         format_substitution(
                             self.session,
@@ -177,6 +201,7 @@ class SolsisUpdater:
                             classroom,
                         )
                     )
+                # fmt: on
 
             # Classroom change
             for substitution in solsis_substitutions["menjava_ucilnic"]:
@@ -186,17 +211,22 @@ class SolsisUpdater:
 
                 teacher = normalize_teacher_name(substitution["ucitelj"])
 
-                original_classroom = normalize_classroom_name(substitution["ucilnica_from"])
-                classroom = normalize_classroom_name(substitution["ucilnica_to"])
+                # Handle multiple classrooms
+                # fmt: off
+                original_classrooms = [normalize_classroom_name(name) for name in substitution["ucilnica_from"].split(", ")]
+                classrooms = [normalize_classroom_name(name) for name in substitution["ucilnica_to"].split(", ")]
+                # fmt: off
 
-                # Skip if the classroom has not changed
-                if classroom == original_classroom:
+                # Skip if the classrooms have not changed
+                if classrooms == original_classrooms:
                     continue
 
                 # Handle multiple classes
                 classes = substitution["class_name"].replace(". ", "").split(" - ")
+                classes = classes[:-1] if len(classes) > 1 else classes
 
-                for class_ in classes:
+                # fmt: off
+                for class_, original_classroom, classroom in product(classes, original_classrooms, classrooms):
                     substitutions.append(
                         format_substitution(
                             self.session,
@@ -212,6 +242,7 @@ class SolsisUpdater:
                             classroom,
                         )
                     )
+                # fmt: on
 
             # Deduplicate substitutions
             substitutions = [dict(subs2) for subs2 in {tuple(subs1.items()) for subs1 in substitutions}]
