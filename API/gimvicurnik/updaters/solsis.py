@@ -11,13 +11,18 @@ import json
 import requests
 from sqlalchemy import insert
 
-from ..database import Classroom, Class, DocumentType, Substitution, Teacher
+from ..database import DocumentType, Substitution
 from ..errors import SolsisApiError
-from ..utils.database import get_or_create
+from ..utils.normalizers import (
+    normalize_subject_name,
+    normalize_teacher_name,
+    normalize_classroom_name,
+    normalize_other_names,
+    format_substitution,
+)
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any
     from sqlalchemy.orm import Session
     from ..config import ConfigSourcesSolsis
 
@@ -78,23 +83,24 @@ class SolsisUpdater:
 
             # Loop trough the Solsis substitutions sections and construct models applicable to our database
             for substitution in solsis_substitutions["nadomescanja"]:
-                original_teacher = self._normalize_teacher_name(substitution["odsoten_fullname"])
+                original_teacher = normalize_teacher_name(substitution["odsoten_fullname"])
 
                 # Teacher is absent
                 for substitution_lesson in substitution["nadomescanja_ure"]:
                     time = int(substitution_lesson["ura"][:-1]) if substitution_lesson["ura"] != "PU" else 0
-                    subject = self._normalize_subject_name(substitution_lesson["predmet"])
-                    notes = self._normalize_other_names(substitution_lesson["opomba"])
+                    subject = normalize_subject_name(substitution_lesson["predmet"])
+                    notes = normalize_other_names(substitution_lesson["opomba"])
 
-                    teacher = self._normalize_teacher_name(substitution_lesson["nadomesca_full_name"])
-                    classroom = self._normalize_classroom_name(substitution_lesson["ucilnica"])
+                    teacher = normalize_teacher_name(substitution_lesson["nadomesca_full_name"])
+                    classroom = normalize_classroom_name(substitution_lesson["ucilnica"])
 
                     # Handle multiple classes
                     classes = substitution_lesson["class_name"].replace(". ", "").split(" - ")
 
                     for class_ in classes:
                         substitutions.append(
-                            self._format_substitution(
+                            format_substitution(
+                                self.session,
                                 date,
                                 day,
                                 time,
@@ -111,18 +117,19 @@ class SolsisUpdater:
             # Subject change
             for substitution in solsis_substitutions["menjava_predmeta"]:
                 time = int(substitution["ura"][:-1]) if substitution["ura"] != "PU" else 0
-                subject = self._normalize_subject_name(substitution["predmet"])
-                notes = self._normalize_other_names(substitution["opomba"])
+                subject = normalize_subject_name(substitution["predmet"])
+                notes = normalize_other_names(substitution["opomba"])
 
-                teacher = self._normalize_teacher_name(substitution["ucitelj"])
-                classroom = self._normalize_classroom_name(substitution["ucilnica"])
+                teacher = normalize_teacher_name(substitution["ucitelj"])
+                classroom = normalize_classroom_name(substitution["ucilnica"])
 
                 # Handle multiple classes
                 classes = substitution["class_name"].replace(". ", "").split(" - ")
 
                 for class_ in classes:
                     substitutions.append(
-                        self._format_substitution(
+                        format_substitution(
+                            self.session,
                             date,
                             day,
                             time,
@@ -139,26 +146,25 @@ class SolsisUpdater:
             # Time change
             for substitution in solsis_substitutions["menjava_ur"]:
                 time = int(substitution_lesson["ura"][:-1]) if substitution["ura"] != "PU" else 0
-                subject = self._normalize_subject_name(substitution["predmet"].split(" -> ")[1])
-                notes = self._normalize_other_names(substitution["opomba"])
+                subject = normalize_subject_name(substitution["predmet"].split(" -> ")[1])
+                notes = normalize_other_names(substitution["opomba"])
 
                 teachers = substitution["zamenjava_uciteljev"].split(" -> ")
                 classrooms = substitution["ucilnica"].split(" -> ")
 
-                original_teacher = self._normalize_teacher_name(teachers[0])
-                teacher = self._normalize_teacher_name(teachers[1])
+                original_teacher = normalize_teacher_name(teachers[0])
+                teacher = normalize_teacher_name(teachers[1])
 
-                original_classroom = self._normalize_teacher_name(classrooms[0])
-                classroom = self._normalize_teacher_name(
-                    classrooms[1] if len(classrooms) == 2 else classrooms[0]
-                )
+                original_classroom = normalize_teacher_name(classrooms[0])
+                classroom = normalize_teacher_name(classrooms[1] if len(classrooms) == 2 else classrooms[0])
 
                 # Handle multiple classes
                 classes = substitution["class_name"].replace(". ", "").split(" - ")
 
                 for class_ in classes:
                     substitutions.append(
-                        self._format_substitution(
+                        format_substitution(
+                            self.session,
                             date,
                             day,
                             time,
@@ -175,13 +181,13 @@ class SolsisUpdater:
             # Classroom change
             for substitution in solsis_substitutions["menjava_ucilnic"]:
                 time = int(substitution["ura"][:-1]) if substitution["ura"] != "PU" else 0
-                subject = self._normalize_subject_name(substitution["predmet"])
-                notes = self._normalize_other_names(substitution["opomba"])
+                subject = normalize_subject_name(substitution["predmet"])
+                notes = normalize_other_names(substitution["opomba"])
 
-                teacher = self._normalize_teacher_name(substitution["ucitelj"])
+                teacher = normalize_teacher_name(substitution["ucitelj"])
 
-                original_classroom = self._normalize_classroom_name(substitution["ucilnica_from"])
-                classroom = self._normalize_classroom_name(substitution["ucilnica_to"])
+                original_classroom = normalize_classroom_name(substitution["ucilnica_from"])
+                classroom = normalize_classroom_name(substitution["ucilnica_to"])
 
                 # Skip if the classroom has not changed
                 if classroom == original_classroom:
@@ -192,7 +198,8 @@ class SolsisUpdater:
 
                 for class_ in classes:
                     substitutions.append(
-                        self._format_substitution(
+                        format_substitution(
+                            self.session,
                             date,
                             day,
                             time,
@@ -238,130 +245,3 @@ class SolsisUpdater:
             raise SolsisApiError("Error while downloading the Solsis substitutions") from error
 
         return content.decode("utf8")
-
-    def _normalize_subject_name(self, name: str) -> str | None:
-        """Normalize the subject name."""
-
-        # Special case: Unknown subject
-        if self._is_name_empty(name):
-            return None
-
-        # Special case: Subject aliases
-        if name == "ŠVZS":
-            return "ŠVZ"
-        elif name == "ŠPVF":
-            return "ŠVM"
-        elif name == "ŠPVD":
-            return "ŠVŽ"
-
-        # Return the normal name
-        return name
-
-    def _normalize_teacher_name(self, name: str) -> str | None:
-        """Normalize the teacher name."""
-
-        # Special case: Additional lesson
-        if name == "Po urniku ni pouka":
-            return None
-
-        # Special case: No teacher
-        if name == "samozaposleni":
-            return None
-
-        # Special case: Unknown teacher
-        if self._is_name_empty(name):
-            return None
-
-        # Special case: Multiple Krapež teachers
-        if "Krapež" in name:
-            if "Alenka" in name:
-                return "KrapežA"
-            elif "Marjetka" in name:
-                return "KrapežM"
-
-        # Special case: Multiple Šajn teachers
-        if "Šajn" in name:
-            if "Eva" in name:
-                return "ŠajnE"
-            elif "Majda" in name:
-                return "ŠajnM"
-
-        # Special case: Teachers with multiple surnames
-        teachers = {
-            "Crnoja": "Legan",
-            "Erbežnik": "Mihelič",
-            "Gresl": "Černe",
-            "Jereb": "Batagelj",
-            "Merhar": "Kariž",
-            "Osole": "Pikl",
-            "Stjepić": "Šajn",
-            "Tehovnik": "Glaser",
-            "Vahtar": "Rudolf",
-            "Potočnik": "Vičar",
-            "Završnik": "Ražen",
-            "Zelič": "Ocvirk",
-            "Žemva": "Strmčnik",
-        }
-        if name.split()[0] in teachers:
-            return teachers[name.split()[0]]
-
-        # Use only surname
-        return name.split()[0]
-
-    def _normalize_classroom_name(self, name: str) -> str | None:
-        """Normalize the classroom name."""
-
-        # Special case: Unknown classroom
-        if self._is_name_empty(name):
-            return None
-
-        # Special case: Classroom aliases
-        # Maybe these mappings aren't correct, but who knows...
-        if name == "Velika dvorana" or name == "Velika telovadnica":
-            return "TV1"
-        if name == "Mala dvorana" or name == "Mala telovadnica":
-            return "TV3"
-
-        # Return the normal name
-        return name
-
-    def _normalize_other_names(self, name: str) -> str | None:
-        """Normalize other types of names."""
-
-        return name if not self._is_name_empty(name) else None
-
-    @staticmethod
-    def _is_name_empty(name: str) -> bool:
-        """Return whether the name is empty."""
-
-        return not name or name == "X" or name == "x" or name == "/" or name == "MANJKA"
-
-    def _format_substitution(
-        self,
-        date: date_,
-        day: int,
-        time: int,
-        subject: str | None,
-        notes: str | None,
-        original_teacher: str | None,
-        original_classroom: str | None,
-        class_: str | None,
-        teacher: str | None,
-        classroom: str | None,
-    ) -> dict[str, Any]:
-        """Format the substitution into a dict that can be stored to a database."""
-
-        # fmt: off
-        return {
-            "date": date,
-            "day": day,
-            "time": time,
-            "subject": subject,
-            "notes": notes,
-            "original_teacher_id": get_or_create(self.session, model=Teacher, name=original_teacher)[0].id if original_teacher else None,
-            "original_classroom_id": get_or_create(self.session, model=Classroom, name=original_classroom)[0].id if original_classroom else None,
-            "class_id": get_or_create(self.session, model=Class, name=class_)[0].id if class_ else None,
-            "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
-            "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
-        }
-        # fmt: on
