@@ -31,14 +31,14 @@ def update_timetable_command() -> None:
 @click.command("update-eclassroom", help="Update the e-classroom data.")
 @click.option("--parse-substitutions", "-p", help="Parse substitutions.", is_flag=True)
 @with_transaction(name="update-eclassroom", op="command")
-def update_eclassroom_command(parse_substitutions: bool) -> None:
+def update_eclassroom_command(parse_substitutions: bool = False) -> None:
     """Update data from the e-classroom."""
 
     logging.getLogger(__name__).info("Updating the e-classroom data")
 
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
-        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session, parse_substitutions)
+        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session, parse_substitutions, True)
         updater.update()
 
 
@@ -56,24 +56,20 @@ def update_menu_command() -> None:
 
 
 @click.command("update-solsis", help="Update the Solsis data.")
-@click.option("--date-span", "-s", nargs=2, type=str, help="Start and end date for the api call.")
+@click.option("--date-span", "-s", nargs=2, type=str, help="Start and end date to get substitutions for.")
 @with_transaction(name="update-solsis", op="command")
 def update_solsis_command(date_span: tuple[str, str]) -> None:
     """Update data from Solsis."""
 
-    # Default span is 7 days inclusive
-    date_from = datetime.now()
+    # The default span is 7 days inclusive
+    date_from = datetime.now().date()
     date_to = date_from + timedelta(days=6)
 
     if date_span:
-        date_from = datetime.strptime(date_span[0], "%Y-%m-%d")
-        date_to = datetime.strptime(date_span[1], "%Y-%m-%d")
+        date_from = datetime.strptime(date_span[0], "%Y-%m-%d").date()
+        date_to = datetime.strptime(date_span[1], "%Y-%m-%d").date()
 
-    formated_dates = (date_from.strftime("%Y-%m-%d"), date_to.strftime("%Y-%m-%d"))
-
-    logging.getLogger(__name__).info(
-        f"Updating the Solsis data (from {formated_dates[0]} to {formated_dates[1]})"
-    )
+    logging.getLogger(__name__).info("Updating the Solsis data (%s - %s)", date_from, date_to)
 
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]

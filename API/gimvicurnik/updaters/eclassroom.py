@@ -10,8 +10,8 @@ from itertools import product
 from urllib.parse import urlparse
 
 from mammoth import convert_to_html  # type: ignore
-from sqlalchemy import insert
 from openpyxl import load_workbook
+from sqlalchemy import insert
 
 from .base import BaseMultiUpdater, DocumentInfo
 from ..database import Class, DocumentType, LunchSchedule, Substitution
@@ -19,16 +19,16 @@ from ..errors import (
     ClassroomApiError,
     InvalidRecordError,
     InvalidTokenError,
-    SubstitutionsFormatError,
     LunchScheduleFormatError,
+    SubstitutionsFormatError,
 )
 from ..utils.database import get_or_create
 from ..utils.normalizers import (
-    normalize_subject_name,
-    normalize_teacher_name,
+    format_substitution,
     normalize_classroom_name,
     normalize_other_names,
-    format_substitution,
+    normalize_subject_name,
+    normalize_teacher_name,
 )
 from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
@@ -41,7 +41,6 @@ if typing.TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
-    from ..utils.pdf import Tables
 
 
 class ParserType(enum.Enum):
@@ -58,12 +57,19 @@ class EClassroomUpdater(BaseMultiUpdater):
     source = "eclassroom"
     error = ClassroomApiError
 
-    def __init__(self, config: ConfigSourcesEClassroom, session: Session, parse_substitutions: bool) -> None:
+    def __init__(
+        self,
+        config: ConfigSourcesEClassroom,
+        session: Session,
+        parse_substitutions: bool,
+        parse_lunch_schedules: bool,
+    ) -> None:
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.session = session
 
         self.parse_substitutions = parse_substitutions
+        self.parse_lunch_schedules = parse_lunch_schedules
 
         super().__init__()
 
@@ -263,11 +269,11 @@ class EClassroomUpdater(BaseMultiUpdater):
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
         """Return whether the document needs parsing."""
 
-        if document.type == DocumentType.SUBSTITUTIONS and not self.parse_substitutions:
-            return False
+        if document.type == DocumentType.SUBSTITUTIONS:
+            return self.parse_substitutions
 
-        if document.type == DocumentType.SUBSTITUTIONS or document.type == DocumentType.LUNCH_SCHEDULE:
-            return True
+        if document.type == DocumentType.LUNCH_SCHEDULE:
+            return self.parse_lunch_schedules
 
         return False
 
@@ -513,6 +519,9 @@ class EClassroomUpdater(BaseMultiUpdater):
 
                     # fmt: off
                     for class_, original_classroom, classroom in product(classes, original_classrooms, classrooms):
+                        if original_classroom == classroom:
+                            continue
+
                         substitutions.append(format_substitution(
                             self.session,
                             effective, day, time,
@@ -523,7 +532,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     # fmt: on
 
         # Deduplicate substitutions
-        substitutions = [dict(subs2) for subs2 in {tuple(subs1.items()) for subs1 in substitutions}]
+        substitutions = list({frozenset(subs.items()): subs for subs in substitutions}.values())
 
         # Remove old substitutions from a database
         self.session.query(Substitution).filter(Substitution.date == effective).delete()

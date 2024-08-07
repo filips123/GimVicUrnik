@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import typing
-from datetime import date
+from datetime import date as date_
 
 from .database import get_or_create
-from ..database import Class, Teacher, Classroom
+from ..database import Class, Classroom, Teacher
 
 if typing.TYPE_CHECKING:
     from typing import Any
@@ -67,7 +67,7 @@ def normalize_teacher_name(name: str) -> str | None:
         "Jereb": "Batagelj",
         "Merhar": "Kariž",
         "Osole": "Pikl",
-        "Stjepić": "Šajn",
+        "Stjepić": "ŠajnM",
         "Tehovnik": "Glaser",
         "Vahtar": "Rudolf",
         "Potočnik": "Vičar",
@@ -114,7 +114,7 @@ def is_name_empty(name: str) -> bool:
 
 def format_substitution(
     session: Session,
-    date: date,
+    date: date_,
     day: int,
     time: int,
     subject: str | None,
@@ -125,7 +125,7 @@ def format_substitution(
     teacher: str | None,
     classroom: str | None,
 ) -> dict[str, Any]:
-    """Format the substitution into a dict that can be stored to a database."""
+    """Format the substitution into a dict that can be stored into a database."""
 
     # fmt: off
     return {

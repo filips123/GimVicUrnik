@@ -12,7 +12,7 @@ sources:
   solsis:
     url: https://solsis.gimvic.org/
     serverName: solsis.gimvic.org
-    apiKey: API-KEY
+    apiKey: YOUR-API-KEY-HERE
 
 urls:
   website: https://urnik.gimvic.org
