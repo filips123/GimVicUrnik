@@ -26,6 +26,85 @@ if typing.TYPE_CHECKING:
     from ..config import ConfigSourcesSolsis
 
 
+class TypeSubstitutions(typing.TypedDict):
+    odsoten_fullname: str
+    stevilo_ur_nadomescanj: int
+    nadomescanja_ure: list[TypeSubstitutionLessons]
+    style_index: int
+
+
+class TypeSubstitutionLessons(typing.TypedDict):
+    ura: str
+    class_name: str
+    sproscen_class_name: str
+    predmet: str
+    nadomesca_full_name: str
+    ucilnica: str
+    sproscen: int
+    zaposli: int
+    opomba: str
+
+
+class TypeSubjectChange(typing.TypedDict):
+    class_name: str
+    ura: str
+    original_predmet: str
+    predmet: str
+    ucitelj: str
+    ucilnica: str
+    opomba: str
+    style_index: int
+
+
+class TypeLessonChange(typing.TypedDict):
+    class_name: str
+    ura: str
+    predmet: str
+    zamenjava_uciteljev: str
+    ucilnica: str
+    opomba: str
+    style_index: int
+
+
+class TypeClassroomChange(typing.TypedDict):
+    class_name: str
+    ura: str
+    predmet: str
+    ucitelj: str
+    ucilnica_from: str
+    ucilnica_to: str
+    opomba: str
+    style_index: int
+
+
+class TypeMoreTeachers(typing.TypedDict):
+    ura: str
+    class_name: str
+    ucitelj: str
+    ucilnica: str
+    opomba: str
+    style_index: int
+
+
+class TypeReservation(typing.TypedDict):
+    ura: str
+    ucilnica: str
+    rezervator: str
+    opomba: str
+    style_index: int
+
+
+class TypeRoot(typing.TypedDict, total=False):
+    nadomescanja: list[TypeSubstitutions]
+    menjava_predmeta: list[TypeSubjectChange]
+    menjava_ur: list[TypeLessonChange]
+    menjava_ucilnic: list[TypeClassroomChange]
+    rezerviranje_ucilnice: list[TypeReservation]
+    vec_uciteljev_v_razredu: list[TypeMoreTeachers]
+    seznam_manjkajocih_razredov: list[str]
+    datum: str
+
+
 class SolsisUpdater:
     source = "solsis"
 
@@ -71,8 +150,10 @@ class SolsisUpdater:
         dates = [self.date_from + timedelta(days=i) for i in range((self.date_to - self.date_from).days + 1)]
 
         for date in dates:
+            self.logger.info("Handling substitutions for %s", date, extra={"date": date})
+
             # Download and parse the Solsis JSON
-            solsis_substitutions = self._download_substitutions(date)
+            solsis_substitutions: TypeRoot = self._download_substitutions(date)
 
             # Skip empty substitutions as the API returns only the date
             if "nadomescanja" not in solsis_substitutions:
@@ -237,7 +318,7 @@ class SolsisUpdater:
                 self.session.execute(insert(Substitution), substitutions)
 
     @with_span(op="download")
-    def _download_substitutions(self, date: date_) -> dict:
+    def _download_substitutions(self, date: date_) -> TypeRoot:
         """Download and parse the Solsis JSON file."""
 
         # Every request needs a different nonsense
@@ -252,7 +333,7 @@ class SolsisUpdater:
         try:
             response = requests.get(url)
             response.raise_for_status()
-            return response.json()
+            return typing.cast(TypeRoot, response.json())
 
         except (OSError, ValueError) as error:
             raise SolsisApiError("Error while downloading substitutions from Solsis API") from error
