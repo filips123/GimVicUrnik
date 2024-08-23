@@ -31,6 +31,14 @@ export enum ThemeType {
   Dark = 'dark',
 }
 
+function validateEnum<T extends object>(
+  enumObject: T,
+  value: any,
+  defaultValue: T[keyof T],
+): T[keyof T] {
+  return Object.values(enumObject).includes(value) ? value : defaultValue
+}
+
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     entityType: EntityType.None,
@@ -57,5 +65,25 @@ export const useSettingsStore = defineStore('settings', {
     dataVersion: 'Ni podatkov',
   }),
 
-  persist: true,
+  persist: {
+    serializer: {
+      deserialize: string => {
+        // Load the raw store from local storage
+        const deserialized = JSON.parse(string)
+
+        // Validate each enum value
+        deserialized.entityType = validateEnum(EntityType, deserialized.entityType, EntityType.None)
+        deserialized.snackType = validateEnum(SnackType, deserialized.snackType, SnackType.Normal)
+        deserialized.lunchType = validateEnum(LunchType, deserialized.lunchType, LunchType.Normal)
+        deserialized.themeType = validateEnum(ThemeType, deserialized.themeType, ThemeType.System)
+
+        // Validate entity list
+        if (!Array.isArray(deserialized.entityList)) deserialized.entityList = []
+
+        // Return the validated store
+        return deserialized
+      },
+      serialize: JSON.stringify,
+    },
+  },
 })
