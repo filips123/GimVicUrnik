@@ -195,6 +195,9 @@ function browserTracingIntegration(router: Router): Integration {
               .replace(':type?', to.params.type as string)
               .replace(':value?', `<${to.params.type}>`)
           }
+        } else if (to.name === 'welcome') {
+          transactionName = '/welcome'
+          transactionSource = 'custom'
         } else if ((to.name === 'timetable' && to.params.type) || to.name === 'notFound') {
           transactionName = 'generic 404 request'
           transactionSource = 'custom'

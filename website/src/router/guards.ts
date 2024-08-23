@@ -14,6 +14,13 @@ export function homeGuard(): NavigationGuardReturn {
   else return { name: 'timetable', replace: true }
 }
 
+export function welcomeGuard(): NavigationGuardReturn {
+  const { entityType } = useSettingsStore()
+
+  // Redirect the user to the timetable page if it has the entity set
+  if (entityType !== EntityType.None) return { name: 'timetable', replace: true }
+}
+
 export async function timetableGuard(
   route: RouteLocationNormalizedGeneric,
   source: RouteLocationNormalizedGeneric,
