@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import {
+  mdiDatabaseImportOutline,
+  mdiInformationOutline,
+  mdiKeyOutline,
+  mdiTuneVariant,
+  mdiUpdate,
+  mdiWeatherNight,
+} from '@mdi/js'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
@@ -13,6 +21,7 @@ import SettingsSetDataCollection from '@/components/SettingsSetDataCollection.vu
 import SettingsSetMoodleToken from '@/components/SettingsSetMoodleToken.vue'
 import { useSettingsStore } from '@/stores/settings'
 import {
+  localizeDataCollection,
   localizeEntityLabel,
   localizeLunchType,
   localizeSnackType,
@@ -21,123 +30,136 @@ import {
 import { updateAllData } from '@/utils/update'
 
 const {
-  entities,
+  entityList,
   entityType,
   snackType,
   lunchType,
   showSubstitutions,
   showLinksInTimetable,
   showHoursInTimetable,
-  showCurrentTime,
-  enableShowingDetails,
+  highlightCurrentTime,
+  enableLessonDetails,
   enablePullToRefresh,
-  enableUpdateOnLoad,
+  dataCollectionPerformance,
+  dataCollectionCrashes,
   themeType,
   moodleToken,
-  dataCollection,
   dataVersion,
 } = storeToRefs(useSettingsStore())
 
-const selectEntity = ref(false)
-const selectSnack = ref(false)
-const selectLunch = ref(false)
-const selectTheme = ref(false)
-const setMoodleToken = ref(false)
-const setDataCollection = ref(false)
-const about = ref(false)
+const selectEntityDialog = ref(false)
+const selectSnackDialog = ref(false)
+const selectLunchDialog = ref(false)
+const selectThemeDialog = ref(false)
+const setDataCollectionDialog = ref(false)
+const setMoodleTokenDialog = ref(false)
+const aboutDialog = ref(false)
 
-function updateApp() {
-  return
+const appVersion = import.meta.env.VITE_VERSION
+
+async function updateApp() {
+  if (
+    import.meta.env.MODE === 'production' &&
+    navigator.serviceWorker &&
+    navigator.serviceWorker.controller
+  ) {
+    // Skip service worker waiting
+    // TODO: Check if this is fine
+    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
+    await new Promise(resolve => setTimeout(resolve, 200))
+  }
+
+  // Add GET parameter to invalidate the cache of the index HTML file
+  window.location.href = '/?updated=' + new Date().getTime()
 }
 </script>
 
 <template>
   <v-column>
     <SettingsBaseAction
-      v-model="selectEntity"
+      v-model="selectEntityDialog"
       :label="localizeEntityLabel(entityType)"
-      :messages="entities.join(', ')"
-      icon="mdi-tune-variant"
+      :messages="entityList.join(', ') || 'Ni nastavljen'"
+      :icon="mdiTuneVariant"
     />
 
     <SettingsBaseAction
-      v-model="selectSnack"
-      label="Izbrana malica"
+      v-model="selectSnackDialog"
+      label="Vrsta malice"
       :messages="localizeSnackType(snackType)"
-      icon="mdi-tune-variant"
+      :icon="mdiTuneVariant"
     />
 
     <SettingsBaseAction
-      v-model="selectLunch"
-      label="Izbrano kosilo"
+      v-model="selectLunchDialog"
+      label="Vrsta kosila"
       :messages="localizeLunchType(lunchType)"
-      icon="mdi-tune-variant"
+      :icon="mdiTuneVariant"
     />
 
     <v-divider-settings />
 
-    <SettingsBaseSwitch v-model="showSubstitutions" title="Prikaži nadomeščanja" />
-    <SettingsBaseSwitch v-model="showLinksInTimetable" title="Prikaži povezave v urniku" />
-    <SettingsBaseSwitch v-model="showHoursInTimetable" title="Prikaži ure v urniku" />
-    <SettingsBaseSwitch v-model="showCurrentTime" title="Prikaži trenutno uro" />
-    <SettingsBaseSwitch v-model="enableShowingDetails" title="Klikni za podrobnosti" />
-    <SettingsBaseSwitch v-model="enablePullToRefresh" title="Potegni za posodobitev" />
-    <SettingsBaseSwitch v-model="enableUpdateOnLoad" title="Samodejno posodabljanje" />
+    <SettingsBaseSwitch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
+    <SettingsBaseSwitch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
+    <SettingsBaseSwitch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
+    <SettingsBaseSwitch v-model="highlightCurrentTime" label="Označi trenutno uro" />
+    <SettingsBaseSwitch v-model="enableLessonDetails" label="Klikni za podrobnosti" />
+    <SettingsBaseSwitch v-model="enablePullToRefresh" label="Potegni za posodobitev" />
 
     <v-divider-settings />
 
     <SettingsBaseAction
-      v-model="selectTheme"
-      label="Izbrana barvna tema"
+      v-model="selectThemeDialog"
+      label="Barvna tema"
       :messages="localizeThemeType(themeType)"
-      icon="mdi-weather-night"
+      :icon="mdiWeatherNight"
     />
 
     <SettingsBaseAction
-      v-model="setMoodleToken"
-      label="Moodle žeton"
-      :messages="moodleToken ? 'Nastavljen' : 'Ni nastavljen'"
-      icon="mdi-key"
-    />
-
-    <SettingsBaseAction
-      v-model="setDataCollection"
+      v-model="setDataCollectionDialog"
       label="Zbiranje tehničnih podatkov"
-      :messages="dataCollection ? 'Vklopljeno' : 'Izklopljeno'"
-      icon="mdi-database-import-outline"
+      :messages="localizeDataCollection(dataCollectionPerformance, dataCollectionCrashes)"
+      :icon="mdiDatabaseImportOutline"
+    />
+
+    <SettingsBaseAction
+      v-model="setMoodleTokenDialog"
+      label="Žeton za spletno učilnico"
+      :messages="moodleToken ? 'Nastavljen' : 'Ni nastavljen'"
+      :icon="mdiKeyOutline"
     />
 
     <v-divider-settings />
 
     <SettingsBaseAction
       label="Posodobi aplikacijo"
-      messages="TODO VERZIJA"
-      icon="mdi-update"
-      @click="updateApp()"
+      :messages="`Trenutna različica: ${appVersion}`"
+      :callback="updateApp"
+      :icon="mdiUpdate"
     />
 
     <SettingsBaseAction
       label="Posodobi podatke"
-      :messages="dataVersion"
-      icon="mdi-update"
-      @click="updateAllData()"
+      :messages="`Trenutna različica: ${dataVersion}`"
+      :callback="updateAllData"
+      :icon="mdiUpdate"
     />
 
     <v-divider-settings />
 
     <SettingsBaseAction
-      v-model="about"
-      label="O Aplikaciji"
-      messages="TODO VERZIJA"
-      icon="mdi-information-outline"
+      v-model="aboutDialog"
+      label="O aplikaciji"
+      :messages="`Trenutna različica: ${appVersion}`"
+      :icon="mdiInformationOutline"
     />
 
-    <SettingsSelectEntity v-model="selectEntity" />
-    <SettingsSelectMenuSnack v-model="selectSnack" />
-    <SettingsSelectMenuLunch v-model="selectLunch" />
-    <SettingsSelectTheme v-model="selectTheme" />
-    <SettingsSetMoodleToken v-model="setMoodleToken" />
-    <SettingsSetDataCollection v-model="setDataCollection" />
-    <SettingsAbout v-model="about" />
+    <SettingsSelectEntity v-model="selectEntityDialog" />
+    <SettingsSelectMenuSnack v-model="selectSnackDialog" />
+    <SettingsSelectMenuLunch v-model="selectLunchDialog" />
+    <SettingsSelectTheme v-model="selectThemeDialog" />
+    <SettingsSetDataCollection v-model="setDataCollectionDialog" />
+    <SettingsSetMoodleToken v-model="setMoodleTokenDialog" />
+    <SettingsAbout v-model="aboutDialog" />
   </v-column>
 </template>

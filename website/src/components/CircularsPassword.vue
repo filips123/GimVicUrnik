@@ -27,24 +27,24 @@ function closeDialog() {
 }
 </script>
 
-<!-- TODO: Styling -->
-
 <template>
   <v-dialog v-model="dialog">
     <v-card title="Vpišite geslo">
       <template #text>
-        <p>
+        <p class="pb-4">
           Za ogled okrožnic znotraj aplikacije je potrebno geslo. Geslo je dostopno na
-          <a href="https://ucilnica.gimvic.org/course/view.php?id=118">spletni učilnici</a>.
+          <a href="https://ucilnica.gimvic.org/course/view.php?id=118" target="_blank"
+            >spletni učilnici</a
+          >.
         </p>
         <v-text-field
           v-model="circularsPassword"
           label="Geslo"
-          :append-icon="inputShow ? mdiEye : mdiEyeOff"
+          :append-inner-icon="inputShow ? mdiEye : mdiEyeOff"
           :type="inputShow ? 'text' : 'password'"
           autofocus
-          @click:append="inputShow = !inputShow"
-          @keyup.enter="closeDialog()"
+          @click:append-inner="inputShow = !inputShow"
+          @keydown.enter="closeDialog()"
         />
       </template>
       <template #actions>

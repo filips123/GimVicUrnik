@@ -1,12 +1,24 @@
 <script setup lang="ts">
-const isChecked = defineModel<boolean>()
-const { title } = defineProps<{ title: string }>()
+const checked = defineModel<boolean>()
+const { label } = defineProps<{ label: string }>()
 </script>
 
 <template>
-  <v-list-item-switch :title>
-    <template #append>
-      <v-switch v-model="isChecked" style="grid-template-areas: none !important" />
-    </template>
-  </v-list-item-switch>
+  <v-row>
+    <v-col>
+      <v-switch v-model="checked" class="settings-base-switch">
+        <template #label>{{ label }}</template>
+      </v-switch>
+    </v-col>
+  </v-row>
 </template>
+
+<style>
+.settings-base-switch .v-selection-control {
+  min-height: unset;
+}
+
+.settings-base-switch .v-selection-control__wrapper {
+  height: 32px;
+}
+</style>

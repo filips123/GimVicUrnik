@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { fetchHandle, updateWrapper } from '@/utils/update'
+import { updateWrapper } from '@/utils/update'
 
 export interface Document {
   type: string
@@ -27,8 +27,8 @@ export const useDocumentsStore = defineStore('documents', {
 
   actions: {
     async updateDocuments() {
-      updateWrapper(async () => {
-        const response = await fetchHandle(import.meta.env.VITE_API + '/documents')
+      await updateWrapper(async () => {
+        const response = await fetch(import.meta.env.VITE_API + '/documents')
         this.documents = await response.json()
       })
     },

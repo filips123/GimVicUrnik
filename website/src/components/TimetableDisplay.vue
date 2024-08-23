@@ -21,7 +21,7 @@ const detailsProps = defineModel<{ day: number; time: number; lessons: MergedLes
 const { currentEntityType } = storeToRefs(useSessionStore())
 const { lessons } = storeToRefs(useTimetableStore())
 
-const { showHoursInTimetable, showCurrentTime, enableLessonDetails } =
+const { showHoursInTimetable, highlightCurrentTime, enableLessonDetails } =
   storeToRefs(useSettingsStore())
 
 const isWeekend = [0, 6].includes(new Date().getDay())
@@ -47,7 +47,7 @@ function lessonStyles(dayIndex: number, timeIndex: number) {
   // prettier-ignore
   return {
     'bg-surface-variation-secondary': lessons.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
-    'current-time': showCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
+    'current-time': highlightCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
   }
 }
 

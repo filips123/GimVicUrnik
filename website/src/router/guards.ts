@@ -4,6 +4,7 @@ import type { NavigationGuardReturn, RouteLocationNormalizedGeneric } from 'vue-
 import { useListsStore } from '@/stores/lists'
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
+import { generateTimetableRoute } from '@/utils/router'
 
 export function homeGuard(): NavigationGuardReturn {
   const { entityType } = useSettingsStore()
@@ -37,31 +38,8 @@ export async function timetableGuard(
     // Load the stored entity from settings
     resetEntityToSettings()
 
-    // Get the correct params for entity
-    let paramType
-    let paramValue = currentEntityList.value.join(',')
-
-    switch (currentEntityType.value) {
-      case EntityType.Class:
-        paramType = 'classes'
-        break
-      case EntityType.Teacher:
-        paramType = 'teachers'
-        break
-      case EntityType.Classroom:
-        paramType = 'classrooms'
-        break
-      case EntityType.EmptyClassrooms:
-        paramType = 'classrooms'
-        paramValue = 'empty'
-    }
-
     // Navigate to the correct timetable page
-    return {
-      name: 'timetable',
-      params: { type: paramType, value: paramValue },
-      replace,
-    }
+    return generateTimetableRoute(currentEntityType.value, currentEntityList.value, true)
   }
 
   if (route.params.value) {
@@ -107,7 +85,7 @@ export async function timetableGuard(
       routeValue[0] === 'empty'
     ) {
       currentEntityType.value = EntityType.EmptyClassrooms
-      currentEntityList.value = []
+      currentEntityList.value = ['Proste učilnice']
       return
     }
   }

@@ -1,0 +1,46 @@
+<script setup lang="ts">
+defineProps<{
+  showDescription?: boolean
+  showDisclaimer?: boolean
+  showInstructions?: boolean
+  showDataCollection?: boolean
+  showDevelopers?: boolean
+  showFeedback?: boolean
+}>()
+</script>
+
+<template>
+  <div>
+    <p v-if="showDescription">
+      Spletna aplikacija <em>Urnik Gimnazije Vič</em> prikazuje urnik, nadomeščanja, jedilnik ter
+      razpored kosila za dijake in profesorje Gimnazije Vič.
+    </p>
+    <p v-if="showDisclaimer">
+      Aplikacija je neuradna in lahko vsebuje nepopolne ali napačne podatke. Za ogled uradnih
+      podatkov uporabite
+      <a href="https://ucilnica.gimvic.org/" target="_blank">Spletno učilnico Gimnazije Vič</a>.
+    </p>
+    <p v-if="showInstructions">
+      Navodila za namestitev in uporabo so na voljo v
+      <a href="https://github.com/filips123/GimVicUrnik/wiki" target="_blank">dokumentaciji</a>.
+    </p>
+    <p v-if="showDataCollection">
+      Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in
+      izboljšanja učinkovitosti. Podatki se ne uporabljajo za identifikacijo uporabnikov,
+      oglaševanje ali druge namene.
+    </p>
+    <span v-if="showDevelopers">Razvijalci:</span>
+    <ul v-if="showDevelopers">
+      <li>Filip Štamcar</li>
+      <li>Jakob Kralj</li>
+      <li>Peter Jereb</li>
+    </ul>
+    <p v-if="showFeedback">
+      Če ste odkrili napako v aplikaciji ali podatkih, želite prispevati k razvoju ali ponuditi
+      povratne informacije, lahko to naredite na
+      <a href="https://github.com/filips123/GimVicUrnik/issues/new/choose" target="_blank"
+        >uradnem repozitoriju</a
+      >.
+    </p>
+  </div>
+</template>

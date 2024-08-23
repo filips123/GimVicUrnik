@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
-import { fetchHandle, updateWrapper } from '@/utils/update'
+import { updateWrapper } from '@/utils/update'
 
 export interface Menu {
   date: string
@@ -33,11 +33,11 @@ export const useFoodStore = defineStore('food', {
 
   actions: {
     async updateMenus() {
-      updateWrapper(async () => {
+      await updateWrapper(async () => {
         this.menus = await Promise.all(
           getWeekdays(getCurrentDate()).map(async (date): Promise<Menu> => {
             const iso = getISODate(date)
-            const response = await fetchHandle(import.meta.env.VITE_API + '/menus/date/' + iso)
+            const response = await fetch(import.meta.env.VITE_API + '/menus/date/' + iso)
             return { ...(await response.json()), date: iso }
           }),
         )
@@ -45,11 +45,11 @@ export const useFoodStore = defineStore('food', {
     },
 
     async updateLunchSchedules() {
-      updateWrapper(async () => {
+      await updateWrapper(async () => {
         this.lunchSchedules = await Promise.all(
           getWeekdays(getCurrentDate()).map(async (date): Promise<LunchSchedule[]> => {
             const iso = getISODate(date)
-            const response = await fetchHandle(import.meta.env.VITE_API + '/schedule/date/' + iso)
+            const response = await fetch(import.meta.env.VITE_API + '/schedule/date/' + iso)
             return await response.json()
           }),
         )

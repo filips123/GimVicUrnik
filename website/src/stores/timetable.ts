@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
-import { fetchHandle, updateWrapper } from '@/utils/update'
+import { updateWrapper } from '@/utils/update'
 
 export interface Lesson {
   day: number
@@ -183,24 +183,24 @@ export const useTimetableStore = defineStore('timetable', {
 
   actions: {
     async updateTimetable() {
-      updateWrapper(async () => {
-        const response = await fetchHandle(import.meta.env.VITE_API + '/timetable')
+      await updateWrapper(async () => {
+        const response = await fetch(import.meta.env.VITE_API + '/timetable')
         this.timetable = await response.json()
       })
     },
 
     async updateSubstitutions() {
-      updateWrapper(async () => {
+      await updateWrapper(async () => {
         const dates = getWeekdays(getCurrentDate()).map(date => getISODate(date))
         const urls = dates.map(date => import.meta.env.VITE_API + '/substitutions/date/' + date)
-        const responses = await Promise.all(urls.map(url => fetchHandle(url)))
+        const responses = await Promise.all(urls.map(url => fetch(url)))
         this.substitutions = await Promise.all(responses.map(response => response.json()))
       })
     },
 
     async updateEmptyClassrooms() {
-      updateWrapper(async () => {
-        const response = await fetchHandle(import.meta.env.VITE_API + '/timetable/classrooms/empty')
+      await updateWrapper(async () => {
+        const response = await fetch(import.meta.env.VITE_API + '/timetable/classrooms/empty')
         this.emptyClassrooms = await response.json()
       })
     },

@@ -26,9 +26,9 @@ export enum MenuType {
 }
 
 export enum ThemeType {
-  System = 'systemTheme',
-  Light = 'lightTheme',
-  Dark = 'darkTheme',
+  System = 'system',
+  Light = 'light',
+  Dark = 'dark',
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -42,7 +42,7 @@ export const useSettingsStore = defineStore('settings', {
     showSubstitutions: true,
     showLinksInTimetable: true,
     showHoursInTimetable: true,
-    showCurrentTime: true,
+    highlightCurrentTime: true,
     enableLessonDetails: true,
     enablePullToRefresh: true,
 
@@ -53,6 +53,8 @@ export const useSettingsStore = defineStore('settings', {
 
     moodleToken: '',
     circularsPassword: '',
+
+    dataVersion: 'Ni podatkov',
   }),
 
   persist: true,

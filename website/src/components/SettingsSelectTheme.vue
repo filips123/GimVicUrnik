@@ -14,30 +14,28 @@ const theme = useTheme()
 watch(themeType, () => {
   if (themeType.value === ThemeType.System) {
     theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'darkTheme'
-      : 'lightTheme'
+      ? 'dark'
+      : 'light'
     return
   }
 
   theme.global.name.value = themeType.value
 })
-
-const themes = Object.values(ThemeType)
 </script>
 
 <template>
   <v-dialog v-model="dialog">
     <v-card title="Izberite barvno temo">
-      <v-card-text-selection>
+      <template #text>
         <v-radio-group v-model="themeType">
           <v-radio
-            v-for="theme in themes"
+            v-for="theme in Object.values(ThemeType)"
             :key="theme"
             :label="localizeThemeType(theme)"
             :value="theme"
           />
         </v-radio-group>
-      </v-card-text-selection>
+      </template>
       <template #actions>
         <v-btn text="V redu" @click="dialog = false" />
       </template>

@@ -18,18 +18,20 @@ export const localizedWeekdays = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'P
 export function localizeEntityLabel(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
-      return 'Izbran razred'
+    case EntityType.None:
+      return 'Razred'
     case EntityType.Teacher:
-      return 'Izbran profesor'
+      return 'Profesor'
     case EntityType.Classroom:
     case EntityType.EmptyClassrooms:
-      return 'Izbrana učilnica'
+      return 'Učilnica'
   }
 }
 
 export function localizeSelectEntityTitle(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
+    case EntityType.None:
       return 'Izberite razred'
     case EntityType.Teacher:
       return 'Izberite profesorje'
@@ -42,6 +44,7 @@ export function localizeSelectEntityTitle(entityType: EntityType) {
 export function localizeSelectEntityNotSelected(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
+    case EntityType.None:
       return 'Ni izbranega razreda'
     case EntityType.Teacher:
       return 'Ni izbranega profesorja'
@@ -85,6 +88,18 @@ export function localizeMenu(menuType: MenuType) {
 }
 
 // Settings Localization
+
+export function localizeDataCollection(performance: boolean, crashes: boolean) {
+  if (performance && crashes) {
+    return 'Merjenje učinkovitosti & Zbiranje napak'
+  } else if (performance) {
+    return 'Merjenje učinkovitosti'
+  } else if (crashes) {
+    return 'Zbiranje napak'
+  } else {
+    return 'Izklopljeno'
+  }
+}
 
 export function localizeThemeType(themeType: ThemeType) {
   switch (themeType) {
