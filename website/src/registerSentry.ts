@@ -31,7 +31,7 @@ import type { Router } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
 
 export default function registerSentry(app: App, router: Router) {
-  if (import.meta.env.VITE_SENTRY_ENABLED !== 'true') return
+  if (!import.meta.env.VITE_SENTRY_ENABLED) return
 
   const { dataCollectionCrashes, dataCollectionPerformance } = useSettingsStore()
   if (!dataCollectionCrashes && !dataCollectionPerformance) return
@@ -41,9 +41,13 @@ export default function registerSentry(app: App, router: Router) {
   const preferredContrast = usePreferredContrast()
   const preferredMotion = usePreferredReducedMotion()
 
-  // Release prefixes and suffixes from config
+  // Get release prefixes and suffixes from config
   const releasePrefix = import.meta.env.VITE_SENTRY_RELEASE_PREFIX || ''
   const releaseSuffix = import.meta.env.VITE_SENTRY_RELEASE_SUFFIX || ''
+
+  // Get traces and profiles sample rates from config
+  const tracesSampleRate = import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE
+  const profilesSampleRate = import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE
 
   // Include additional always-enabled integrations
   const integrations = [
@@ -58,8 +62,8 @@ export default function registerSentry(app: App, router: Router) {
 
   // Add performance integrations if enabled in settings
   if (dataCollectionPerformance) {
-    integrations.push(browserTracingIntegration(router))
-    integrations.push(browserProfilingIntegration())
+    if (tracesSampleRate) integrations.push(browserTracingIntegration(router))
+    if (profilesSampleRate) integrations.push(browserProfilingIntegration())
   }
 
   // Init the Sentry SDK
@@ -67,10 +71,10 @@ export default function registerSentry(app: App, router: Router) {
     app,
 
     dsn: import.meta.env.VITE_SENTRY_DSN,
-    tracesSampleRate: parseFloat(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE),
-    profilesSampleRate: parseFloat(import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE),
-    maxBreadcrumbs: parseInt(import.meta.env.VITE_SENTRY_MAX_BREADCRUMBS),
-    tracePropagationTargets: import.meta.env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS.split(','),
+    tracesSampleRate: tracesSampleRate,
+    profilesSampleRate: profilesSampleRate,
+    maxBreadcrumbs: import.meta.env.VITE_SENTRY_MAX_BREADCRUMBS,
+    tracePropagationTargets: import.meta.env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS,
     normalizeDepth: 8,
 
     environment: import.meta.env.MODE,

@@ -1,8 +1,16 @@
 <script setup lang="ts">
-import { useSwipe } from '@vueuse/core'
+import {
+  mdiCog,
+  mdiFileDocumentOutline,
+  mdiFood,
+  mdiNewspaper,
+  mdiRss,
+  mdiTimetable,
+} from '@mdi/js'
+import { usePreferredDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import PullToRefresh from 'pulltorefreshjs'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { useDisplay, useTheme } from 'vuetify'
 
@@ -10,41 +18,22 @@ import AppSnackbar from '@/components/AppSnackbar.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
 import NavigationDesktop from '@/components/NavigationDesktop.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
+import { useSessionStore } from '@/stores/session'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
-import { useUserStore } from '@/stores/user'
 import { updateAllData } from '@/utils/update'
 
 const router = useRouter()
 const { mobile } = useDisplay()
 const theme = useTheme()
 
-const { entities, day } = storeToRefs(useUserStore())
-const userStore = useUserStore()
-const { resetEntityToSettings } = userStore
-resetEntityToSettings()
-
-const { enablePullToRefresh, themeType } = storeToRefs(useSettingsStore())
+const { currentEntityList } = storeToRefs(useSessionStore())
+const { themeType, enablePullToRefresh } = storeToRefs(useSettingsStore())
 
 const routerTitle = computed(() => router.currentRoute.value.meta.title)
-const routerName = computed(() => router.currentRoute.value.name)
-const welcome = computed(() => routerName.value === 'welcome')
-const showDayNavigation = computed(
-  () => routerName.value === 'timetable' || routerName.value === 'menu',
-)
 
-const swipe = ref(null)
-const { direction } = useSwipe(swipe)
-
-watch(direction, () => {
-  switch (direction.value) {
-    case 'left':
-      day.value = Math.min(4, day.value + 1)
-      break
-    case 'right':
-      day.value = Math.max(0, day.value - 1)
-      break
-  }
-})
+const allowPullToRefresh = computed(() => !!router.currentRoute.value.meta.allowPullToRefresh)
+const showEntityName = computed(() => !!router.currentRoute.value.meta.showEntityName)
+const showDayTabs = computed(() => !!router.currentRoute.value.meta.showDayTabs)
 
 onMounted(() => {
   PullToRefresh.init({
@@ -55,35 +44,40 @@ onMounted(() => {
     instructionsReleaseToRefresh: 'Izpustite za posodobitev',
     instructionsRefreshing: 'Posodabljanje',
 
-    shouldPullToRefresh: () => enablePullToRefresh.value && !window.scrollY,
+    shouldPullToRefresh: () =>
+      enablePullToRefresh.value && allowPullToRefresh.value && !window.scrollY,
     onRefresh: (): void => {
       updateAllData()
     },
   })
-
-  // displaySnackbar('Nova posodobitev', 'Posodobi', () => (show.value = false), -1)
-
-  // Set theme
-  if (themeType.value === ThemeType.System) {
-    theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'darkTheme'
-      : 'lightTheme'
-    return
-  }
-
-  theme.global.name.value = themeType.value
 })
 
+onUnmounted(() => {
+  PullToRefresh.destroyAll()
+})
+
+watch(
+  [themeType, usePreferredDark()],
+  ([themeType, prefersDark]) => {
+    if (themeType === ThemeType.System) {
+      theme.global.name.value = prefersDark ? 'dark' : 'light'
+    } else {
+      theme.global.name.value = themeType
+    }
+  },
+  { immediate: true },
+)
+
 const pages: { title: string; link: string; icon: string }[] = [
-  { title: 'Viri', link: 'sources', icon: 'mdi-file-document-outline' },
-  { title: 'Naročanje', link: 'subscribe', icon: 'mdi-rss' },
-  { title: 'Nastavitve', link: 'settings', icon: 'mdi-cog' },
+  { title: 'Viri', link: 'sources', icon: mdiFileDocumentOutline },
+  { title: 'Naročanje', link: 'subscribe', icon: mdiRss },
+  { title: 'Nastavitve', link: 'settings', icon: mdiCog },
 ]
 
 const navigation: { title: string; link: string; icon: string }[] = [
-  { title: 'Urnik', link: 'timetable', icon: 'mdi-timetable' },
-  { title: 'Jedilnik', link: 'menu', icon: 'mdi-food' },
-  { title: 'Okrožnice', link: 'circulars', icon: 'mdi-newspaper' },
+  { title: 'Urnik', link: 'timetable', icon: mdiTimetable },
+  { title: 'Jedilnik', link: 'menu', icon: mdiFood },
+  { title: 'Okrožnice', link: 'circulars', icon: mdiNewspaper },
 ]
 </script>
 
@@ -91,38 +85,42 @@ const navigation: { title: string; link: string; icon: string }[] = [
   <v-app>
     <v-app-bar class="pr-2">
       <v-app-bar-title>
-        <div @click="resetEntityToSettings()">{{ routerTitle }}</div>
-        <div v-if="routerName === 'timetable'" class="entities">
-          {{ entities.join(', ') }}
+        <div>{{ routerTitle }}</div>
+        <div v-if="showEntityName" class="entities">
+          {{ currentEntityList.join(', ') }}
         </div>
       </v-app-bar-title>
-      <div v-if="!welcome">
+      <div role="navigation">
         <v-btn-icon
           v-for="page in pages"
-          :key="page.title"
+          :key="page.link"
           :alt="page.title"
+          :title="page.title"
           :aria-label="page.title"
           :icon="page.icon"
           :to="{ name: page.link }"
         />
       </div>
-      <template v-if="mobile && showDayNavigation" #extension>
+      <template v-if="mobile && showDayTabs" #extension>
         <NavigationDay />
       </template>
     </v-app-bar>
-    <NavigationDesktop v-if="!mobile && !welcome" :navigation="navigation" />
-    <v-main id="main" ref="swipe">
-      <span id="ptr--target"></span>
-      <v-container fluid><router-view /></v-container>
+    <NavigationDesktop v-if="!mobile" :navigation="navigation" />
+    <v-main id="main">
+      <div id="ptr--target"></div>
+      <v-container fluid class="h-100">
+        <router-view />
+      </v-container>
     </v-main>
     <AppSnackbar />
-    <NavigationMobile v-if="mobile && !welcome" :navigation="navigation" />
+    <NavigationMobile v-if="mobile" :navigation="navigation" />
   </v-app>
 </template>
+
 <style>
 .entities {
-  font-size: 0.775rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .ptr--icon,

@@ -18,11 +18,11 @@ interface ImportMetaEnv {
   readonly VITE_CIRCULARS_PASSWORD: string
 
   readonly VITE_SENTRY_DSN: string
-  readonly VITE_SENTRY_ENABLED: string
-  readonly VITE_SENTRY_MAX_BREADCRUMBS: string
-  readonly VITE_SENTRY_TRACES_SAMPLE_RATE: string
-  readonly VITE_SENTRY_PROFILES_SAMPLE_RATE: string
-  readonly VITE_SENTRY_TRACE_PROPAGATION_TARGETS: string
+  readonly VITE_SENTRY_ENABLED: boolean
+  readonly VITE_SENTRY_MAX_BREADCRUMBS: number
+  readonly VITE_SENTRY_TRACES_SAMPLE_RATE: number
+  readonly VITE_SENTRY_PROFILES_SAMPLE_RATE: number
+  readonly VITE_SENTRY_TRACE_PROPAGATION_TARGETS: string[]
   readonly VITE_SENTRY_APPLICATION_KEY: string
   readonly VITE_SENTRY_RELEASE_PREFIX: string
   readonly VITE_SENTRY_RELEASE_SUFFIX: string

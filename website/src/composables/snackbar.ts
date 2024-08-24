@@ -6,18 +6,23 @@ export const useSnackbarStore = defineStore('snackbar', {
       show: false,
       text: '',
       buttonText: '',
-      action: () => {},
-      timeout: 2000,
+      buttonAction: () => {},
+      timeout: 4000,
     }
   },
 
   actions: {
-    displaySnackbar(text: string, buttonText?: string, action?: () => void, timeout?: number) {
-      this.show = true
+    displaySnackbar(
+      text: string,
+      buttonText?: string,
+      buttonAction?: () => void,
+      timeout?: number,
+    ) {
       this.text = text
       this.buttonText = buttonText || ''
-      this.action = action || (() => {})
-      this.timeout = timeout || 2000
+      this.buttonAction = buttonAction || (() => {})
+      this.timeout = timeout || 4000
+      this.show = true
     },
   },
 })

@@ -58,19 +58,9 @@ const aboutDialog = ref(false)
 const appVersion = import.meta.env.VITE_VERSION
 
 async function updateApp() {
-  if (
-    import.meta.env.MODE === 'production' &&
-    navigator.serviceWorker &&
-    navigator.serviceWorker.controller
-  ) {
-    // Skip service worker waiting
-    // TODO: Check if this is fine
-    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
-    await new Promise(resolve => setTimeout(resolve, 200))
-  }
-
   // Add GET parameter to invalidate the cache of the index HTML file
-  window.location.href = '/?updated=' + new Date().getTime()
+  // The service worker waiting is skipped on the next load
+  location.href = '?update=' + new Date().getTime()
 }
 </script>
 

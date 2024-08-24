@@ -3,13 +3,13 @@ import { storeToRefs } from 'pinia'
 
 import { useSnackbarStore } from '@/composables/snackbar'
 
-const { action, buttonText, show, text, timeout } = storeToRefs(useSnackbarStore())
+const { buttonAction, buttonText, show, text, timeout } = storeToRefs(useSnackbarStore())
 </script>
 
 <template>
   <v-snackbar v-model="show" :text :timeout>
     <template v-if="buttonText" #actions>
-      <v-btn :text="buttonText" @click="action" />
+      <v-btn :text="buttonText" @click="buttonAction" />
     </template>
   </v-snackbar>
 </template>

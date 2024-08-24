@@ -37,16 +37,16 @@ export async function timetableGuard(
     // We only want to replace routes if coming from home
     const replace = source.name === 'home'
 
+    // Load the stored entity from settings
+    resetEntityToSettings()
+
     if (currentEntityType.value === EntityType.None) {
       // The entity is not stored yet, show the welcome page
       return { name: 'welcome', replace }
     }
 
-    // Load the stored entity from settings
-    resetEntityToSettings()
-
     // Navigate to the correct timetable page
-    return generateTimetableRoute(currentEntityType.value, currentEntityList.value, true)
+    return generateTimetableRoute(currentEntityType.value, currentEntityList.value, replace)
   }
 
   if (route.params.value) {

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { watch } from 'vue'
-import { useTheme } from 'vuetify'
 
 import { ThemeType, useSettingsStore } from '@/stores/settings'
 import { localizeThemeType } from '@/utils/localization'
@@ -9,18 +7,6 @@ import { localizeThemeType } from '@/utils/localization'
 const dialog = defineModel<boolean>()
 
 const { themeType } = storeToRefs(useSettingsStore())
-const theme = useTheme()
-
-watch(themeType, () => {
-  if (themeType.value === ThemeType.System) {
-    theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
-    return
-  }
-
-  theme.global.name.value = themeType.value
-})
 </script>
 
 <template>

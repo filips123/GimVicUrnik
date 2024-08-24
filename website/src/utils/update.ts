@@ -21,6 +21,10 @@ export async function updateAllData(showSuccess: boolean = true): Promise<void> 
     return
   }
 
+  if (showSuccess) {
+    displaySnackbar('Posodabljanje ...')
+  }
+
   await Promise.all([
     documentsStore.updateDocuments(),
     foodStore.updateMenus(),
@@ -51,7 +55,7 @@ export async function updateWrapper(updateFunction: () => Promise<void>) {
     console.error(error)
 
     // Submit the error to Sentry if enabled
-    if (import.meta.env.VITE_SENTRY_ENABLED === 'true') captureException(error)
+    if (import.meta.env.VITE_SENTRY_ENABLED) captureException(error)
   }
 
   // Set the data version in storage

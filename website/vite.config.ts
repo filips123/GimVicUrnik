@@ -32,9 +32,14 @@ export default defineConfig(({ mode }) => {
   }
 
   const pwaConfig: Partial<VitePWAOptions & { manifest: { keywords: string[] } }> = {
+    filename: 'service-worker.js',
     manifestFilename: 'site.webmanifest',
 
-    // TODO: Configure service worker registration and updates
+    workbox: {
+      cacheId: 'gimvicurnik',
+      navigateFallback: 'index.html',
+      navigateFallbackDenylist: [/\./, /\/api(?:[/?].*)?$/, /\?update=/],
+    },
 
     manifest: {
       name: env.VITE_TITLE,
@@ -80,8 +85,8 @@ export default defineConfig(({ mode }) => {
 
     devOptions: {
       enabled: true,
-      suppressWarnings: true
-    }
+      suppressWarnings: true,
+    },
   }
 
   const plugins: PluginOption = [
@@ -117,8 +122,15 @@ export default defineConfig(({ mode }) => {
     },
 
     define: {
+      // Set environment variables about build environment
       'import.meta.env.VITE_VERSION': JSON.stringify(appVersion),
       'import.meta.env.VITE_BUILDTIME': new Date(),
+      // Convert Sentry variables to the correct types for better treeshaking
+      'import.meta.env.VITE_SENTRY_ENABLED': env.VITE_SENTRY_ENABLED === 'true',
+      'import.meta.env.VITE_SENTRY_MAX_BREADCRUMBS': parseInt(env.VITE_SENTRY_MAX_BREADCRUMBS) || 100,
+      'import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_TRACES_SAMPLE_RATE) || 0,
+      'import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_PROFILES_SAMPLE_RATE) || 0,
+      'import.meta.env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS': env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS?.split(','),
     },
 
     build: {
@@ -145,6 +157,17 @@ export default defineConfig(({ mode }) => {
             return 'assets/[name].[hash][extname]'
           },
         },
+      },
+    },
+
+    server: {
+      headers: {
+        'Document-Policy': 'js-profiling',
+      },
+    },
+    preview: {
+      headers: {
+        'Document-Policy': 'js-profiling',
       },
     },
   }
