@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
+import TimetableEmptyClassrooms from '@/components/TimetableEmptyClassrooms.vue'
 import TimetableLesson from '@/components/TimetableLesson.vue'
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
@@ -111,15 +112,7 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
                 <TimetableLesson :lesson="lesson" />
               </tr>
             </table>
-            <template v-else>
-              <template
-                v-for="(lesson, index) in lessonsTimeDay"
-                :key="`${lesson.time}-${lesson.day}-${lesson.classroom}`"
-              >
-                <template v-if="index > 0"> - </template>
-                <TimetableLesson :lesson="lesson" />
-              </template>
-            </template>
+            <TimetableEmptyClassrooms v-else :lessons="lessonsTimeDay" />
           </td>
         </template>
       </tr>

@@ -67,9 +67,8 @@ export const useTimetableStore = defineStore('timetable', {
       let substitutions: Substitution[] = []
 
       if (currentEntityType === EntityType.EmptyClassrooms) {
-        // TODO: Substitutions for empty classrooms
         timetable = state.emptyClassrooms
-        substitutions = []
+        substitutions = state.substitutions.flat()
       } else {
         for (const entity of currentEntityList) {
           // Get all base lessons that affect the current entity
@@ -107,14 +106,15 @@ export const useTimetableStore = defineStore('timetable', {
         // Find a substitution that matches with the current lesson (teacher)
         // Note that there may be multiple matching substitutions, but we only take the first one
         // This should be fine since they should be equivalent, apart from minor details
-        const substitution = showSubstitutions
-          ? substitutions.find(
-              substitution =>
-                substitution?.day === lesson.day &&
-                substitution?.time === lesson.time &&
-                substitution?.['original-teacher'] === lesson.teacher,
-            )
-          : null
+        const substitution =
+          showSubstitutions && currentEntityType !== EntityType.EmptyClassrooms
+            ? substitutions.find(
+                substitution =>
+                  substitution?.day === lesson.day &&
+                  substitution?.time === lesson.time &&
+                  substitution?.['original-teacher'] === lesson.teacher,
+              )
+            : null
 
         // Add the lesson with the optional substitution to the array
         array[lesson.time][lesson.day - 1].push({
@@ -163,7 +163,7 @@ export const useTimetableStore = defineStore('timetable', {
                 continue
               }
 
-              // We want to deduplicate substitutions that have the original teacher and displayed data
+              // We want to deduplicate substitutions based on the original teacher and displayed data
               const key = `SUBSTITUTION-${lesson.class}-${lesson.teacher}-${lesson.substitutionSubject}-${lesson.substitutionTeacher}-${lesson.substitutionClassroom}`
 
               // We want to keep the first lesson with notes if any of them has notes, otherwise the first one overall

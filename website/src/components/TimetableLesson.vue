@@ -63,18 +63,17 @@ const isEmpty = computed(() => {
 </script>
 
 <template>
-  <template v-if="currentEntityType !== EntityType.EmptyClassrooms">
-    <!-- prettier-ignore -->
-    <template v-if="!isEmpty">
-      <td>{{ subjectName }}</td>
-      <td v-if="currentEntityType !== EntityType.Class"><TimetableLessonLink v-bind="classLink" /></td>
-      <td v-if="currentEntityType !== EntityType.Teacher"><TimetableLessonLink v-bind="teacherLink" /></td>
-      <td v-if="currentEntityType !== EntityType.Classroom"><TimetableLessonLink v-bind="classroomLink" /></td>
-    </template>
-    <td v-else>/</td>
+  <template v-if="!isEmpty">
+    <td class="w-33">{{ subjectName }}</td>
+    <td v-if="currentEntityType !== EntityType.Class" class="w-33">
+      <TimetableLessonLink v-bind="classLink" />
+    </td>
+    <td v-if="currentEntityType !== EntityType.Teacher" class="w-33">
+      <TimetableLessonLink v-bind="teacherLink" />
+    </td>
+    <td v-if="currentEntityType !== EntityType.Classroom" class="w-33">
+      <TimetableLessonLink v-bind="classroomLink" />
+    </td>
   </template>
-
-  <template v-else>
-    <TimetableLessonLink v-bind="classroomLink" />
-  </template>
+  <td v-else colspan="3">/</td>
 </template>
