@@ -47,7 +47,7 @@ const timeInterval = computed(() => {
 function lessonStyles(dayIndex: number, timeIndex: number) {
   // prettier-ignore
   return {
-    'bg-surface-variation-secondary': lessons.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
+    'bg-surface-highlighted': lessons.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
     'current-time': highlightCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
   }
 }
@@ -72,14 +72,14 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
 </script>
 
 <template>
-  <v-table>
+  <v-table-main>
     <thead v-if="!daySpecific">
-      <tr class="bg-surface-variation">
+      <tr class="bg-surface-subtle text-h6">
         <th :colspan="!daySpecific && showHoursInTimetable ? 2 : 1">Ura</th>
         <th
           v-for="(weekday, index) in localizedWeekdays"
           :key="index"
-          :class="{ 'bg-primary': index === currentDay && !isWeekend }"
+          :class="{ 'bg-surface-medium': index === currentDay && !isWeekend }"
           v-text="weekday"
         />
       </tr>
@@ -89,22 +89,32 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
       <tr
         v-for="(lessonsTime, timeIndex) in lessons"
         :key="timeIndex"
-        :class="daySpecific ? lessonStyles(targetDay!, timeIndex) : null"
-        @click="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : null"
+        class="timetable-row"
+        :class="daySpecific ? lessonStyles(targetDay!, timeIndex) : undefined"
+        :tabindex="daySpecific ? 0 : undefined"
+        @click="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
+        @keydown.enter="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
       >
         <template v-if="timeIndex >= timeInterval[0] && timeIndex <= timeInterval[1]">
-          <td v-text="timeIndex === 0 ? 'PU' : timeIndex + '.'" />
+          <td class="time-number" v-text="timeIndex === 0 ? 'PU' : timeIndex + '.'" />
           <td
             v-if="!daySpecific && showHoursInTimetable"
+            class="time-range"
             v-text="lessonTimes[timeIndex].join('–')"
           />
           <td
             v-for="(lessonsTimeDay, dayIndex) in filterForTargetDay(lessonsTime)"
             :key="`${timeIndex}-${dayIndex}`"
-            :class="!daySpecific ? lessonStyles(dayIndex, timeIndex) : null"
-            @click="!daySpecific ? handleDetails(dayIndex, timeIndex, $event) : null"
+            :class="!daySpecific ? lessonStyles(dayIndex, timeIndex) : undefined"
+            :tabindex="!daySpecific ? 0 : undefined"
+            @click="!daySpecific ? handleDetails(dayIndex, timeIndex, $event) : undefined"
+            @keydown.enter="!daySpecific ? handleDetails(dayIndex, timeIndex, $event) : undefined"
           >
-            <table v-if="currentEntityType !== EntityType.EmptyClassrooms">
+            <table
+              v-if="currentEntityType !== EntityType.EmptyClassrooms"
+              role="presentation"
+              class="w-100"
+            >
               <tr
                 v-for="lesson in lessonsTimeDay"
                 :key="`${lesson.time}-${lesson.day}-${lesson.class}-${lesson.teacher}-${lesson.classroom}`"
@@ -117,5 +127,33 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
         </template>
       </tr>
     </tbody>
-  </v-table>
+  </v-table-main>
 </template>
+
+<style>
+/* Improve display timetable cells */
+
+.timetable-row > td {
+  padding: 0 !important;
+}
+
+.time-number {
+  width: min(12vw, 5rem);
+}
+
+.time-range {
+  width: 8em;
+}
+
+/* Add style for current time */
+
+.current-time {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 0, 0, 0),
+    rgba(255, 0, 0, 0) 20px,
+    rgba(var(--v-current-time-color), var(--v-current-time-opacity)) 20px,
+    rgba(var(--v-current-time-color), var(--v-current-time-opacity)) 40px
+  );
+}
+</style>

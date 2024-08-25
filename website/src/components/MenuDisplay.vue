@@ -16,13 +16,16 @@ const snackMenu = computed(() => props.menu?.snack?.[snackType.value])
 const lunchMenu = computed(() => props.menu?.lunch?.[lunchType.value])
 </script>
 
-<!-- TODO: Create custom theme colors for day card, like grey lighten 3 for light and grey darken 4 for dark -->
-
 <template>
-  <v-card v-if="!mobile" :title="localizeDay(menu.date)" :subtitle="localizeDate(menu.date)" />
-  <v-card v-if="snackMenu" title="Malica" :text="snackMenu" class="text-pre-line" />
-  <v-card v-if="lunchMenu" title="Kosilo" :text="lunchMenu" class="text-pre-line" />
-  <v-card v-if="lunchSchedules?.length" title="Razpored kosila">
+  <v-card-main
+    v-if="!mobile"
+    :title="localizeDay(menu.date)"
+    :subtitle="localizeDate(menu.date)"
+    class="bg-surface-subtle"
+  />
+  <v-card-main v-if="snackMenu" title="Malica" :text="snackMenu" />
+  <v-card-main v-if="lunchMenu" title="Kosilo" :text="lunchMenu" />
+  <v-card-main v-if="lunchSchedules?.length" title="Razpored kosila">
     <template #text>
       <div
         v-for="lunchSchedule in lunchSchedules"
@@ -34,5 +37,5 @@ const lunchMenu = computed(() => props.menu?.lunch?.[lunchType.value])
         <div v-if="lunchSchedule.notes">Opombe: {{ lunchSchedule.notes }}</div>
       </div>
     </template>
-  </v-card>
+  </v-card-main>
 </template>

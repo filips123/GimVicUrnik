@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 
-import TextAbout from '@/components/TextAbout.vue'
+import CommonAbout from '@/components/CommonAbout.vue'
 import { useSettingsStore } from '@/stores/settings'
 
 const dialog = defineModel<boolean>()
@@ -19,7 +19,7 @@ watch(dataCollectionPerformance, enabled => {
   <v-dialog v-model="dialog">
     <v-card title="Nastavite zbiranje podatkov">
       <template #text>
-        <TextAbout show-data-collection class="pb-1" />
+        <CommonAbout show-data-collection class="pb-1" />
         <v-checkbox
           v-model="dataCollectionPerformance"
           :disabled="false"

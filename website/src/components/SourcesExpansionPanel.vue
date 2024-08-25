@@ -22,18 +22,21 @@ function displayedDate(document: Document): string {
 </script>
 
 <template>
-  <v-expansion-panels v-if="documents?.length">
-    <v-expansion-panel :title>
+  <v-expansion-panels v-if="documents?.length" class="sources-panel mb-4">
+    <v-expansion-panel>
+      <template #title>
+        <span class="text-h6">{{ title }}</span>
+      </template>
       <template #text>
-        <v-list>
-          <v-list-item
-            v-for="document in documents"
-            :key="document.url"
-            :title="document.title"
-            :subtitle="displayedDate(document)"
-            :href="tokenizeUrl(document.url, moodleToken)"
-            target="_blank"
-          />
+        <v-list :aria-label="title">
+          <v-lazy v-for="document in documents" :key="document.url" height="48">
+            <v-list-item
+              :title="document.title"
+              :subtitle="displayedDate(document)"
+              :href="tokenizeUrl(document.url, moodleToken)"
+              target="_blank"
+            />
+          </v-lazy>
         </v-list>
       </template>
     </v-expansion-panel>
@@ -41,7 +44,14 @@ function displayedDate(document: Document): string {
 </template>
 
 <style>
-.v-expansion-panel-text__wrapper {
+/* Prevent expanding title height */
+
+.sources-panel .v-expansion-panel-title {
+  min-height: 48px !important;
+  padding: 0 24px !important;
+}
+
+.sources-panel .v-expansion-panel-text__wrapper {
   padding: 0 0 8px !important;
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const model = defineModel<boolean>()
 
-const { icon, messages, label, callback } = defineProps<{
+const { callback } = defineProps<{
   icon: string
   messages: string
   label: string

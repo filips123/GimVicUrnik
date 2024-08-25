@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TextAbout from '@/components/TextAbout.vue'
+import CommonAbout from '@/components/CommonAbout.vue'
 
 const dialog = defineModel<boolean>()
 </script>
@@ -8,7 +8,13 @@ const dialog = defineModel<boolean>()
   <v-dialog v-model="dialog" persistent>
     <v-card title="Urnik Gimnazije Vič">
       <template #text>
-        <TextAbout show-description show-disclaimer show-instructions show-data-collection />
+        <CommonAbout
+          show-description
+          show-disclaimer
+          show-instructions
+          show-data-collection
+          show-feedback
+        />
       </template>
       <template #actions>
         <v-btn text="V redu" @click="dialog = false" />

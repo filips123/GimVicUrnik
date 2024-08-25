@@ -47,15 +47,3 @@ const touchOptions = {
 
   <TimetableDetails v-model="detailsDialog" v-bind="detailsProps" />
 </template>
-
-<style>
-.current-time {
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 0, 0, 0),
-    rgba(255, 0, 0, 0) 20px,
-    rgba(var(--v-theme-current-time), var(--v-current-time-opacity)) 20px,
-    rgba(var(--v-theme-current-time), var(--v-current-time-opacity)) 40px
-  );
-}
-</style>

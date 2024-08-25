@@ -56,6 +56,8 @@ export async function updateWrapper(updateFunction: () => Promise<void>) {
 
     // Submit the error to Sentry if enabled
     if (import.meta.env.VITE_SENTRY_ENABLED) captureException(error)
+
+    return
   }
 
   // Set the data version in storage

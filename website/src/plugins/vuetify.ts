@@ -1,238 +1,160 @@
-import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
+
 import type { ThemeDefinition } from 'vuetify'
 import { createVuetify } from 'vuetify'
-import {
-  VApp,
-  VAppBar,
-  VAppBarTitle,
-  VBottomNavigation,
-  VBtn,
-  VCard,
-  VCardText,
-  VCheckbox,
-  VCol,
-  VContainer,
-  VDialog,
-  VDivider,
-  VExpansionPanel,
-  VExpansionPanels,
-  VInput,
-  VList,
-  VListItem,
-  VMain,
-  VNavigationDrawer,
-  VRadio,
-  VRadioGroup,
-  VRow,
-  VSheet,
-  VSnackbar,
-  VSwitch,
-  VTab,
-  VTable,
-  VTabs,
-  VTextField,
-  VVirtualScroll,
-} from 'vuetify/components'
-import 'vuetify/styles'
+import { VBtn, VCard, VDivider, VSheet, VTable } from 'vuetify/components'
+import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
+import { sl } from 'vuetify/locale'
 
 const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
-    primary: '#369d36',
-    'primary-variant': '#009300',
-    background: '#ffffff',
-    text: '#000000',
-    navigation: '#ffffff',
-    surface: '#ffffff',
-    'surface-variation': '#f6f6f6',
-    'surface-variation-secundary': '#eeeeee',
-    'on-surface': '#121212',
-    'current-time': '#369d36',
+    primary: '#008800',
+    'primary-variant': '#007700',
+    'surface-subtle': '#f6f6f6',
+    'surface-medium': '#e6e6e6',
+    'surface-highlighted': '#efefef',
   },
   variables: {
-    'disabled-opacity': 0.2,
+    'app-subtitle-opacity': 0.8,
+    'card-subtitle-opacity': 0.8,
+    'current-time-color': '#369d36',
     'current-time-opacity': 0.1,
+    'overlay-color': '#000000',
+    'overlay-opacity': 0.42,
   },
 }
 
 const darkTheme: ThemeDefinition = {
   dark: true,
   colors: {
-    primary: '#009300',
+    primary: '#008800',
     'primary-variant': '#369d36',
-    background: '#121212',
-    text: '#ffffff',
-    navigation: '#363636',
-    surface: '#1e1e1e',
-    'surface-variation': '#222222',
-    'surface-variation-secundary': '#303030',
-    'on-surface': '#121212',
-    'current-time': '#121212',
+    'surface-subtle': '#1c1c1c',
+    'surface-medium': '#262626',
+    'surface-highlighted': '#2c2c2c',
   },
   variables: {
-    'disabled-opacity': 0.2,
-    'current-time-opacity': 0.7,
+    'app-subtitle-opacity': 0.8,
+    'card-subtitle-opacity': 0.8,
+    'current-time-color': '#121212',
+    'current-time-opacity': 0.4,
+    'overlay-color': '#121212',
+    'overlay-opacity': 0.48,
   },
 }
 
 const vuetify = createVuetify({
   icons: {
     defaultSet: 'mdi',
+    aliases,
+    sets: { mdi },
   },
+
   theme: {
-    defaultTheme: 'lightTheme',
+    defaultTheme: 'light',
     themes: {
-      lightTheme,
-      darkTheme,
+      light: lightTheme,
+      dark: darkTheme,
     },
   },
+
+  locale: {
+    locale: 'sl',
+    messages: { sl },
+  },
+
   aliases: {
     VDividerSettings: VDivider,
-    VListItemSwitch: VListItem,
     VBtnIcon: VBtn,
     VBtnSubscribe: VBtn,
-    VCardTextSelection: VCardText,
     VColumn: VSheet,
+    VTableMain: VTable,
+    VCardMain: VCard,
   },
+
   defaults: {
+    // Global
+
+    global: {
+      hideDetails: 'auto',
+    },
+
     // Aliases
+
     VDividerSettings: {
       class: 'my-6',
-    },
-    VListItemSwitch: {
-      class: 'pa-0 my-1',
     },
     VBtnIcon: {
       color: 'inherit',
       variant: 'text',
     },
     VBtnSubscribe: {
-      class: 'text-primary-variant pa-0',
+      color: 'primary-variant',
+      class: 'px-1 ms-n1 me-2',
       variant: 'text',
-    },
-    VCardTextSelection: {
-      class: 'pa-0',
     },
     VColumn: {
       class: 'bg-background mx-auto',
       style: 'max-width: 35rem;',
     },
+    VTableMain: {
+      class: 'elevation-light rounded',
+    },
+    VCardMain: {
+      class: 'elevation-light rounded mb-2 text-pre-line',
+    },
 
     // Defaults
+
     VAppBar: {
       color: 'primary',
     },
     VSwitch: {
       color: 'primary-variant',
     },
+    VCheckbox: {
+      color: 'primary-variant',
+    },
+    VRadioGroup: {
+      color: 'primary-variant',
+    },
     VTextField: {
       color: 'primary-variant',
-      class: 'text-uppercase',
-    },
-    VListItem: {
-      class: 'text-text',
-    },
-    VExpansionPanel: {
-      class: 'text-text',
-    },
-    VBottomNavigation: {
-      class: 'bg-navigation',
-    },
-    VNavigationDrawer: {
-      class: 'bg-navigation',
-    },
-    VTable: {
-      class: 'text-text elevation-2',
-    },
-    VContainer: {
-      class: 'px-4 pt-4 pb-2',
-    },
-    VCard: {
-      class: 'text-text mx-2 mb-2',
-      style: 'white-space: pre-line;',
-    },
-    VExpansionPanels: {
-      style: 'margin: 16px auto; max-width: 40rem;',
-    },
-    VExpansionPanelTitle: {
-      style: 'line-height: 1rem; min-height: 48px; padding: 0 16px;',
-    },
-    VSnackbar: {
-      style: 'margin-bottom: 60px; min-width: 200px;',
     },
     VDialog: {
-      width: '25rem',
+      width: '50rem',
       scrollable: true,
-      VCard: {
-        class: 'elevation-10 text-text',
-      },
       VCardItem: {
         class: 'bg-primary pa-3',
       },
       VCardTitle: {
-        class: 'text-uppercase',
-        style: 'white-space: normal;',
+        class: 'text-wrap',
+        style: 'font-size: 1.15rem;',
       },
       VCardSubtitle: {
-        style: 'white-space: normal;',
+        class: 'text-wrap',
       },
       VCardText: {
         class: 'pa-4',
       },
       VCardActions: {
-        class: 'justify-end bg-surface-variation',
+        class: 'justify-end bg-surface-subtle',
       },
       VCheckbox: {
-        color: 'primary-variant',
         class: 'pa-0',
       },
       VCheckboxBtn: {
         style: '--v-input-control-height: 0px;',
       },
-      VBtn: {
-        class: 'text-primary-variant',
-        variant: 'text',
-      },
       VRadioGroup: {
-        color: 'primary-variant',
         class: 'pa-0',
       },
-      VDivider: {
-        class: 'my-3',
+      VBtn: {
+        color: 'primary-variant',
+        variant: 'text',
       },
     },
-  },
-  components: {
-    VApp,
-    VAppBar,
-    VAppBarTitle,
-    VBottomNavigation,
-    VBtn,
-    VCard,
-    VCardText,
-    VCheckbox,
-    VCol,
-    VContainer,
-    VDialog,
-    VDivider,
-    VExpansionPanel,
-    VExpansionPanels,
-    VInput,
-    VList,
-    VListItem,
-    VMain,
-    VNavigationDrawer,
-    VRadio,
-    VRadioGroup,
-    VRow,
-    VSnackbar,
-    VSwitch,
-    VTab,
-    VTable,
-    VTabs,
-    VTextField,
-    VVirtualScroll,
-    VSheet,
   },
 })
 

@@ -2,7 +2,7 @@
 import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
 import { ref } from 'vue'
 
-const { navigation } = defineProps<{
+defineProps<{
   navigation: { title: string; link: string; icon: string }[]
 }>()
 
@@ -10,8 +10,8 @@ const rail = ref(true)
 </script>
 
 <template>
-  <v-navigation-drawer :rail>
-    <v-list class="pt-0" tabindex="-2">
+  <v-navigation-drawer :rail class="d-print-none">
+    <v-list class="pt-0" tabindex="-2" aria-label="Navigacija">
       <v-list-item
         v-for="page in navigation"
         :key="page.link"

@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 
 import { useSettingsStore } from '@/stores/settings'
 
-const { linkType, linkValue } = defineProps<{
+defineProps<{
   linkType: string
   linkValue: string | null
 }>()
@@ -15,7 +15,7 @@ const { showLinksInTimetable } = storeToRefs(useSettingsStore())
   <router-link
     v-if="showLinksInTimetable && linkValue"
     :to="{ name: 'timetable', params: { type: linkType, value: linkValue } }"
-    class="text-primary-variant text-decoration-none"
+    class="text-decoration-none"
     >{{ linkValue }}</router-link
   >
   <template v-else>{{ linkValue }}</template>

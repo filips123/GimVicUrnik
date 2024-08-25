@@ -85,10 +85,8 @@ const navigation: { title: string; link: string; icon: string }[] = [
   <v-app>
     <v-app-bar class="pr-2">
       <v-app-bar-title>
-        <div>{{ routerTitle }}</div>
-        <div v-if="showEntityName" class="entities">
-          {{ currentEntityList.join(', ') }}
-        </div>
+        <h1 class="app-title">{{ routerTitle }}</h1>
+        <div v-if="showEntityName" class="app-subtitle">{{ currentEntityList.join(', ') }}</div>
       </v-app-bar-title>
       <div role="navigation">
         <v-btn-icon
@@ -99,6 +97,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
           :aria-label="page.title"
           :icon="page.icon"
           :to="{ name: page.link }"
+          class="ml-1"
         />
       </div>
       <template v-if="mobile && showDayTabs" #extension>
@@ -112,19 +111,29 @@ const navigation: { title: string; link: string; icon: string }[] = [
         <router-view />
       </v-container>
     </v-main>
-    <AppSnackbar />
     <NavigationMobile v-if="mobile" :navigation="navigation" />
+    <AppSnackbar />
   </v-app>
 </template>
 
 <style>
-.entities {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
+/* Set styles for app title and subtitle */
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.0125em;
 }
+
+.app-subtitle {
+  font-size: 0.9rem;
+  color: rgba(var(--v-theme-on-primary), var(--v-app-subtitle-opacity));
+}
+
+/* Fix pull to refresh colors in dark theme */
 
 .ptr--icon,
 .ptr--text {
-  color: rgb(var(--v-theme-text)) !important;
+  color: rgb(var(--v-theme-on-background)) !important;
 }
 </style>

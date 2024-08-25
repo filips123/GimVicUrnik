@@ -2,12 +2,12 @@ import { EntityType, LunchType, MenuType, SnackType, ThemeType } from '@/stores/
 
 // Day Localization
 
-export function localizeDay(date: string): string {
+export function localizeDay(date: string | Date): string {
   const day = new Date(date).toLocaleDateString('sl', { weekday: 'long' })
   return day.charAt(0).toUpperCase() + day.slice(1)
 }
 
-export function localizeDate(date: string): string {
+export function localizeDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('sl')
 }
 

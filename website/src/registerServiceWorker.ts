@@ -4,19 +4,19 @@ import type { Router } from 'vue-router'
 import { useSnackbarStore } from '@/composables/snackbar'
 
 export default function registerServiceWorker(router: Router) {
-  const { displaySnackbar } = useSnackbarStore()
-
   const searchParams = new URLSearchParams(location.search)
   let immediatelyUpdate = false
 
   if (searchParams.has('update')) {
     // Display a message while updating the service worker
+    const { displaySnackbar } = useSnackbarStore()
     displaySnackbar('Posodabljanje ...')
     immediatelyUpdate = true
   }
 
   if (searchParams.has('updating')) {
     // Display a success message if the app was updated
+    const { displaySnackbar } = useSnackbarStore()
     displaySnackbar('Aplikacija posodobljena')
     router.replace(location.pathname)
   }
@@ -46,6 +46,7 @@ export default function registerServiceWorker(router: Router) {
       } else {
         // Prompt the user to update the service worker
         console.log('New content is available, prompting the user to refresh...')
+        const { displaySnackbar } = useSnackbarStore()
         displaySnackbar('Na voljo je posodobitev', 'Posodobi', performUpdate, -1)
       }
     },

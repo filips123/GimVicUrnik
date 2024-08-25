@@ -66,6 +66,25 @@ export default function registerSentry(app: App, router: Router) {
     if (profilesSampleRate) integrations.push(browserProfilingIntegration())
   }
 
+  // Track only base components for performance
+  const trackedComponents = [
+    'Root',
+    'VApp',
+    'VMain',
+    'VAppBar',
+    'NavigationDesktop',
+    'NavigationMobile',
+    'NavigationDay',
+    'ViewTimetable',
+    'ViewMenu',
+    'ViewCirculars',
+    'ViewSources',
+    'ViewSubscribe',
+    'ViewSettings',
+    'ViewWelcome',
+    'NotFound',
+  ]
+
   // Init the Sentry SDK
   sentryInit({
     app,
@@ -81,7 +100,7 @@ export default function registerSentry(app: App, router: Router) {
     release: releasePrefix + import.meta.env.VITE_VERSION + releaseSuffix,
 
     autoSessionTracking: dataCollectionPerformance,
-    trackComponents: dataCollectionPerformance,
+    trackComponents: dataCollectionPerformance ? trackedComponents : false,
 
     integrations,
   })
@@ -115,6 +134,21 @@ export default function registerSentry(app: App, router: Router) {
       'Snack Type': settingsStore.snackType,
       'Lunch Type': settingsStore.lunchType,
     }
+
+    // Add tags based on user settings
+
+    event.tags['settings.show_substitutions'] = settingsStore.showSubstitutions
+    event.tags['settings.show_links_in_timetable'] = settingsStore.showLinksInTimetable
+    event.tags['settings.show_hours_in_timetable'] = settingsStore.showHoursInTimetable
+    event.tags['settings.highlight_current_time'] = settingsStore.highlightCurrentTime
+    event.tags['settings.enable_lesson_details'] = settingsStore.enableLessonDetails
+    event.tags['settings.enable_pull_to_refresh'] = settingsStore.enablePullToRefresh
+    event.tags['settings.has_moodle_token'] = !!settingsStore.moodleToken
+    event.tags['settings.has_circulars_password'] = !!settingsStore.circularsPassword
+    event.tags['settings.type.theme'] = settingsStore.themeType
+    event.tags['settings.type.entity'] = settingsStore.entityType
+    event.tags['settings.type.snack'] = settingsStore.snackType
+    event.tags['settings.type.lunch'] = settingsStore.lunchType
 
     // Add tags based on a few relevant media queries
 

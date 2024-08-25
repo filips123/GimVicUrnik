@@ -18,7 +18,6 @@ function closeDialog() {
   dialog.value = false
 
   if (circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD) {
-    displaySnackbar('Geslo je pravilno')
     callback.value = true
   } else if (circularsPassword.value !== '') {
     displaySnackbar('Geslo je napačno')

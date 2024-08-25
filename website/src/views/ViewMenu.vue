@@ -41,12 +41,14 @@ const touchOptions = {
     </v-window-item>
   </v-window>
 
-  <v-row v-else no-gutters>
-    <v-col v-for="(menu, dayIndex) in menus" :key="dayIndex">
-      <MenuDisplay
-        :menu="menu"
-        :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])"
-      />
-    </v-col>
-  </v-row>
+  <template v-else>
+    <v-row class="v-row--medium">
+      <v-col v-for="(menu, dayIndex) in menus" :key="dayIndex">
+        <MenuDisplay
+          :menu="menu"
+          :lunch-schedules="entitiesLunchSchedules(lunchSchedules[dayIndex])"
+        />
+      </v-col>
+    </v-row>
+  </template>
 </template>

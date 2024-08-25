@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const checked = defineModel<boolean>()
-const { label } = defineProps<{ label: string }>()
+defineProps<{ label: string }>()
 </script>
 
 <template>
@@ -14,6 +14,8 @@ const { label } = defineProps<{ label: string }>()
 </template>
 
 <style>
+/* Use consistent switch heights */
+
 .settings-base-switch .v-selection-control {
   min-height: unset;
 }

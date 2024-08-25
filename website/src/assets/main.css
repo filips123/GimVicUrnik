@@ -1,21 +1,23 @@
-@import './base.css';
+/* Hide scrollbar that Vuetify adds by default */
 
-#app {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-
-  font-weight: normal;
+html {
+  overflow-y: auto !important;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+#app,
+.v-bottom-navigation__content {
+  width: 100vw !important;
 }
 
-/* Default tags */
+/* Disable native pull-to-refresh and elastic/bounce scrolling */
+
+html,
+body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
+/* Style default tags */
 
 th,
 td {
@@ -24,24 +26,116 @@ td {
 
 a {
   color: rgb(var(--v-theme-primary-variant));
+  text-decoration: none;
 }
 
 p {
-  padding: 3px 0px;
+  padding: 0 0 6px;
+}
+
+ol,
+ul {
+  padding-bottom: 10px;
 }
 
 li {
   margin-left: 25px;
 }
 
-/* Vuetify overrides */
+/* Add custom elevation style */
 
-.v-dialog > .v-overlay__content {
-  max-height: calc(100% - 140px) !important;
-  max-width: calc(100% - 10px) !important;
+.elevation-light {
+  box-shadow:
+    0 1px 1px 0 var(--v-shadow-key-penumbra-opacity, rgba(0, 0, 0, 0.14)),
+    0 1px 3px 0 var(--v-shadow-key-ambient-opacity, rgba(0, 0, 0, 0.12)) !important;
 }
 
-.v-text-field > .v-input__details,
-.v-checkbox > .v-input__details {
-  display: none;
+/* Add custom row density */
+
+.v-row + .v-row--medium {
+  margin-top: 8px !important;
+}
+
+.v-row--medium {
+  margin: -8px !important;
+}
+
+.v-row--medium > .v-col,
+.v-row--medium > [class*='v-col-'] {
+  padding: 8px !important;
+}
+
+/* Fix shadows in tab windows being cut off */
+
+.v-container {
+  overflow: hidden !important;
+}
+
+.v-window {
+  overflow: visible !important;
+}
+
+/* Fix incorrect shadow color for dialogs */
+
+.v-overlay__scrim {
+  background: rgb(var(--v-overlay-color)) !important;
+}
+
+/* Disable unnecessary Vuetify transitions */
+
+.v-card,
+.v-table,
+.v-table > .v-table__wrapper > table > tbody > tr > td,
+.v-table > .v-table__wrapper > table > tbody > tr > th,
+.v-table > .v-table__wrapper > table > thead > tr > td,
+.v-table > .v-table__wrapper > table > thead > tr > th,
+.v-table > .v-table__wrapper > table > tfoot > tr > td,
+.v-table > .v-table__wrapper > table > tfoot > tr > th {
+  transition: none !important;
+}
+
+/* Change dynamic dialog size */
+
+.v-dialog > .v-overlay__content {
+  max-height: calc(100% - 150px) !important;
+  max-width: calc(100% - 20px) !important;
+}
+
+/* Make dialog labels clickable everywhere */
+
+.v-dialog .v-label--clickable {
+  width: 100%;
+}
+
+/* Reverse switch and label */
+
+.v-switch {
+  .v-selection-control {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+
+    .v-selection-control__wrapper {
+      margin-right: 0;
+    }
+
+    .v-label {
+      padding: 0 8px 0 0;
+      opacity: 1;
+      flex: 1;
+    }
+  }
+}
+
+/* Improve styles on print mode */
+
+@media print {
+  #main {
+    --v-layout-left: 0 !important;
+    --v-layout-right: 0 !important;
+    --v-layout-bottom: 0 !important;
+  }
+
+  .v-tab--selected {
+    font-weight: bold !important;
+  }
 }

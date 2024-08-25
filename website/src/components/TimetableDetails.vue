@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 
 import type { MergedLesson } from '@/stores/timetable'
-import { localizedWeekdays } from '@/utils/localization'
+import { getCurrentDate } from '@/utils/days'
+import { localizeDate, localizedWeekdays } from '@/utils/localization'
 import { lessonTimes } from '@/utils/times'
 
 const dialog = defineModel<boolean>()
@@ -11,8 +12,14 @@ const props = defineProps<{ day: number; time: number; lessons: MergedLesson[] }
 const lessonDay = computed(() => localizedWeekdays[props.day])
 const lessonDuration = computed(() => lessonTimes[props.time].join('–'))
 
+const lessonDate = computed(() => {
+  const currentDate = getCurrentDate()
+  currentDate.setDate(currentDate.getDate() - currentDate.getDay() + props.day + 1)
+  return localizeDate(currentDate)
+})
+
 const title = computed(() => (props.time ? `${props.time}. ura` : 'Predura'))
-const subtitle = computed(() => `${lessonDay.value}, ${lessonDuration.value}`)
+const subtitle = computed(() => `${lessonDay.value}, ${lessonDate.value}, ${lessonDuration.value}`)
 
 const substitutions = computed(() => props.lessons.filter(lesson => lesson.isSubstitution))
 
@@ -25,8 +32,6 @@ function displayDifferent(value1: string | null, value2: string | null): string 
 }
 </script>
 
-<!-- TODO: Styling -->
-
 <template>
   <v-dialog v-model="dialog">
     <v-card :title :subtitle>
@@ -34,10 +39,10 @@ function displayDifferent(value1: string | null, value2: string | null): string 
         <div
           v-for="(substitution, index) in substitutions"
           :key="index"
-          :class="{ 'mb-3': index !== substitutions.length - 1 }"
+          :class="{ 'mb-4': index !== substitutions.length - 1 }"
         >
           <!-- prettier-ignore -->
-          <v-list dense class="lesson-details">
+          <v-list dense class="lesson-details pa-0">
             <v-list-item class="px-0">
               <v-list-item-title>Razred</v-list-item-title>
               <v-list-item-subtitle>{{ substitution.class }}</v-list-item-subtitle>
@@ -69,6 +74,8 @@ function displayDifferent(value1: string | null, value2: string | null): string 
 </template>
 
 <style>
+/* Improve display of lesson details */
+
 .lesson-details .v-list-item-title {
   max-width: 5rem;
 }

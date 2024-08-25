@@ -148,7 +148,14 @@ export default defineConfig(({ mode }) => {
 
           // Split assets into directory per type for easier server config
           entryFileNames: 'js/[name].[hash].js',
-          chunkFileNames: 'js/[name].[hash].js',
+          chunkFileNames: ({ name }) => {
+            name =
+              name.endsWith('.vue_vue_type_style_index_0_lang') ||
+              name.endsWith('.vue_vue_type_script_setup_true_lang')
+                ? name.substring(0, name.lastIndexOf('.'))
+                : name
+            return `js/${name}.[hash].js`
+          },
           assetFileNames: ({ name }) => {
             const extension = name!.split('.').at(1)
             if (extension === 'css') return 'css/[name].[hash][extname]'
