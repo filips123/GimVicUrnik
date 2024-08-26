@@ -264,7 +264,7 @@ class CalendarHandler(BaseHandler):
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
                 config.lessonTimes,
-                f"Koledar - {', '.join(classes)} - Gimnazija Vič",
+                f"Koledar \u2013 {', '.join(classes)} \u2013 Gimnazija Vič",
                 config.urls.api + request.path,
             )
 
@@ -274,7 +274,7 @@ class CalendarHandler(BaseHandler):
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
                 config.lessonTimes,
-                f"Urnik - {', '.join(classes)} - Gimnazija Vič",
+                f"Urnik \u2013 {', '.join(classes)} \u2013 Gimnazija Vič",
                 config.urls.api + request.path,
                 include_substitutions=False,
             )
@@ -285,7 +285,7 @@ class CalendarHandler(BaseHandler):
                 Class.get_substitutions(None, classes),
                 Class.get_lessons(classes),
                 config.lessonTimes,
-                f"Nadomeščanja - {', '.join(classes)} - Gimnazija Vič",
+                f"Nadomeščanja \u2013 {', '.join(classes)} \u2013 Gimnazija Vič",
                 config.urls.api + request.path,
                 include_timetable=False,
             )
@@ -297,6 +297,6 @@ class CalendarHandler(BaseHandler):
                 .join(Class)
                 .filter(Class.name.in_(classes))
                 .order_by(LunchSchedule.time, LunchSchedule.class_),
-                f"Razporedi kosila - {', '.join(classes)} - Gimnazija Vič",
+                f"Razporedi kosila \u2013 {', '.join(classes)} \u2013 Gimnazija Vič",
                 config.urls.api + request.path,
             )

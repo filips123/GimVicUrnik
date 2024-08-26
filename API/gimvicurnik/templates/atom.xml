@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:webfeeds="http://webfeeds.org/rss/1.0">
-  <title>{{ name }} - Gimnazija Vič</title>
-  <subtitle>{{ name }} - Gimnazija Vič</subtitle>
+  <title>{{ name }} – Gimnazija Vič</title>
+  <subtitle>{{ name }} – Gimnazija Vič</subtitle>
   <id>{{ urls.api }}/feed/{{ type }}.atom</id>
   <updated>{{ last_updated.strftime("%Y-%m-%dT%H:%M:%SZ") }}</updated>
 
