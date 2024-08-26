@@ -9,6 +9,7 @@ import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 import { version as appVersion } from './package.json'
+import ApachePreload from './plugins/preload'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -89,11 +90,23 @@ export default defineConfig(({ mode }) => {
     },
   }
 
+  // Preload resources for each view to improve performance
+  const preloadConfig = {
+    '^/$': 'src/views/ViewTimetable.vue',
+    '^/timetable(?:\\/)?': 'src/views/ViewTimetable.vue',
+    '^/menu$': 'src/views/ViewMenu.vue',
+    '^/circulars$': 'src/views/ViewCirculars.vue',
+    '^/sources$': 'src/views/ViewSources.vue',
+    '^/subscribe$': 'src/views/ViewSubscribe.vue',
+    '^/settings$': 'src/views/ViewSettings.vue',
+  }
+
   const plugins: PluginOption = [
     Vue(vueConfig),
     Vuetify(),
     Html(htmlConfig),
     VitePWA(pwaConfig),
+    ApachePreload(preloadConfig)
   ]
 
   // Upload sourcemaps for the current release to Sentry if enabled
@@ -135,6 +148,7 @@ export default defineConfig(({ mode }) => {
 
     build: {
       sourcemap: true,
+      manifest: true,
       rollupOptions: {
         output: {
           // Use Webpack prefix for easier matching
