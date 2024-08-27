@@ -16,12 +16,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Configure Poetry cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -32,7 +35,7 @@ jobs:
           restore-keys: ${{ runner.os }}-poetry-
 
       - name: Configure Yarn cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/yarn
@@ -52,9 +55,9 @@ jobs:
           echo "~/.local/bin" >> $GITHUB_PATH
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Prepare the SSH configuration
         run: |
@@ -66,7 +69,7 @@ jobs:
           ssh urnik "whoami"
 
       - name: Download the project configuration
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ secrets.CONFIG_REPOSITORY_NAME }}
           ssh-key: ${{ secrets.CONFIG_REPOSITORY_PRIVATE_KEY }}
@@ -90,8 +93,7 @@ jobs:
         run: |
           cd website
           cp -r ../configuration/frontend/. .
-          yarn version --no-git-tag-version --new-version "$VERSION"
-          yarn install --frozen-lockfile
+          yarn version "$VERSION"
           yarn build
         env:
           SENTRY_UPLOAD_SOURCEMAPS: true
