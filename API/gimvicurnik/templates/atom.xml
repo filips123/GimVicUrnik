@@ -8,7 +8,7 @@
 
   <link href="{{ urls.api }}/feed/{{ type }}.atom" rel="self" type="application/atom+xml" />
   <link href="{{ urls.api }}/feed/{{ type }}.rss" rel="alternate" type="application/rss+xml" />
-  <link href="{{ urls.website }}/documents" rel="alternate" type="text/html" />
+  <link href="{{ urls.website }}/{{ page }}" rel="alternate" type="text/html" />
 
   <icon>{{ urls.website }}/img/icons/android-chrome-192x192.png</icon>
   <webfeeds:icon>{{ urls.website }}/img/icons/android-chrome-192x192.png</webfeeds:icon>

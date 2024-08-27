@@ -4,16 +4,16 @@
   <channel>
     <title>{{ name }} – Gimnazija Vič</title>
     <description>{{ name }} – Gimnazija Vič</description>
-    <link>{{ urls.website }}/documents</link>
+    <link>{{ urls.website }}/{{ page }}</link>
     <lastBuildDate>{{ last_updated.strftime("%a, %d %b %Y %H:%M:%S GMT") }}</lastBuildDate>
 
     <atom:link href="{{ urls.api }}/feed/{{ type }}.rss" rel="self" type="application/rss+xml" />
     <atom:link href="{{ urls.api }}/feed/{{ type }}.atom" rel="alternate" type="application/atom+xml" />
-    <atom:link href="{{ urls.website }}/documents" rel="alternate" type="text/html" />
+    <atom:link href="{{ urls.website }}/{{ page }}" rel="alternate" type="text/html" />
 
     <image>
       <title>{{ name }} – Gimnazija Vič</title>
-      <link>{{ urls.website }}/documents</link>
+      <link>{{ urls.website }}/{{ page }}</link>
       <url>{{ urls.website }}/img/icons/android-chrome-192x192.png</url>
     </image>
     <webfeeds:icon>{{ urls.website }}/img/icons/android-chrome-192x192.png</webfeeds:icon>
