@@ -68,21 +68,21 @@ export default function registerSentry(app: App, router: Router) {
 
   // Track only base components for performance
   const trackedComponents = [
-    'Root',
-    'VApp',
-    'VMain',
-    'VAppBar',
-    'NavigationDesktop',
-    'NavigationMobile',
-    'NavigationDay',
-    'ViewTimetable',
-    'ViewMenu',
-    'ViewCirculars',
-    'ViewSources',
-    'ViewSubscribe',
-    'ViewSettings',
-    'ViewWelcome',
-    'NotFound',
+    '<VApp>',
+    '<VAppBar>',
+    '<VMain>',
+    '<RouterView>',
+    '<NavigationDesktop>',
+    '<NavigationMobile>',
+    '<NavigationDay>',
+    '<ViewTimetable>',
+    '<ViewMenu>',
+    '<ViewCirculars>',
+    '<ViewSources>',
+    '<ViewSubscribe>',
+    '<ViewSettings>',
+    '<ViewWelcome>',
+    '<NotFound>',
   ]
 
   // Init the Sentry SDK
