@@ -19,9 +19,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path ../.gitignore --fix .",
+    "lint": "eslint --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path ../.gitignore .",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
-    "format": "prettier --write src"
+    "format": "prettier src plugins ${0:- --check}"
   },
   "packageManager": "yarn@4.3.1",
   "dependencies": {
