@@ -32,7 +32,7 @@ export function localizeSelectEntityTitle(entityType: EntityType) {
   switch (entityType) {
     case EntityType.Class:
     case EntityType.None:
-      return 'Izberite razred'
+      return 'Izberite razred in izbirne predmete'
     case EntityType.Teacher:
       return 'Izberite profesorje'
     case EntityType.Classroom:

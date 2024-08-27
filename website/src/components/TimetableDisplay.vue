@@ -142,7 +142,7 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
 }
 
 .time-range {
-  width: 8em;
+  width: min(12vw, 7rem);
 }
 
 /* Add style for current time */

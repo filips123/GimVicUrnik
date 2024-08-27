@@ -59,6 +59,10 @@ const vuetify = createVuetify({
     },
   },
 
+  display: {
+    mobileBreakpoint: 1174,
+  },
+
   locale: {
     locale: 'sl',
     messages: { sl },
