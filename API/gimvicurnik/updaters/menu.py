@@ -43,11 +43,13 @@ class MenuUpdater(BaseMultiUpdater):
         try:
             response = self.requests.get(self.config.url)
             response.raise_for_status()
+        except OSError as error:
+            raise MenuApiError("Error while downloading menu index") from error
 
+        try:
             soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")
-
-        except (OSError, ParserRejectedMarkup) as error:
-            raise MenuApiError("Error while downloading or parsing menu index") from error
+        except ParserRejectedMarkup as error:
+            raise MenuApiError("Error while parsing menu index") from error
 
         menus = soup.find_all("li", {"class": "jedilnik"})
 

@@ -9,6 +9,10 @@ sources:
     course: 118
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
+  solsis:
+    url: https://solsis.gimvic.org/
+    serverName: solsis.gimvic.org
+    apiKey: YOUR-API-KEY-HERE
 
 urls:
   website: https://urnik.gimvic.org

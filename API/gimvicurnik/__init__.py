@@ -24,6 +24,7 @@ from .commands import (
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
+    update_solsis_command,
     cleanup_database_command,
     update_timetable_command,
 )
@@ -246,6 +247,7 @@ class GimVicUrnik:
         self.app.cli.add_command(update_timetable_command)
         self.app.cli.add_command(update_eclassroom_command)
         self.app.cli.add_command(update_menu_command)
+        self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)
         self.app.cli.add_command(create_database_command)
 

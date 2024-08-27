@@ -44,10 +44,18 @@ class ConfigSourcesMenu:
 
 
 @define(kw_only=True)
+class ConfigSourcesSolsis:
+    url: str
+    serverName: str
+    apiKey: str
+
+
+@define(kw_only=True)
 class ConfigSources:
     timetable: ConfigSourcesTimetable
     eclassroom: ConfigSourcesEClassroom
     menu: ConfigSourcesMenu
+    solsis: ConfigSourcesSolsis
 
 
 # --------- URLS CONFIG ---------

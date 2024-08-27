@@ -29,7 +29,7 @@ You will also need to install [one of SQLAlchemy dialects](https://docs.sqlalche
 
 GimVičUrnik API uses YAML file for configuration. Example file can be found at [`config.yaml.sample`](config.yaml.sample). You can also see default values and the schema [in the source code](gimvicurnik/config/__init__.py). If you don't plan to use Sentry, you can delete its section entirely. Logging section will by default display INFO or higher log levels to stdout, but you can also delete or change it if you don't want that.
 
-You need to obtain the e-classroom token as specified in the [Moodle Forum Discussion](https://moodle.org/mod/forum/discuss.php?d=193857).
+You need to obtain the e-classroom token as specified in the [Moodle Forum Discussion](https://moodle.org/mod/forum/discuss.php?d=193857). To run Solsis updater, you will also need Solsis API token. If you don't have one, you can use the e-classroom updater with the parse substitutions option instead, to parse substitution from PDF files.
 
 It is recommended to set the configuration file as `GIMVICURNIK_CONFIG` environment variable, but setting `--config` argument also mostly works.
 
@@ -42,8 +42,9 @@ You need to run `gimvicurnik create-database` to create all required database ta
 Data need to be fetched and updated in separate commands from the web server. Most likely you want to execute them periodically in a cron job.
 
 * `gimvicurnik update-timetable`: Update the timetable data
-* `gimvicurnik update-eclassroom`: Update the e-classroom data (substitutions, lunch schedule, circulars)
+* `gimvicurnik update-eclassroom`: Update the e-classroom data (~~substitutions~~, lunch schedules, circulars)
 * `gimvicurnik update-menu`: Update the menu data (snack and lunch menu)
+* `gimvicurnik update-solsis`: Update the Solsis data (substitutions)
 
 ### Starting Server
 
