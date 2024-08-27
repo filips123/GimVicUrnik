@@ -12,15 +12,15 @@ const calendarUrl = `${apiBase}/calendar`
 </script>
 
 <template>
-  <!-- prettier-ignore -->
   <v-column>
     <div>
       <h2 class="text-h5 pb-1">Viri</h2>
-      <SubscribeDisplay label="Okrožnice" :url="`${feedUrl}/circulars.atom`" schema="feed" />
-      <SubscribeDisplay label="Nadomeščanja" :url="`${feedUrl}/substitutions.atom`" schema="feed" />
-      <SubscribeDisplay label="Jedilniki" :url="`${feedUrl}/menus.atom`" schema="feed" />
-      <SubscribeDisplay label="Razporedi kosila" :url="`${feedUrl}/schedules.atom`" schema="feed" />
+      <SubscribeDisplay label="Okrožnice" :url="`${feedUrl}/circulars.atom`" />
+      <SubscribeDisplay label="Nadomeščanja" :url="`${feedUrl}/substitutions.atom`" />
+      <SubscribeDisplay label="Jedilniki" :url="`${feedUrl}/menus.atom`" />
+      <SubscribeDisplay label="Razporedi kosila" :url="`${feedUrl}/schedules.atom`" />
     </div>
+    <!-- prettier-ignore -->
     <div v-if="entityType === EntityType.Class" class="pt-4">
       <h2 class="text-h5 pb-1">Koledarji</h2>
       <SubscribeDisplay label="Urnik & Nadomeščanja" :url="`${calendarUrl}/combined/${entityList}`" schema="webcal" />
