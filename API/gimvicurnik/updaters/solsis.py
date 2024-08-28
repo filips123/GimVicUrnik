@@ -322,7 +322,7 @@ class SolsisUpdater:
         """Download and parse the Solsis JSON file."""
 
         # Every request needs a different nonsense
-        nonsense = "%032x" % getrandbits(128)
+        nonsense = f"{getrandbits(128):032x}"
 
         # Compose the URL
         params = f"func=gateway&call=suplence&datum={date.strftime('%Y-%m-%d')}&nonsense={nonsense}"

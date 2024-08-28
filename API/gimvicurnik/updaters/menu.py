@@ -55,7 +55,8 @@ class MenuUpdater(BaseMultiUpdater):
 
         if not menus:
             self.logger.info("No menus found")
-            return iter(())
+            yield from ()
+            return
 
         for menu in menus:
             for link in menu.find_all("a", href=True):
@@ -115,7 +116,13 @@ class MenuUpdater(BaseMultiUpdater):
         return True
 
     @with_span(op="parse", pass_span=True)
-    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: datetime.date, span: Span) -> None:  # type: ignore[override]
+    def parse_document(  # type: ignore[override]
+        self,
+        document: DocumentInfo,
+        stream: BytesIO,
+        effective: datetime.date,
+        span: Span,
+    ) -> None:
         """Parse the document and store extracted data."""
 
         span.set_tag("document.source", self.source)

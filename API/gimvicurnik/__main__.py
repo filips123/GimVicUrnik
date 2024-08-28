@@ -41,7 +41,9 @@ class GimVicUrnikGroup(FlaskGroup):
             flask_version = metadata.version("flask")
             werkzeug_version = metadata.version("werkzeug")
             pdfplumber_version = metadata.version("pdfplumber")
+            pdfminer_version = metadata.version("pdfminer.six")
             openpyxl_version = metadata.version("openpyxl")
+            mammoth_version = metadata.version("mammoth")
 
             try:
                 sentry_version = metadata.version("sentry-sdk")
@@ -56,7 +58,9 @@ class GimVicUrnikGroup(FlaskGroup):
                 f"Flask: {flask_version}\n"
                 f"Werkzeug: {werkzeug_version}\n"
                 f"pdfplumber: {pdfplumber_version}\n"
+                f"pdfminer: {pdfminer_version}\n"
                 f"openpyxl: {openpyxl_version}\n"
+                f"mammoth: {mammoth_version}\n"
                 f"Sentry SDK: {sentry_version}",
                 color=ctx.color,
             )

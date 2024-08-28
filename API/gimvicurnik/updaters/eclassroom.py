@@ -278,7 +278,13 @@ class EClassroomUpdater(BaseMultiUpdater):
         return False
 
     @with_span(op="parse", pass_span=True)
-    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: date, span: Span) -> None:  # type: ignore[override]
+    def parse_document(  # type: ignore[override]
+        self,
+        document: DocumentInfo,
+        stream: BytesIO,
+        effective: date,
+        span: Span,
+    ) -> None:
         """Parse the document and store extracted data."""
 
         span.set_tag("document.source", self.source)
