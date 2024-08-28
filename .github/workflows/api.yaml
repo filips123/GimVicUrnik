@@ -24,13 +24,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure Poetry cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/black
             ~/.cache/pip
             ~/.cache/pypoetry
             ~/.local/share/pypoetry
@@ -40,9 +39,9 @@ jobs:
           restore-keys: ${{ runner.os }}-poetry-lint-
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: |
@@ -53,11 +52,13 @@ jobs:
       - name: Install dependencies
         run: poetry install --extras sentry
 
-      - name: Lint the project with ruff
-        run: ruff gimvicurnik
+      - name: Lint the project with ruff check
+        if: always()
+        run: ruff check --output-format=github
 
-      - name: Lint the project with black
-        run: black gimvicurnik --check
+      - name: Lint the project with ruff format
+        if: always()
+        run: ruff format --check
 
   typecheck:
     name: Typechecking
@@ -65,10 +66,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure Poetry cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -80,9 +81,9 @@ jobs:
           restore-keys: ${{ runner.os }}-poetry-typecheck-
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: |

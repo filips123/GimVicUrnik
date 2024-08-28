@@ -1,5 +1,5 @@
-GimVičUrnik
-===========
+GimVičUrnik - API
+=================
 
 An API for a school timetable, substitutions and menus at Gimnazija Vič.
 
@@ -58,10 +58,10 @@ You can retrieve all API routes using the `gimvicurnik routes` commands. The off
 
 ## Contributing
 
-The API uses ruff, black and mypy for linting the code. They are included in project's development dependencies.
+The API uses ruff for linting and formatting the code, and mypy for typechecking. They are included in the project's development dependencies.
 
 Please make sure that your changes are formatted correctly according to the code style:
 
-* Linting: `ruff gimvicurnik`
+* Linting: `ruff check`
+* Formatting: `ruff format`
 * Typechecking: `mypy gimvicurnik`
-* Formatting: `black gimvicurnik`
