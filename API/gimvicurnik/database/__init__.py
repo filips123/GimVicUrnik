@@ -186,7 +186,8 @@ class Classroom(Entity, Base):
         times = Session.query(func.min(Lesson.time), func.max(Lesson.time))[0]
 
         if times[0] is None or times[1] is None:
-            return []
+            yield from ()
+            return
 
         classrooms = Session.query(Classroom.name).order_by(Classroom.name).distinct().all()
         occupied = set(Session.query(Lesson.day, Lesson.time, Classroom.name).join(Classroom).distinct())

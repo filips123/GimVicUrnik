@@ -38,7 +38,7 @@ class DateDisplay(enum.Enum):
 def get_mime_type(url: str) -> str:
     """Get MIME type for a few extensions we know documents use."""
 
-    if re.match(r"\.pdf(?:\?[\w=]*)?$", url):
+    if re.search(r"\.pdf(?:\?[\w=]*)?$", url):
         return "application/pdf"
     if url.endswith(".docx"):
         return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -81,12 +81,16 @@ class FeedHandler(BaseHandler):
             last_updated = Session.query(func.max(Document.modified)).filter(query_filter).scalar()
             last_updated = last_updated or date.fromtimestamp(0)
 
+            # Get the frontend page based on the feed type
+            feed_page = "circulars" if feed_type == FeedType.CIRCULARS else "sources"
+
             # Render the feed from Atom/RSS template
             content = render_template(
                 f"{feed_format.value}.xml",
                 urls=config.urls,
                 name=feed_name,
                 type=feed_type.value,
+                page=feed_page,
                 entries=query,
                 last_updated=last_updated,
                 date_display=date_display,

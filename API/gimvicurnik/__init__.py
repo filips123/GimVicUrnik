@@ -235,7 +235,7 @@ class GimVicUrnik:
             return date.strftime("%d. %m. %Y")
 
         def _format_week(date: datetime.date) -> str:
-            return f"{_format_date(date)} — {_format_date((date + datetime.timedelta(days=4)))}"
+            return f"{_format_date(date)} \u2013 {_format_date(date + datetime.timedelta(days=4))}"
 
         filters = self.app.jinja_env.filters
         filters["date"] = _format_date

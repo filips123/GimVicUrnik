@@ -9,7 +9,7 @@ from datetime import date, datetime, timezone
 from itertools import product
 from urllib.parse import urlparse
 
-from mammoth import convert_to_html  # type: ignore
+import mammoth  # type: ignore
 from openpyxl import load_workbook
 from sqlalchemy import insert
 
@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
     from typing import Any
     from collections.abc import Iterator
     from io import BytesIO
-    from mammoth.documents import Image  # type: ignore
+    from mammoth.documents import Image, Hyperlink  # type: ignore
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
@@ -278,7 +278,13 @@ class EClassroomUpdater(BaseMultiUpdater):
         return False
 
     @with_span(op="parse", pass_span=True)
-    def parse_document(self, document: DocumentInfo, stream: BytesIO, effective: date, span: Span) -> None:  # type: ignore[override]
+    def parse_document(  # type: ignore[override]
+        self,
+        document: DocumentInfo,
+        stream: BytesIO,
+        effective: date,
+        span: Span,
+    ) -> None:
         """Parse the document and store extracted data."""
 
         span.set_tag("document.source", self.source)
@@ -322,8 +328,19 @@ class EClassroomUpdater(BaseMultiUpdater):
         def ignore_images(_image: Image) -> dict:
             return {}
 
+        def transform_hyperlinks(hyperlink: Hyperlink) -> Hyperlink:
+            hyperlink.target_frame = "_blank"
+            return hyperlink
+
         # Convert DOCX to HTML
-        result = convert_to_html(content, convert_image=ignore_images)
+        result = mammoth.convert_to_html(
+            content,
+            convert_image=ignore_images,
+            transform_document=mammoth.transforms.element_of_type(
+                mammoth.documents.Hyperlink,
+                transform_hyperlinks,
+            ),
+        )
         return typing.cast(str, result.value)
 
     def _parse_substitutions_pdf(self, stream: BytesIO, effective: date) -> None:

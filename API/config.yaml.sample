@@ -30,9 +30,9 @@ sentry:
     requests: 1.0
     other: 1.0
   profilerSampleRate:
-      commands: false
-      requests: false
-      other: false
+    commands: false
+    requests: false
+    other: false
 
 logging:
   version: 1
