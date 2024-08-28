@@ -23,27 +23,27 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "format": "prettier src plugins ${0:- --check}"
   },
-  "packageManager": "yarn@4.3.1",
+  "packageManager": "yarn@4.4.1",
   "dependencies": {
     "@mdi/js": "^7.4.47",
-    "@sentry/browser": "^8.21.0",
-    "@sentry/types": "^8.21.0",
-    "@sentry/vue": "^8.21.0",
-    "@vueuse/core": "^10.11.0",
-    "pinia": "^2.2.0",
+    "@sentry/browser": "^8.27.0",
+    "@sentry/types": "^8.27.0",
+    "@sentry/vue": "^8.27.0",
+    "@vueuse/core": "^11.0.3",
+    "pinia": "^2.2.2",
     "pinia-plugin-persistedstate": "^3.2.1",
     "pulltorefreshjs": "^0.1.22",
-    "vue": "^3.4.35",
-    "vue-router": "^4.4.1",
-    "vuetify": "^3.6.14"
+    "vue": "^3.4.38",
+    "vue-router": "^4.4.3",
+    "vuetify": "^3.7.1"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.10.4",
-    "@sentry/vite-plugin": "^2.21.1",
+    "@sentry/vite-plugin": "^2.22.3",
     "@tsconfig/node20": "^20.1.4",
-    "@types/node": "^20.14.13",
+    "@types/node": "^20.16.2",
     "@types/pulltorefreshjs": "^0.1.7",
-    "@vitejs/plugin-vue": "^5.1.1",
+    "@vitejs/plugin-vue": "^5.1.2",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/tsconfig": "^0.5.1",
@@ -53,10 +53,10 @@
     "eslint-plugin-vue": "^9.27.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
-    "vite": "^5.3.5",
+    "vite": "^5.4.2",
     "vite-plugin-html": "^3.2.2",
     "vite-plugin-pwa": "^0.20.1",
-    "vite-plugin-vuetify": "^2.0.3",
+    "vite-plugin-vuetify": "^2.0.4",
     "vue-tsc": "^2.0.29"
   }
 }
