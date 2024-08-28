@@ -39,14 +39,16 @@ jobs:
         with:
           path: |
             ~/.cache/yarn
+            ~/.yarn/berry/cache
             ./website/node_modules/.cache
+            ./website/node_modules/.vite
           key: ${{ runner.os }}-yarn-deploy-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: |
