@@ -1,38 +1,59 @@
-/* eslint-disable no-console */
+import { registerSW } from 'virtual:pwa-register'
+import type { Router } from 'vue-router'
 
-import { register } from 'register-service-worker'
+import { useSnackbarStore } from '@/composables/snackbar'
 
-if (process.env.NODE_ENV === 'production') {
-  register(`${process.env.BASE_URL}service-worker.js`, {
-    ready () {
-      console.log('App is being served from cache by a service worker.')
-    },
-    registered (registration) {
-      console.log('Service worker has been registered.')
+export default function registerServiceWorker(router: Router) {
+  const searchParams = new URLSearchParams(location.search)
+  let immediatelyUpdate = false
+
+  if (searchParams.has('update')) {
+    // Display a message while updating the service worker
+    const { displaySnackbar } = useSnackbarStore()
+    displaySnackbar('Posodabljanje ...')
+    immediatelyUpdate = true
+  }
+
+  if (searchParams.has('updating')) {
+    // Display a success message if the app was updated
+    const { displaySnackbar } = useSnackbarStore()
+    displaySnackbar('Aplikacija posodobljena')
+    router.replace(location.pathname)
+  }
+
+  setTimeout(() => {
+    if (searchParams.has('update') || searchParams.has('updating')) {
+      // Hide the parameter if the app was already up to date
+      router.replace(location.pathname)
+    }
+  }, 4000)
+
+  const updateSW = registerSW({
+    immediate: true,
+
+    onRegisteredSW(swUrl, registration) {
+      if (!registration) return
 
       // Routinely check for app updates by testing for a new service worker
-      setInterval(() => { registration.update().catch(() => { /* Ignore errors */ }) }, 1000 * 60 * 60)
+      setInterval(() => registration.update(), 60 * 60 * 1000)
     },
-    cached () {
-      console.log('Content has been cached for offline use.')
-    },
-    updatefound () {
-      console.log('New content is downloading.')
-    },
-    updated (registration) {
-      console.log('New content is available; please refresh.')
 
-      // Dispatch update event so the app can display a message to the user
-      document.dispatchEvent(new CustomEvent('serviceWorkerUpdated', { detail: registration }))
+    onNeedRefresh() {
+      if (immediatelyUpdate) {
+        // Update the service worker immediately if requested
+        console.log('Update parameter detected, updating the service worker...')
+        performUpdate()
+      } else {
+        // Prompt the user to update the service worker
+        console.log('New content is available, prompting the user to refresh...')
+        const { displaySnackbar } = useSnackbarStore()
+        displaySnackbar('Na voljo je posodobitev', 'Posodobi', performUpdate, -1)
+      }
     },
-    offline () {
-      console.log('No internet connection found. App is running in offline mode.')
-
-      // Dispatch offline event so the app can display a message to the user
-      document.dispatchEvent(new CustomEvent('serviceWorkerOffline'))
-    },
-    error (error) {
-      console.error('Error during service worker registration:', error)
-    }
   })
+
+  const performUpdate = async () => {
+    await router.replace({ path: location.pathname, query: { updating: 1 } })
+    await updateSW()
+  }
 }

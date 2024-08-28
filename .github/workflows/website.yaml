@@ -24,30 +24,74 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Configure Yarn cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/yarn
+            ~/.yarn/berry/cache
             ./node_modules/.cache
+            ./node_modules/.vite
           key: ${{ runner.os }}-yarn-lint-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-lint-
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Copy configuration
         run: cp .env.sample .env
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
-      - name: Lint the project
-        run: yarn lint --mode production
+      - name: Lint the project with ESLint
+        run: yarn lint
+
+      - name: Lint the project with Prettier
+        run: yarn format
+
+  typecheck:
+    name: Typechecking
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Configure Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            ~/.yarn/berry/cache
+            ./node_modules/.cache
+            ./node_modules/.vite
+          key: ${{ runner.os }}-yarn-typecheck-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-typecheck-
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Copy configuration
+        run: cp .env.sample .env
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck the project
+        run: yarn typecheck
 
   build:
     name: Building
@@ -55,27 +99,32 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Configure Yarn cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/yarn
+            ~/.yarn/berry/cache
             ./node_modules/.cache
+            ./node_modules/.vite
           key: ${{ runner.os }}-yarn-build-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-build-
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Copy configuration
         run: cp .env.sample .env
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build the project
-        run: yarn build --mode production
+        run: yarn build

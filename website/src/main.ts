@@ -1,18 +1,21 @@
-import './registerSentry'
-import './registerServiceWorker'
+import './assets/main.css'
 
-import Vue from 'vue'
+import { createApp } from 'vue'
 
 import App from './App.vue'
+import pinia from './plugins/pinia'
 import vuetify from './plugins/vuetify'
+import registerSentry from './registerSentry'
+import registerServiceWorker from './registerServiceWorker'
 import router from './router'
-import store from './store'
 
-Vue.config.productionTip = false
+const app = createApp(App)
 
-new Vue({
-  router,
-  store,
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
+
+registerSentry(app, router)
+registerServiceWorker(router)
+
+app.mount('#app')

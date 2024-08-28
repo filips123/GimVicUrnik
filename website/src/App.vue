@@ -1,264 +1,139 @@
+<script setup lang="ts">
+import {
+  mdiCog,
+  mdiFileDocumentOutline,
+  mdiFood,
+  mdiNewspaper,
+  mdiRss,
+  mdiTimetable,
+} from '@mdi/js'
+import { usePreferredDark } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import PullToRefresh from 'pulltorefreshjs'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import { useDisplay, useTheme } from 'vuetify'
+
+import AppSnackbar from '@/components/AppSnackbar.vue'
+import NavigationDay from '@/components/NavigationDay.vue'
+import NavigationDesktop from '@/components/NavigationDesktop.vue'
+import NavigationMobile from '@/components/NavigationMobile.vue'
+import { useSessionStore } from '@/stores/session'
+import { ThemeType, useSettingsStore } from '@/stores/settings'
+import { updateAllData } from '@/utils/update'
+
+const router = useRouter()
+const { mobile } = useDisplay()
+const theme = useTheme()
+
+const { currentEntityList } = storeToRefs(useSessionStore())
+const { themeType, enablePullToRefresh } = storeToRefs(useSettingsStore())
+
+const routerTitle = computed(() => router.currentRoute.value.meta.title)
+
+const allowPullToRefresh = computed(() => !!router.currentRoute.value.meta.allowPullToRefresh)
+const showEntityName = computed(() => !!router.currentRoute.value.meta.showEntityName)
+const showDayTabs = computed(() => !!router.currentRoute.value.meta.showDayTabs)
+
+onMounted(() => {
+  PullToRefresh.init({
+    mainElement: '#ptr--target',
+    triggerElement: '#main',
+
+    instructionsPullToRefresh: 'Povlecite za posodobitev',
+    instructionsReleaseToRefresh: 'Izpustite za posodobitev',
+    instructionsRefreshing: 'Posodabljanje',
+
+    shouldPullToRefresh: () =>
+      enablePullToRefresh.value && allowPullToRefresh.value && !window.scrollY,
+    onRefresh: (): void => {
+      updateAllData()
+    },
+  })
+})
+
+onUnmounted(() => {
+  PullToRefresh.destroyAll()
+})
+
+watch(
+  [themeType, usePreferredDark()],
+  ([themeType, prefersDark]) => {
+    if (themeType === ThemeType.System) {
+      theme.global.name.value = prefersDark ? 'dark' : 'light'
+    } else {
+      theme.global.name.value = themeType
+    }
+  },
+  { immediate: true },
+)
+
+const pages: { title: string; link: string; icon: string }[] = [
+  { title: 'Viri', link: 'sources', icon: mdiFileDocumentOutline },
+  { title: 'Naročanje', link: 'subscribe', icon: mdiRss },
+  { title: 'Nastavitve', link: 'settings', icon: mdiCog },
+]
+
+const navigation: { title: string; link: string; icon: string }[] = [
+  { title: 'Urnik', link: 'timetable', icon: mdiTimetable },
+  { title: 'Jedilnik', link: 'menu', icon: mdiFood },
+  { title: 'Okrožnice', link: 'circulars', icon: mdiNewspaper },
+]
+</script>
+
 <template>
   <v-app>
-    <v-app-bar app clipped-left color="#009300" dark extension-height="35">
-      <div class="d-flex align-center overflow-x-hidden pr-1">
-        <router-link title="Domov" :to="{ name: 'home' }">
-          <v-img alt="GimVičUrnik Logo"
-            class="mr-2"
-            src="./assets/logo.svg"
-            width="40" />
-        </router-link>
-        <v-toolbar-title>{{ pageTitle }}</v-toolbar-title>
+    <v-app-bar class="pr-2">
+      <v-app-bar-title>
+        <h1 class="app-title">{{ routerTitle }}</h1>
+        <div v-if="showEntityName" class="app-subtitle">{{ currentEntityList.join(', ') }}</div>
+      </v-app-bar-title>
+      <div role="navigation">
+        <v-btn-icon
+          v-for="page in pages"
+          :key="page.link"
+          :alt="page.title"
+          :title="page.title"
+          :aria-label="page.title"
+          :icon="page.icon"
+          :to="{ name: page.link }"
+          class="ml-1"
+        />
       </div>
-
-      <v-spacer />
-
-      <v-btn v-if="isNavigationDisplayed"
-        :to="{ name: 'subscribe' }"
-        alt="Naročanje"
-        aria-label="Naročanje"
-        class="mr-1"
-        icon
-        large>
-        <v-icon>{{ mdiRss }}</v-icon>
-      </v-btn>
-
-      <v-btn v-if="isNavigationDisplayed"
-        :to="{ name: 'settings' }"
-        alt="Nastavitve"
-        aria-label="Nastavitve"
-        class="mr-n2"
-        icon
-        large>
-        <v-icon>{{ mdiCog }}</v-icon>
-      </v-btn>
-
-      <template v-if="isNavigationDisplayed && isMobile && isDayMenuDisplayed" v-slot:extension>
-        <day-navigation />
+      <template v-if="mobile && showDayTabs" #extension>
+        <NavigationDay />
       </template>
     </v-app-bar>
-
-    <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" />
-
-    <v-main id="main" v-bind:class="{ 'pb-16': isNavigationDisplayed && isMobile }">
-      <span id="ptr--target"></span>
-
-      <v-container fluid>
-        <router-view @setDayMenuDisplay=setDayMenuDisplay
-          @setNavigationDisplay=setNavigationDisplay
-          @setPageTitle=setPageTitle
-          @setPullToRefreshAllowed=setPullToRefreshAllowed />
+    <NavigationDesktop v-if="!mobile" :navigation="navigation" />
+    <v-main id="main">
+      <div id="ptr--target"></div>
+      <v-container fluid class="h-100">
+        <router-view />
       </v-container>
     </v-main>
-
-    <v-snackbar v-model="isSnackbarDisplayed">
-      {{ snackbarMessage }}
-
-      <template v-if="snackbarButton" v-slot:action="{ attrs }">
-        <v-btn v-bind="attrs" color="green" text @click="snackbarAction()">
-          {{ snackbarButton }}
-        </v-btn>
-      </template>
-    </v-snackbar>
-
-    <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" />
+    <NavigationMobile v-if="mobile" :navigation="navigation" />
+    <AppSnackbar />
   </v-app>
 </template>
 
-<style lang="scss">
-// Hide scrollbar that Vuetify adds by default
-html {
-  overflow-y: auto !important;
+<style>
+/* Set styles for app title and subtitle */
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.0125em;
 }
 
-// Disable native pull-to-refresh and Safari elastic scrolling
-html, body {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+.app-subtitle {
+  font-size: 0.9rem;
+  color: rgba(var(--v-theme-on-primary), var(--v-app-subtitle-opacity));
 }
 
-// Reverse switch and label
-.v-input--reverse .v-input__slot {
-  flex-direction: row-reverse;
-  justify-content: flex-end;
+/* Fix pull to refresh colors in dark theme */
 
-  .v-application--is-ltr & {
-    .v-input--selection-controls__input {
-      margin-left: 8px;
-      margin-right: 0;
-    }
-  }
-
-  .v-application--is-rtl & {
-    .v-input--selection-controls__input {
-      margin-left: 0;
-      margin-right: 8px;
-    }
-  }
-}
-
-// Move switch and label more to the top
-.v-input--switch {
-  margin-bottom: -25px;
-  margin-top: 0;
-}
-
-// Move snackbar a bit more to the top so it doesn't hide navigation
-.v-snack {
-  padding-bottom: 60px !important;
+.ptr--icon,
+.ptr--text {
+  color: rgb(var(--v-theme-on-background)) !important;
 }
 </style>
-
-<script lang="ts">
-import { mdiCog, mdiRss } from '@mdi/js'
-import PullToRefresh from 'pulltorefreshjs'
-import { Component, Vue } from 'vue-property-decorator'
-
-import { SettingsModule, ThemeType } from '@/store/modules/settings'
-import { updateAllData } from '@/store/modules/storage'
-import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
-
-@Component({
-  components: {
-    ViewNavigationDesktop: () => import(/* webpackChunkName: "desktop" */ '@/components/navigation/ViewNavigationDesktop.vue'),
-    ViewNavigationMobile: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/ViewNavigationMobile.vue'),
-    DayNavigation: () => import(/* webpackChunkName: "mobile" */ '@/components/navigation/DayNavigation.vue')
-  }
-})
-export default class App extends Vue {
-  mdiCog = mdiCog
-  mdiRss = mdiRss
-
-  pageTitle = process.env.VUE_APP_TITLE
-  isPullToRefreshAllowed = true
-  isNavigationDisplayed = true
-  isDayMenuDisplayed = false
-
-  isSnackbarDisplayed = false
-  snackbarMessage = ''
-  snackbarButton = ''
-  snackbarAction?: () => void
-
-  get isMobile (): boolean {
-    return this.$vuetify.breakpoint.width < 1064
-  }
-
-  snackbarHandler (event: Event): void {
-    if (!(event as CustomEvent).detail) {
-      this.isSnackbarDisplayed = false
-      return
-    }
-
-    if (this.isSnackbarDisplayed) return
-
-    this.snackbarMessage = (event as CustomEvent).detail.message
-    this.snackbarButton = (event as CustomEvent).detail?.button
-    this.snackbarAction = (event as CustomEvent).detail?.action
-
-    this.isSnackbarDisplayed = true
-  }
-
-  themeHandler (event: MediaQueryListEvent): void {
-    // Change Vuetify theme to match system theme
-    if (SettingsModule.theme === ThemeType.System) {
-      this.$vuetify.theme.dark = event.matches
-    }
-
-    // Also set body color to make it possible for browser to style scrollbars
-    setTimeout(() => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      document.getElementsByTagName('body')[0].style.background = getComputedStyle(document.getElementById('app'))['background-color']
-    }, 0)
-  }
-
-  swUpdatedHandler (event: Event): void {
-    const registration: ServiceWorkerRegistration = (event as CustomEvent).detail
-
-    displaySnackbar('Na voljo je posodobitev', 'Posodobi', () => {
-      hideSnackbar()
-
-      if (!registration || !registration.waiting) return
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-    })
-  }
-
-  controllerChangedHandler (): void {
-    // Add GET parameter to invalidate cache of index HTML file
-    window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
-  }
-
-  created (): void {
-    // Event listeners for displaying and hiding snackbars
-    document.addEventListener('displaySnackbar', this.snackbarHandler)
-    document.addEventListener('hideSnackbar', this.snackbarHandler)
-
-    // Event listener for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    if (typeof mediaQuery.addEventListener === 'undefined') mediaQuery.addListener(this.themeHandler)
-    else mediaQuery.addEventListener('change', this.themeHandler)
-
-    // Event listener for detecting service worker updates
-    document.addEventListener('serviceWorkerUpdated', this.swUpdatedHandler, { once: true })
-
-    // Event listener for detecting controller changes
-    navigator.serviceWorker && navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
-  }
-
-  mounted (): void {
-    // Create pull to refresh
-    PullToRefresh.init({
-      mainElement: '#ptr--target',
-      triggerElement: 'body',
-
-      instructionsPullToRefresh: 'Povlecite za posodobitev',
-      instructionsReleaseToRefresh: 'Izpustite za posodobitev',
-      instructionsRefreshing: 'Posodabljanje',
-
-      shouldPullToRefresh: () => !window.scrollY && this.isPullToRefreshAllowed && SettingsModule.enablePullToRefresh,
-      onRefresh: (): void => {
-        updateAllData()
-      }
-    })
-
-    // Also set body color to make it possible for browser to style scrollbars
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    document.getElementsByTagName('body')[0].style.background = getComputedStyle(document.getElementById('app'))['background-color']
-  }
-
-  destroyed (): void {
-    // Remove event listeners for displaying and hiding snackbars
-    document.removeEventListener('displaySnackbar', this.snackbarHandler)
-    document.removeEventListener('hideSnackbar', this.snackbarHandler)
-
-    // Remove event listener for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', this.themeHandler)
-
-    // Remove event listener for detecting service worker updates
-    document.removeEventListener('serviceWorkerUpdated', this.swUpdatedHandler)
-
-    // Remove event listener for detecting controller changes
-    navigator.serviceWorker && navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
-
-    // Destroy pull to refresh instances
-    PullToRefresh.destroyAll()
-  }
-
-  setPageTitle (pageTitle: string): void {
-    this.pageTitle = pageTitle
-  }
-
-  setPullToRefreshAllowed (isPullToRefreshAllowed: boolean): void {
-    this.isPullToRefreshAllowed = isPullToRefreshAllowed
-  }
-
-  setNavigationDisplay (isNavigationDisplayed: boolean): void {
-    this.isNavigationDisplayed = isNavigationDisplayed
-  }
-
-  setDayMenuDisplay (isDayMenuDisplayed: boolean): void {
-    this.isDayMenuDisplayed = isDayMenuDisplayed
-  }
-}
-</script>
