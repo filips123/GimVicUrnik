@@ -25,7 +25,7 @@ td {
 }
 
 a {
-  color: rgb(var(--v-theme-primary-variant));
+  color: rgb(var(--v-theme-secondary));
   text-decoration: none;
 }
 
@@ -79,6 +79,22 @@ li {
 
 .v-overlay__scrim {
   background: rgb(var(--v-overlay-color)) !important;
+}
+
+/* Fix bottom navigation not being centered */
+
+.v-bottom-navigation__content > .v-btn {
+  width: 0 !important;
+}
+
+/* Fix transition on window item swiping */
+
+.v-window__container {
+  margin: 0 -8px;
+}
+
+.v-window-item {
+  padding: 0 8px;
 }
 
 /* Disable unnecessary Vuetify transitions */

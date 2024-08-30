@@ -10,15 +10,15 @@ export function homeGuard(): NavigationGuardReturn {
   const { entityType } = useSettingsStore()
 
   // Redirect the user either to the timetable or welcome page
-  if (entityType === EntityType.None) return { name: 'welcome', replace: true }
-  else return { name: 'timetable', replace: true }
+  if (entityType === EntityType.None) return { name: 'welcome', replace: true, force: true }
+  else return { name: 'timetable', replace: true, force: true }
 }
 
 export function welcomeGuard(): NavigationGuardReturn {
   const { entityType } = useSettingsStore()
 
   // Redirect the user to the timetable page if it has the entity set
-  if (entityType !== EntityType.None) return { name: 'timetable', replace: true }
+  if (entityType !== EntityType.None) return { name: 'timetable', replace: true, force: true }
 }
 
 export async function timetableGuard(

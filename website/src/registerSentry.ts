@@ -8,7 +8,6 @@ import {
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   setHttpStatus,
-  spanToJSON,
   startBrowserTracingNavigationSpan,
 } from '@sentry/browser'
 import type { Integration, Span, SpanAttributes, TransactionSource } from '@sentry/types'
@@ -202,7 +201,6 @@ function browserTracingIntegration(router: Router): Integration {
 
       router.beforeEach((to, from) => {
         const attributes: SpanAttributes = {
-          [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.navigation.vue',
           'route.name': to.name as string,
           'route.path': to.path as string,
           'route.hash': to.hash as string,
@@ -250,17 +248,14 @@ function browserTracingIntegration(router: Router): Integration {
         if (instrumentPageLoad && isPageLoadNavigation) {
           const activeRootSpan = getActiveRootSpan()
           if (activeRootSpan) {
-            // Replace the name of the existing root span if it was not custom set
-            const existingAttributes = spanToJSON(activeRootSpan).data || {}
-            if (existingAttributes[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE] !== 'custom') {
-              activeRootSpan.updateName(transactionName)
-              activeRootSpan.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, transactionSource)
-            }
+            // Replace the name of the existing root span
+            activeRootSpan.updateName(transactionName)
 
             // Set router attributes on the existing pageload transaction
-            // This will override the origin and add params & query attributes
+            // This will override the source and origin and add params & query attributes
             activeRootSpan.setAttributes({
               ...attributes,
+              [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: transactionSource,
               [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.pageload.vue',
             })
 
@@ -294,14 +289,5 @@ function browserTracingIntegration(router: Router): Integration {
 
 function getActiveRootSpan(): Span | undefined {
   const span = getActiveSpan()
-  const rootSpan = span && getRootSpan(span)
-
-  if (!rootSpan) {
-    return undefined
-  }
-
-  const op = spanToJSON(rootSpan).op
-
-  // Only use this root span if it is a pageload or navigation span
-  return op === 'navigation' || op === 'pageload' ? rootSpan : undefined
+  if (span) return getRootSpan(span)
 }

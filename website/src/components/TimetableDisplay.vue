@@ -86,16 +86,15 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
     </thead>
 
     <tbody>
-      <tr
-        v-for="(lessonsTime, timeIndex) in lessons"
-        :key="timeIndex"
-        class="timetable-row"
-        :class="daySpecific ? lessonStyles(targetDay!, timeIndex) : undefined"
-        :tabindex="daySpecific ? 0 : undefined"
-        @click="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
-        @keydown.enter="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
-      >
-        <template v-if="timeIndex >= timeInterval[0] && timeIndex <= timeInterval[1]">
+      <template v-for="(lessonsTime, timeIndex) in lessons" :key="timeIndex">
+        <tr
+          v-if="timeIndex >= timeInterval[0] && timeIndex <= timeInterval[1]"
+          class="timetable-row"
+          :class="daySpecific ? lessonStyles(targetDay!, timeIndex) : undefined"
+          :tabindex="daySpecific ? 0 : undefined"
+          @click="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
+          @keydown.enter="daySpecific ? handleDetails(targetDay!, timeIndex, $event) : undefined"
+        >
           <td class="time-number" v-text="timeIndex === 0 ? 'PU' : timeIndex + '.'" />
           <td
             v-if="!daySpecific && showHoursInTimetable"
@@ -124,8 +123,8 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
             </table>
             <TimetableEmptyClassrooms v-else :lessons="lessonsTimeDay" />
           </td>
-        </template>
-      </tr>
+        </tr>
+      </template>
     </tbody>
   </v-table-main>
 </template>

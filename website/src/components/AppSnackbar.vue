@@ -9,7 +9,7 @@ const { buttonAction, buttonText, show, text, timeout } = storeToRefs(useSnackba
 <template>
   <v-snackbar v-model="show" :text :timeout color="surface-medium">
     <template v-if="buttonText" #actions>
-      <v-btn :text="buttonText" color="primary-variant" @click="buttonAction" />
+      <v-btn :text="buttonText" color="secondary" @click="buttonAction" />
     </template>
   </v-snackbar>
 </template>

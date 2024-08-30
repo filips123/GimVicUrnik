@@ -83,7 +83,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
 
 <template>
   <v-app>
-    <v-app-bar class="pr-2">
+    <v-app-bar class="app-bar pr-2">
       <v-app-bar-title>
         <h1 class="app-title">{{ routerTitle }}</h1>
         <div v-if="showEntityName" class="app-subtitle">{{ currentEntityList.join(', ') }}</div>
@@ -119,15 +119,24 @@ const navigation: { title: string; link: string; icon: string }[] = [
 <style>
 /* Set styles for app title and subtitle */
 
+.app-bar {
+  user-select: none;
+}
+
 .app-title {
   font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: 0.0125em;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
 }
 
 .app-subtitle {
   font-size: 0.9rem;
   color: rgba(var(--v-theme-on-primary), var(--v-app-subtitle-opacity));
+  text-overflow: ellipsis;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 /* Fix pull to refresh colors in dark theme */

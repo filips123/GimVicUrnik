@@ -88,6 +88,20 @@ onMounted(() => {
   )
 })
 
+function pushState(entityTypeDialog: boolean, entityListDialog: boolean) {
+  history.pushState(
+    {
+      ...history.state,
+      position: history.state.position + 1,
+      replaced: false,
+      scroll: null,
+      entityTypeDialog,
+      entityListDialog,
+    },
+    '',
+  )
+}
+
 watch(displayed, value => {
   if (value) {
     // Show the type selection dialog
@@ -95,14 +109,7 @@ watch(displayed, value => {
     entityListDialog.value = false
 
     // Push a new history state where the type dialog is displayed
-    history.pushState(
-      {
-        ...history.state,
-        entityTypeDialog: true,
-        entityListDialog: false,
-      },
-      '',
-    )
+    pushState(true, false)
   }
 
   if (!value) {
@@ -121,7 +128,7 @@ watch(displayed, value => {
     )
 
     // Ensure the history stack is consistent
-    history.pushState(history.state, '')
+    pushState(false, false)
     history.back()
   }
 })
@@ -162,14 +169,7 @@ function handleSelectEntityType(selectedEntity: EntityType) {
   entityListDialog.value = true
 
   // Push a new history state where the list dialog is displayed
-  history.pushState(
-    {
-      ...history.state,
-      entityTypeDialog: false,
-      entityListDialog: true,
-    },
-    '',
-  )
+  pushState(false, true)
 }
 
 function handleViewEntityList() {
