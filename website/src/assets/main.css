@@ -25,7 +25,7 @@ td {
 }
 
 a {
-  color: rgb(var(--v-theme-primary-variant));
+  color: rgb(var(--v-theme-secondary));
   text-decoration: none;
 }
 

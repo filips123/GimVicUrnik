@@ -10,7 +10,7 @@ const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
     primary: '#008800',
-    'primary-variant': '#007700',
+    secondary: '#007700',
     'surface-subtle': '#f6f6f6',
     'surface-medium': '#e6e6e6',
     'surface-highlighted': '#efefef',
@@ -29,7 +29,7 @@ const darkTheme: ThemeDefinition = {
   dark: true,
   colors: {
     primary: '#008800',
-    'primary-variant': '#369d36',
+    secondary: '#369d36',
     'surface-subtle': '#1c1c1c',
     'surface-medium': '#262626',
     'surface-highlighted': '#2c2c2c',
@@ -94,7 +94,7 @@ const vuetify = createVuetify({
       variant: 'text',
     },
     VBtnSubscribe: {
-      color: 'primary-variant',
+      color: 'secondary',
       class: 'px-1 ms-n1 me-2',
       variant: 'text',
     },
@@ -115,16 +115,16 @@ const vuetify = createVuetify({
       color: 'primary',
     },
     VSwitch: {
-      color: 'primary-variant',
+      color: 'secondary',
     },
     VCheckbox: {
-      color: 'primary-variant',
+      color: 'secondary',
     },
     VRadioGroup: {
-      color: 'primary-variant',
+      color: 'secondary',
     },
     VTextField: {
-      color: 'primary-variant',
+      color: 'secondary',
     },
     VDialog: {
       width: '50rem',
@@ -155,7 +155,7 @@ const vuetify = createVuetify({
         class: 'pa-0',
       },
       VBtn: {
-        color: 'primary-variant',
+        color: 'secondary',
         variant: 'text',
       },
     },

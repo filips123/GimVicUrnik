@@ -57,9 +57,6 @@ function doAction() {
 }
 
 .settings-base-action:focus-visible {
-  outline-color: rgba(
-    var(--v-theme-primary-variant),
-    calc(0.25 * var(--v-theme-overlay-multiplier))
-  );
+  outline-color: rgba(var(--v-theme-secondary), calc(0.25 * var(--v-theme-overlay-multiplier)));
 }
 </style>
