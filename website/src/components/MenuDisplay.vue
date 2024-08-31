@@ -23,6 +23,9 @@ const lunchMenu = computed(() => props.menu?.lunch?.[lunchType.value])
     :subtitle="localizeDate(menu.date)"
     class="bg-surface-subtle"
   />
+  <v-card-main v-else class="bg-surface-subtle text-center">
+    <v-card-title class="opacity-70">{{ localizeDate(menu.date) }}</v-card-title>
+  </v-card-main>
   <v-card-main v-if="snackMenu" title="Malica" :text="snackMenu" />
   <v-card-main v-if="lunchMenu" title="Kosilo" :text="lunchMenu" />
   <v-card-main v-if="lunchSchedules?.length" title="Razpored kosila">
