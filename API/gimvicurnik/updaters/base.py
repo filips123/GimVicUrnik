@@ -184,7 +184,6 @@ class BaseMultiUpdater(ABC):
         extractable = self.document_needs_extraction(document)
 
         action = "skipped"
-        effective = None
         content = None
         crashed = False
         new_hash = None
@@ -234,12 +233,17 @@ class BaseMultiUpdater(ABC):
 
             return
 
-        if parsable:
-            # Get the document's effective date using subclassed method
-            # If this fails, we can't do anything other than to skip the document
-            effective = self.get_document_effective(document)
+        # Get the document's effective date using the subclassed method
+        # This may return none for documents without an effective date
+        # If this fails, we can't do anything other than to skip the document
+        effective = self.get_document_effective(document)
 
-            # Parse the document using subclassed method and handle any errors
+        if parsable:
+            # If there is no date, we can't do anything other than to skip the document
+            if not effective:
+                raise ValueError("Missing effective date for a parsable document")
+
+            # Parse the document using the subclassed method and handle any errors
             # If this fails, we store the record but mark it for later parsing
             try:
                 self.parse_document(document, stream, effective)
@@ -272,9 +276,9 @@ class BaseMultiUpdater(ABC):
             record.url = document.url
             record.type = document.type
             record.modified = modified
+            record.effective = effective
 
             if parsable:
-                record.effective = effective
                 record.hash = new_hash
                 record.parsed = True
 
@@ -391,7 +395,7 @@ class BaseMultiUpdater(ABC):
         """Return the normalized document title. Must be set by subclasses."""
 
     @abstractmethod
-    def get_document_effective(self, document: DocumentInfo) -> datetime.date:
+    def get_document_effective(self, document: DocumentInfo) -> datetime.date | None:
         """Return the document effective date in a local timezone. Must be set by subclasses."""
 
     # noinspection PyMethodMayBeStatic

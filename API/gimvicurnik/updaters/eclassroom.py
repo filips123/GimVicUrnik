@@ -251,7 +251,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         return document.title
 
     @typing.no_type_check  # Ignored because if regex fails, we cannot do anything
-    def get_document_effective(self, document: DocumentInfo) -> date:
+    def get_document_effective(self, document: DocumentInfo) -> date | None:
         """Return the document effective date in a local timezone."""
 
         if document.type == DocumentType.SUBSTITUTIONS:
@@ -262,9 +262,6 @@ class EClassroomUpdater(BaseMultiUpdater):
             title = document.title.split(",")[-1].split("-")[-1].strip()
             search = re.search(r"(\d+) *\. *(\d+) *\. *(\d+)", title)
             return date(year=int(search.group(3)), month=int(search.group(2)), day=int(search.group(1)))
-
-        # This cannot happen because only substitutions and schedules are provided
-        raise KeyError("Unknown parsable document type from the e-classroom")
 
     def document_needs_parsing(self, document: DocumentInfo) -> bool:
         """Return whether the document needs parsing."""
@@ -305,7 +302,7 @@ class EClassroomUpdater(BaseMultiUpdater):
                     "Unknown lunch schedule document format: " + str(document.extension)
                 )
             case _:
-                # This cannot happen because only menus are provided by the API
+                # This cannot happen because only these types are provided by the API
                 raise KeyError("Unknown parsable document type from the e-classroom")
 
     def document_needs_extraction(self, document: DocumentInfo) -> bool:
