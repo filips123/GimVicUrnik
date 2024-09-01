@@ -12,6 +12,7 @@ export interface Menu {
     fruitvegetable: string | null
   } | null
   lunch: {
+    until: string | null
     normal: string | null
     vegetarian: string | null
   } | null

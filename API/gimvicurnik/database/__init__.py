@@ -287,5 +287,7 @@ class LunchMenu(Base):
     id: Mapped[intpk]
     date: Mapped[date_] = mapped_column(unique=True, index=True)
 
+    until: Mapped[time_ | None]
+
     normal: Mapped[text | None]
     vegetarian: Mapped[text | None]

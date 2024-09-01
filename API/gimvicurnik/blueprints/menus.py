@@ -34,6 +34,7 @@ class MenusHandler(BaseHandler):
 
             if lunch:
                 lunch = {
+                    "until": lunch.until.strftime("%H:%M") if lunch.until else None,
                     "normal": lunch.normal,
                     "vegetarian": lunch.vegetarian,
                 }
