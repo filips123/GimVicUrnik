@@ -22,6 +22,8 @@ if typing.TYPE_CHECKING:
 
 
 class TimetableUpdater:
+    source = "timetable"
+
     def __init__(self, config: ConfigSourcesTimetable, session: Session) -> None:
         self.logger = logging.getLogger(__name__)
         self.config = config
@@ -40,13 +42,15 @@ class TimetableUpdater:
                 # fmt: off
                 sentry_sdk.set_context("document", {
                     "URL": self.config.url,
-                    "source": DocumentType.TIMETABLE.value,
-                    "type​": DocumentType.TIMETABLE.value
+                    "source": self.source,
+                    "type​": DocumentType.TIMETABLE.value,
+                    "format": "js"
                 })
                 # fmt: on
 
-                sentry_sdk.set_tag("document_source", DocumentType.TIMETABLE.value)
+                sentry_sdk.set_tag("document_source", self.source)
                 sentry_sdk.set_tag("document_type", DocumentType.TIMETABLE.value)
+                sentry_sdk.set_tag("document_format", "js")
 
             self.logger.exception(error)
 
@@ -56,8 +60,9 @@ class TimetableUpdater:
 
         span.description = self.config.url
         span.set_tag("document.url", self.config.url)
-        span.set_tag("document.source", DocumentType.TIMETABLE.value)
+        span.set_tag("document.source", self.source)
         span.set_tag("document.type", DocumentType.TIMETABLE.value)
+        span.set_tag("document.format", "js")
         span.set_tag("document.action", "crashed")
 
         # Download the timetable JS and get its hash
