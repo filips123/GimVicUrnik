@@ -66,23 +66,24 @@ export default function registerSentry(app: App, router: Router) {
   }
 
   // Track only base components for performance
-  const trackedComponents = [
-    '<VApp>',
-    '<VAppBar>',
-    '<VMain>',
-    '<RouterView>',
-    '<NavigationDesktop>',
-    '<NavigationMobile>',
-    '<NavigationDay>',
-    '<ViewTimetable>',
-    '<ViewMenu>',
-    '<ViewCirculars>',
-    '<ViewSources>',
-    '<ViewSubscribe>',
-    '<ViewSettings>',
-    '<ViewWelcome>',
-    '<NotFound>',
-  ]
+  // Disabled temporarily until issues are resolved
+  // const trackedComponents = [
+  //   '<VApp>',
+  //   '<VAppBar>',
+  //   '<VMain>',
+  //   '<RouterView>',
+  //   '<NavigationDesktop>',
+  //   '<NavigationMobile>',
+  //   '<NavigationDay>',
+  //   '<ViewTimetable>',
+  //   '<ViewMenu>',
+  //   '<ViewCirculars>',
+  //   '<ViewSources>',
+  //   '<ViewSubscribe>',
+  //   '<ViewSettings>',
+  //   '<ViewWelcome>',
+  //   '<NotFound>',
+  // ]
 
   // Init the Sentry SDK
   sentryInit({
@@ -99,7 +100,7 @@ export default function registerSentry(app: App, router: Router) {
     release: releasePrefix + import.meta.env.VITE_VERSION + releaseSuffix,
 
     autoSessionTracking: dataCollectionPerformance,
-    trackComponents: dataCollectionPerformance ? trackedComponents : false,
+    trackComponents: false,
 
     integrations,
   })
