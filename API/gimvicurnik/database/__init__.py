@@ -122,7 +122,7 @@ class Entity:
     @classmethod
     def get_substitutions(
         cls,
-        date: date_ | None = None,
+        dates: list[date_] | None = None,
         names: list[str] | None = None,
     ) -> Iterator[dict[str, Any]]:
         original_teacher = aliased(Teacher)
@@ -143,8 +143,8 @@ class Entity:
         )
         # fmt: on
 
-        if date:
-            query = query.filter(Substitution.date == date)
+        if dates:
+            query = query.filter(Substitution.date.in_(dates))
 
         if names:
             if cls.__tablename__ == "classes":

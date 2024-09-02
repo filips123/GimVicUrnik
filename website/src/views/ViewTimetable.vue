@@ -6,17 +6,19 @@ import { useDisplay } from 'vuetify'
 import TimetableDetails from '@/components/TimetableDetails.vue'
 import TimetableDisplay from '@/components/TimetableDisplay.vue'
 import { useSessionStore } from '@/stores/session'
+import { EntityType } from '@/stores/settings'
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
 import { localizedWeekdays } from '@/utils/localization'
 
 const { mobile } = useDisplay()
 
-const { day } = storeToRefs(useSessionStore())
+const { currentEntityType, day } = storeToRefs(useSessionStore())
+const { updateTimetable, updateSubstitutions, updateEmptyClassrooms } = useTimetableStore()
 
-const timetableStore = useTimetableStore()
-timetableStore.updateTimetable()
-timetableStore.updateSubstitutions()
-timetableStore.updateEmptyClassrooms()
+updateTimetable()
+updateSubstitutions()
+
+if (currentEntityType === EntityType.EmptyClassrooms) updateEmptyClassrooms()
 
 const detailsDialog = ref(false)
 const detailsProps = ref({ day: -1, time: -1, lessons: [] as MergedLesson[] })

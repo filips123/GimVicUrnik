@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
-import { getCurrentDate, getISODate, getWeekdays } from '@/utils/days'
+import { getCurrentDate, getISODate } from '@/utils/days'
 import { updateWrapper } from '@/utils/update'
 
 export interface Lesson {
@@ -196,10 +196,9 @@ export const useTimetableStore = defineStore('timetable', {
 
     async updateSubstitutions() {
       await updateWrapper(async () => {
-        const dates = getWeekdays(getCurrentDate()).map(date => getISODate(date))
-        const urls = dates.map(date => import.meta.env.VITE_API + '/substitutions/date/' + date)
-        const responses = await Promise.all(urls.map(url => fetch(url)))
-        this.substitutions = await Promise.all(responses.map(response => response.json()))
+        const date = getISODate(getCurrentDate())
+        const response = await fetch(import.meta.env.VITE_API + '/substitutions/week/' + date)
+        this.substitutions = await response.json()
       })
     },
 
