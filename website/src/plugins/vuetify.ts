@@ -37,8 +37,8 @@ const darkTheme: ThemeDefinition = {
   variables: {
     'app-subtitle-opacity': 0.8,
     'card-subtitle-opacity': 0.8,
-    'current-time-color': '#121212',
-    'current-time-opacity': 0.4,
+    'current-time-color': '#000000',
+    'current-time-opacity': 0.31,
     'overlay-color': '#121212',
     'overlay-opacity': 0.48,
   },

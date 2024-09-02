@@ -147,10 +147,10 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
 /* Add style for current time */
 
 .current-time {
-  background: repeating-linear-gradient(
+  background-image: repeating-linear-gradient(
     -45deg,
-    rgba(255, 0, 0, 0),
-    rgba(255, 0, 0, 0) 20px,
+    transparent,
+    transparent 20px,
     rgba(var(--v-current-time-color), var(--v-current-time-opacity)) 20px,
     rgba(var(--v-current-time-color), var(--v-current-time-opacity)) 40px
   );

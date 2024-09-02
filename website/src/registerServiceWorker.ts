@@ -35,7 +35,7 @@ export default function registerServiceWorker(router: Router) {
       if (!registration) return
 
       // Routinely check for app updates by testing for a new service worker
-      setInterval(() => registration.update(), 60 * 60 * 1000)
+      setInterval(() => registration.update().catch(() => {}), 60 * 60 * 1000)
     },
 
     onNeedRefresh() {

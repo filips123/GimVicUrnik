@@ -122,7 +122,7 @@ class Entity:
     @classmethod
     def get_substitutions(
         cls,
-        date: date_ | None = None,
+        dates: list[date_] | None = None,
         names: list[str] | None = None,
     ) -> Iterator[dict[str, Any]]:
         original_teacher = aliased(Teacher)
@@ -143,8 +143,8 @@ class Entity:
         )
         # fmt: on
 
-        if date:
-            query = query.filter(Substitution.date == date)
+        if dates:
+            query = query.filter(Substitution.date.in_(dates))
 
         if names:
             if cls.__tablename__ == "classes":
@@ -156,7 +156,7 @@ class Entity:
 
         for model in query:
             yield {
-                "date": model[0].date.strftime("%Y-%m-%d"),
+                "date": model[0].date.isoformat(),
                 "day": model[0].day,
                 "time": model[0].time,
                 "subject": model[0].subject,
@@ -286,6 +286,8 @@ class LunchMenu(Base):
 
     id: Mapped[intpk]
     date: Mapped[date_] = mapped_column(unique=True, index=True)
+
+    until: Mapped[time_ | None]
 
     normal: Mapped[text | None]
     vegetarian: Mapped[text | None]

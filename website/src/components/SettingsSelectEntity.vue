@@ -72,8 +72,10 @@ const availableList = computed(() => {
 
 // Display the correct dialogs based on state
 useEventListener(window, 'popstate', event => {
-  entityTypeDialog.value = event.state.entityTypeDialog
-  entityListDialog.value = event.state.entityListDialog
+  if (event.state?.entityTypeDialog && event.state?.entityListDialog) {
+    entityTypeDialog.value = event.state.entityTypeDialog
+    entityListDialog.value = event.state.entityListDialog
+  }
 })
 
 // Replace the history state with the initial state
