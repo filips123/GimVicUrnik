@@ -18,7 +18,7 @@ const { updateTimetable, updateSubstitutions, updateEmptyClassrooms } = useTimet
 updateTimetable()
 updateSubstitutions()
 
-if (currentEntityType === EntityType.EmptyClassrooms) updateEmptyClassrooms()
+if (currentEntityType.value === EntityType.EmptyClassrooms) updateEmptyClassrooms()
 
 const detailsDialog = ref(false)
 const detailsProps = ref({ day: -1, time: -1, lessons: [] as MergedLesson[] })
