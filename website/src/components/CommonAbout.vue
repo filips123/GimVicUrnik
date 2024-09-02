@@ -25,9 +25,10 @@ defineProps<{
       <a href="https://github.com/filips123/GimVicUrnik/wiki" target="_blank">dokumentaciji</a>.
     </p>
     <p v-if="showDataCollection">
-      Aplikacija zbira omejene podatke o brskalniku in uporabi za namene odpravljanja napak in
-      izboljšanja učinkovitosti. Podatki se ne uporabljajo za identifikacijo uporabnikov,
-      oglaševanje ali druge namene.
+      Aplikacija s pomočjo storitve
+      <a href="https://sentry.io/privacy/" target="_blank">Sentry</a> zbira omejene podatke o
+      napravi in uporabi za namene odpravljanja napak ter izboljšanja učinkovitosti. Podatki se ne
+      uporabljajo za identifikacijo uporabnikov, oglaševanje ali druge namene.
     </p>
     <span v-if="showDevelopers">Razvijalci:</span>
     <ul v-if="showDevelopers">
@@ -38,7 +39,7 @@ defineProps<{
     <p v-if="showFeedback">
       Če ste odkrili napako v aplikaciji ali podatkih, želite prispevati k razvoju ali ponuditi
       povratne informacije, lahko to naredite na
-      <a href="https://github.com/filips123/GimVicUrnik/issues/new/choose" target="_blank"
+      <a href="https://github.com/filips123/GimVicUrnik/wiki/Povratne-informacije" target="_blank"
         >uradnem repozitoriju</a
       >.
     </p>
