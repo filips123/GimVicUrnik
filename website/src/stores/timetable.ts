@@ -63,6 +63,8 @@ export const useTimetableStore = defineStore('timetable', {
         return []
       }
 
+      performance.mark('lessons.start')
+
       let timetable: Lesson[] = []
       let substitutions: Substitution[] = []
 
@@ -176,6 +178,9 @@ export const useTimetableStore = defineStore('timetable', {
           }
         }
       }
+
+      performance.mark('lessons.end')
+      performance.measure('lessons', 'lessons.start', 'lessons.end')
 
       return array
     },

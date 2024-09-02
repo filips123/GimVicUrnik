@@ -156,7 +156,7 @@ class Entity:
 
         for model in query:
             yield {
-                "date": model[0].date.strftime("%Y-%m-%d"),
+                "date": model[0].date.isoformat(),
                 "day": model[0].day,
                 "time": model[0].time,
                 "subject": model[0].subject,

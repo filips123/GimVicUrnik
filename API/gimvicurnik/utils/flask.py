@@ -23,7 +23,7 @@ class DateConverter(BaseConverter):
             raise ValidationError() from error
 
     def to_url(self, value: date) -> str:
-        return value.strftime("%Y-%m-%d")
+        return value.isoformat()
 
 
 class ListConverter(BaseConverter):
