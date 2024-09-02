@@ -106,7 +106,7 @@ export default defineConfig(({ mode }) => {
     Vuetify(),
     Html(htmlConfig),
     VitePWA(pwaConfig),
-    ApachePreload(preloadConfig)
+    ApachePreload(preloadConfig),
   ]
 
   // Upload sourcemaps for the current release to Sentry if enabled
@@ -144,6 +144,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_TRACES_SAMPLE_RATE) || 0,
       'import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_PROFILES_SAMPLE_RATE) || 0,
       'import.meta.env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS': env.VITE_SENTRY_TRACE_PROPAGATION_TARGETS?.split(','),
+      // Disable Sentry debug mode in production
+      '__SENTRY_DEBUG__': mode === 'production' ? 'false' : 'true',
     },
 
     build: {

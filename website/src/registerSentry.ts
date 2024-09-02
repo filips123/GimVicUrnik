@@ -19,11 +19,6 @@ import {
   reportingObserverIntegration,
   thirdPartyErrorFilterIntegration,
 } from '@sentry/vue'
-import {
-  usePreferredColorScheme,
-  usePreferredContrast,
-  usePreferredReducedMotion,
-} from '@vueuse/core'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 
@@ -34,11 +29,6 @@ export default function registerSentry(app: App, router: Router) {
 
   const { dataCollectionCrashes, dataCollectionPerformance } = useSettingsStore()
   if (!dataCollectionCrashes && !dataCollectionPerformance) return
-
-  // Initialize stores for some interesting media queries
-  const preferredColor = usePreferredColorScheme()
-  const preferredContrast = usePreferredContrast()
-  const preferredMotion = usePreferredReducedMotion()
 
   // Get release prefixes and suffixes from config
   const releasePrefix = import.meta.env.VITE_SENTRY_RELEASE_PREFIX || ''
@@ -160,16 +150,20 @@ export default function registerSentry(app: App, router: Router) {
       'window-controls-overlay',
       'picture-in-picture',
     ]
-    for (const mode of displayModes) {
-      if (window.matchMedia(`(display-mode: ${mode})`).matches) {
-        event.tags['media.display_mode'] = mode
+    for (const displayMode of displayModes) {
+      if (window.matchMedia(`(display-mode: ${displayMode})`).matches) {
+        event.tags['media.display_mode'] = displayMode
         break
       }
     }
 
-    event.tags['media.color_scheme'] = preferredColor.value
-    event.tags['media.contrast'] = preferredContrast.value
-    event.tags['media.reduced_motion'] = preferredMotion.value
+    const colorSchemes = ['light', 'dark']
+    for (const colorScheme of colorSchemes) {
+      if (window.matchMedia(`(prefers-color-scheme: ${colorScheme})`).matches) {
+        event.tags['media.color_scheme'] = colorScheme
+        break
+      }
+    }
 
     // Return the modified event
     return event
