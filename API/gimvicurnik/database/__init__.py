@@ -100,7 +100,7 @@ class Entity:
     ) -> Iterator[dict[str, Any]]:
         query = (
             Session.query(Lesson, Class.name, Teacher.name, Classroom.name)
-            .join(Class)
+            .join(Class, isouter=True)
             .join(Teacher, isouter=True)
             .join(Classroom, isouter=True)
             .order_by(Lesson.day, Lesson.time)
@@ -134,7 +134,7 @@ class Entity:
         # fmt: off
         query = (
             Session.query(Substitution, Class.name, original_teacher.name, original_classroom.name, teacher.name, classroom.name)
-            .join(Class)
+            .join(Class, isouter=True)
             .join(original_teacher, Substitution.original_teacher_id == original_teacher.id, isouter=True)
             .join(original_classroom, Substitution.original_classroom_id == original_classroom.id, isouter=True)
             .join(teacher, Substitution.teacher_id == teacher.id, isouter=True)
@@ -216,8 +216,8 @@ class Lesson(Base):
     time: Mapped[smallint]
     subject: Mapped[text | None]
 
-    class_id: Mapped[class_fk] = mapped_column(index=True)
-    class_: Mapped[Class] = relationship(backref="lessons")
+    class_id: Mapped[class_fk | None] = mapped_column(index=True)
+    class_: Mapped[Class | None] = relationship(backref="lessons")
 
     teacher_id: Mapped[teacher_fk | None] = mapped_column(index=True)
     teacher: Mapped[Teacher | None] = relationship(backref="lessons")
@@ -244,8 +244,8 @@ class Substitution(Base):
     original_classroom_id: Mapped[classroom_fk | None] = mapped_column(index=True)
     original_classroom: Mapped[Classroom | None] = relationship(foreign_keys=[original_classroom_id])
 
-    class_id: Mapped[class_fk] = mapped_column(index=True)
-    class_: Mapped[Class] = relationship(backref="substitutions", foreign_keys=[class_id])
+    class_id: Mapped[class_fk | None] = mapped_column(index=True)
+    class_: Mapped[Class | None] = relationship(backref="substitutions", foreign_keys=[class_id])
 
     teacher_id: Mapped[teacher_fk | None] = mapped_column(index=True)
     teacher: Mapped[Teacher | None] = relationship(backref="substitutions", foreign_keys=[teacher_id])
@@ -262,8 +262,8 @@ class LunchSchedule(Base):
     date: Mapped[date_] = mapped_column(index=True)
     time: Mapped[time_ | None]
 
-    class_id: Mapped[class_fk] = mapped_column(index=True)
-    class_: Mapped[Class] = relationship()
+    class_id: Mapped[class_fk | None] = mapped_column(index=True)
+    class_: Mapped[Class | None] = relationship()
 
     location: Mapped[text | None]
     notes: Mapped[text | None]

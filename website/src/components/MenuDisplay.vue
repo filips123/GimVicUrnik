@@ -32,7 +32,7 @@ const lunchMenu = computed(() => props.menu?.lunch?.[lunchType.value])
     <template #text>
       <div
         v-for="lunchSchedule in lunchSchedules"
-        :key="lunchSchedule.time + lunchSchedule.class"
+        :key="`${lunchSchedule.date}-${lunchSchedule.time}-${lunchSchedule.class}-${lunchSchedule.location}`"
         class="pb-2"
       >
         <div v-if="lunchSchedule.time">Ura: {{ lunchSchedule.time }}</div>

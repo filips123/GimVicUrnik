@@ -35,7 +35,7 @@ class ScheduleHandler(BaseHandler):
 
             query = (
                 Session.query(LunchSchedule, Class.name)
-                .join(Class)
+                .join(Class, isouter=True)
                 .filter(LunchSchedule.date == date)
                 .order_by(LunchSchedule.time, LunchSchedule.class_)
             )
@@ -53,7 +53,7 @@ class ScheduleHandler(BaseHandler):
 
             query = (
                 Session.query(LunchSchedule, Class.name)
-                .join(Class)
+                .join(Class, isouter=True)
                 .filter(LunchSchedule.date.in_(weekdays))
                 .order_by(LunchSchedule.time, LunchSchedule.class_)
             )
