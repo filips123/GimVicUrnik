@@ -16,6 +16,7 @@ from ..utils.database import get_or_create
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
+    from typing import Any
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesTimetable
@@ -114,37 +115,49 @@ class TimetableUpdater:
         for key, value in data:
             lessons[key].append(value.strip())
 
+        models: list[dict[str, Any]] = []
+
         # Convert raw data into a model
-        # fmt: off
-        models = [
-            {
-                "day": lesson[5],
-                "time": lesson[6],
-                "subject": lesson[3] if lesson[3] else None,
-                "class_id": get_or_create(self.session, model=Class, name=lesson[1])[0].id if lesson[1] else None,
-                "teacher_id": get_or_create(self.session, model=Teacher, name=lesson[2])[0].id if lesson[2] else None,
-                "classroom_id": get_or_create(self.session, model=Classroom, name=lesson[4])[0].id if lesson[4] else None,
-            }
-            for _, lesson in lessons.items()
-            if lesson[1]
-        ]
-        # fmt: on
+        for lesson in lessons.values():
+            # Each cell may contain multiple values separated by a tilde
+            classes = lesson[1].split("~") if lesson[1] else [None]
+            teachers = lesson[2].split("~") if lesson[2] else [None]
+            classrooms = lesson[4].split("~") if lesson[4] else [None]
+
+            # fmt: off
+            models.extend(
+                {
+                    "day": lesson[5],
+                    "time": lesson[6],
+                    "subject": lesson[3] if lesson[3] else None,
+                    "class_id": get_or_create(self.session, model=Class, name=class_)[0].id if class_ else None,
+                    "teacher_id": get_or_create(self.session, model=Teacher, name=teacher)[0].id if teacher else None,
+                    "classroom_id": get_or_create(self.session, model=Classroom, name=classroom)[0].id if classroom else None,
+                }
+                for class_ in classes
+                for teacher in teachers
+                for classroom in classrooms
+            )
+            # fmt: on
 
         # Store timetable lessons
         self.session.query(Lesson).delete()
         self.session.execute(insert(Lesson), models)
 
         # Store a list of all classes from timetable
-        for class_ in re.findall(r"razredi\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
-            get_or_create(self.session, model=Class, name=class_)
+        for classes in re.findall(r"razredi\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            for class_ in classes.split("~"):
+                get_or_create(self.session, model=Class, name=class_)
 
         # Store a list of all teachers from timetable
-        for teacher in re.findall(r"ucitelji\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
-            get_or_create(self.session, model=Teacher, name=teacher)
+        for teachers in re.findall(r"ucitelji\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            for teacher in teachers.split("~"):
+                get_or_create(self.session, model=Teacher, name=teacher)
 
         # Store a list of all classrooms from timetable
-        for classroom in re.findall(r"ucilnice\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
-            get_or_create(self.session, model=Classroom, name=classroom)
+        for classrooms in re.findall(r"ucilnice\[\d+] = \"([^\"\n]*)\"", raw_data, re.MULTILINE):
+            for classroom in classrooms.split("~"):
+                get_or_create(self.session, model=Classroom, name=classroom)
 
         # Update or create a document
         if not document:

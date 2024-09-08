@@ -19,9 +19,9 @@ export interface Menu {
 }
 
 export interface LunchSchedule {
-  class: string
   date: string
   time: string | null
+  class: string | null
   notes: string | null
   location: string | null
 }

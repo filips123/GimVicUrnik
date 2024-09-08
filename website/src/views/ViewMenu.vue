@@ -21,7 +21,7 @@ updateLunchSchedules()
 
 function entitiesLunchSchedules(lunchSchedules?: LunchSchedule[]) {
   if (!lunchSchedules || entityType.value !== EntityType.Class) return []
-  return lunchSchedules.filter(schedule => entityList.value.includes(schedule.class))
+  return lunchSchedules.filter(schedule => entityList.value.includes(schedule.class!))
 }
 
 // Stop stopping event propagation on touch handlers

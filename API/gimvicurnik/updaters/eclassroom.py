@@ -208,7 +208,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         if "www.dropbox.com" in url:
             return DocumentType.SUBSTITUTIONS
-        elif "delitev-kosila" in url:
+        elif "delitev-kosila" in url or "delitevKosila" in url:
             return DocumentType.LUNCH_SCHEDULE
         elif "okroznica" in url.lower() or "okrožnica" in url.lower():
             return DocumentType.CIRCULAR
@@ -579,37 +579,27 @@ class EClassroomUpdater(BaseMultiUpdater):
                     ws.delete_cols(1)
 
             for wr in ws.iter_rows(min_row=3, max_col=5):
-                if not wr[3].value and wr[3].value != 0:
-                    break
-
                 # Check for correct cell value type
                 if typing.TYPE_CHECKING:
-                    assert isinstance(wr[0].value, datetime)
-                    assert isinstance(wr[1].value, str)
-                    assert isinstance(wr[2].value, str)
-                    assert isinstance(wr[4].value, str)
+                    assert isinstance(wr[0].value, datetime)  # Time
+                    assert isinstance(wr[1].value, str)  # Notes
+                    assert isinstance(wr[2].value, str)  # Class
+                    assert isinstance(wr[4].value, str)  # Location
 
-                # Ignore rows that do not contain a class name
+                # Ignore empty and header rows
                 if not wr[2].value or "raz" in wr[2].value:
                     continue
 
-                schedule: dict[str, Any] = {}
+                schedule = {
+                    "date": effective,
+                    "time": wr[0].value if wr[0].value else None,
+                    "notes": wr[1].value.strip() if wr[1].value else None,
+                    "location": wr[4].value.strip() if wr[4].value else None,
+                    "class_id": get_or_create(self.session, model=Class, name=wr[2].value.strip())[0].id
+                    if wr[2].value
+                    else None,
+                }
 
-                # Time in format H:M
-                schedule["time"] = wr[0].value if wr[0].value else None
-
-                schedule["notes"] = wr[1].value.strip() if wr[1].value else None
-
-                if wr[2].value:
-                    # fmt: off
-                    schedule["class_id"] = get_or_create(
-                        self.session, model=Class, name=wr[2].value.strip()
-                    )[0].id
-                    # fmt: on
-
-                schedule["location"] = wr[4].value.strip() if wr[4].value else None
-
-                schedule["date"] = effective
                 lunch_schedule.append(schedule)
 
         wb.close()
