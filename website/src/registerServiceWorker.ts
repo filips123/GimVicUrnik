@@ -11,6 +11,8 @@ export default function registerServiceWorker(router: Router) {
     // Display a message while updating the service worker
     const { displaySnackbar } = useSnackbarStore()
     displaySnackbar('Posodabljanje ...')
+
+    // Mark that we need to update the service worker
     immediatelyUpdate = true
   }
 
@@ -18,6 +20,8 @@ export default function registerServiceWorker(router: Router) {
     // Display a success message if the app was updated
     const { displaySnackbar } = useSnackbarStore()
     displaySnackbar('Aplikacija posodobljena')
+
+    // Hide the parameter after the app was updated
     router.replace(location.pathname)
   }
 
@@ -40,12 +44,14 @@ export default function registerServiceWorker(router: Router) {
 
     onNeedRefresh() {
       if (immediatelyUpdate) {
-        // Update the service worker immediately if requested
         console.log('Update parameter detected, updating the service worker...')
+
+        // Update the service worker immediately if requested
         performUpdate()
       } else {
-        // Prompt the user to update the service worker
         console.log('New content is available, prompting the user to refresh...')
+
+        // Prompt the user to update the service worker
         const { displaySnackbar } = useSnackbarStore()
         displaySnackbar('Na voljo je posodobitev', 'Posodobi', performUpdate, -1)
       }
@@ -53,7 +59,14 @@ export default function registerServiceWorker(router: Router) {
   })
 
   const performUpdate = async () => {
-    await router.replace({ path: location.pathname, query: { updating: 1 } })
+    // Display a message while updating the service worker
+    const { displaySnackbar } = useSnackbarStore()
+    displaySnackbar('Posodabljanje ...')
+
+    // Add query parameter so we know the app was updated
+    history.replaceState(history.state, '', location.pathname + '?updating=1')
+
+    // Update the service worker
     await updateSW()
   }
 }
