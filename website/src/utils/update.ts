@@ -41,17 +41,18 @@ export async function updateAllData(showSuccess: boolean = true): Promise<void> 
 }
 
 export async function updateWrapper(updateFunction: () => Promise<void>) {
-  const { displaySnackbar } = useSnackbarStore()
-
   if (!navigator.onLine) {
-    displaySnackbar('Internetna povezava ni na voljo')
     return
   }
 
   try {
     await updateFunction()
   } catch (error) {
+    // Inform the user about the error
+    const { displaySnackbar } = useSnackbarStore()
     displaySnackbar('Napaka pri pridobivanju podatkov')
+
+    // Log the error to the console
     console.error(error)
 
     // Submit the error to Sentry if enabled

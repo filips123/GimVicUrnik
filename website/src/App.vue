@@ -18,6 +18,7 @@ import AppSnackbar from '@/components/AppSnackbar.vue'
 import NavigationDay from '@/components/NavigationDay.vue'
 import NavigationDesktop from '@/components/NavigationDesktop.vue'
 import NavigationMobile from '@/components/NavigationMobile.vue'
+import { useSnackbarStore } from '@/composables/snackbar'
 import { useSessionStore } from '@/stores/session'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
 import { updateAllData } from '@/utils/update'
@@ -50,6 +51,11 @@ onMounted(() => {
       updateAllData()
     },
   })
+
+  if (!navigator.onLine) {
+    const { displaySnackbar } = useSnackbarStore()
+    displaySnackbar('Internetna povezava ni na voljo')
+  }
 })
 
 onUnmounted(() => {

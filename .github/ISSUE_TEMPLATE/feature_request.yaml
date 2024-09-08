@@ -1,28 +1,28 @@
 name: Prošnja za funkcijo
-description: Napišite izboljšavo obstoječih funkcij ali novo funkcijo
+description: Napišite predlog za izboljšavo obstoječih funkcij ali dodajanja novih.
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
-      value: |
-        Hvala, ker ste si vzeli čas za izpolnitev tega poročila!
+      value: Hvala, ker ste si vzeli čas za izpolnjevanje tega poročila!
   - type: textarea
-    id: idea
+    id: description
     attributes:
       label: Vaša zamisel
       description: V nekaj stavkih opišite svojo zamisel.
     validations:
       required: true
   - type: textarea
-    id: whatfor
+    id: problem
     attributes:
-      label: Problem, ki ga reši
+      label: Rešen problem
       description: Kakšen problem bi rešila vaša zamisel?
     validations:
       required: true
   - type: textarea
-    id: other
+    id: context
     attributes:
-      label: Slike vaše zamisli
-      description: Kako bi izgledala vaša zamisel? Kako rešijo to druge aplikacije?
+      label: Več informacij
+      description: Kako bi izgledala vaša zamisel? Kako to rešujejo druge aplikacije?
     validations:
       required: false

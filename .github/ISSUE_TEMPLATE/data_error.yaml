@@ -1,20 +1,20 @@
 name: Napaka v podatkih
 description: Napišite poročilo o napaki v podatkih.
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: |
-        Hvala, ker ste si vzeli čas za izpolnitev tega poročila!
+      value: Hvala, ker ste si vzeli čas za izpolnjevanje tega poročila!
   - type: dropdown
     id: datatype
     attributes:
       label: Vrsta podatka
-      description: Pri katerem podatku, se je pojavila napaka?
+      description: Pri katerem podatku se je pojavila napaka?
       options:
         - Urnik
-        - Jedilniki
-        - Okrožnice
         - Nadomeščanja
+        - Okrožnice
+        - Jedilniki
         - Razporedi kosil
     validations:
       required: true
@@ -22,26 +22,34 @@ body:
     id: viewtype
     attributes:
       label: Vrsta pogleda
-      description: Pri katerem pogledu, se je pojavila napaka?
+      description: Pri katerem pogledu se je pojavila napaka?
       options:
         - Razred
         - Profesor
         - Učilnica
     validations:
-      required: true
+      required: false
+  - type: input
+    id: viewlist
+    attributes:
+      label: Ime pogleda
+      description: Pri katerem pogledu se je pojavila napaka?
+      placeholder: npr. 4A, MINF, MZGO
+    validations:
+      required: false
   - type: textarea
-    id: error
+    id: description
     attributes:
       label: Opis napake
-      description: Kolikor vam je mogoče podrobno opisati napako.
-      placeholder: npr. Namesto geografije 3. uro je bila napisana 4. uro
+      description: Čim bolj podrobno opišite napako, ki ste jo opazili.
+      placeholder: npr. Namesto geografije 3. uro je bila napisana kemija.
     validations:
       required: true
   - type: input
     id: date
     attributes:
       label: Datum
-      description: Vpišite datum, ko se je zgodila napaka (dd. mm. yyyy)
-      placeholder: npr. 29. 12. 2023
+      description: Vnesite datum, ko se je zgodila napaka (dd. mm. yyyy).
+      placeholder: npr. 27. 5. 2024
     validations:
       required: false
