@@ -28,18 +28,23 @@ def update_timetable_command() -> None:
         updater.update()
 
 
+# fmt: off
 @click.command("update-eclassroom", help="Update the e-classroom data.")
-@click.option("--parse-substitutions", "-p", help="Parse substitutions.", is_flag=True)
+@click.option("--parse-substitutions/--no-parse-substitutions", "-s/-no-s", help="Parse substitutions.", default=False)
+@click.option("--parse-lunch-schedules/--no-parse-lunch-schedules", "-l/-no-l", help="Parse lunch schedules.", default=True)
+@click.option("--extract-circulars/--no-extract-circulars", "-c/-no-c", help="Extract circulars.", default=True)
 @with_transaction(name="update-eclassroom", op="command")
-def update_eclassroom_command(parse_substitutions: bool = False) -> None:
+def update_eclassroom_command(parse_substitutions: bool, parse_lunch_schedules: bool, extract_circulars: bool) -> None:
     """Update data from the e-classroom."""
 
     logging.getLogger(__name__).info("Updating the e-classroom data")
 
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
-        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session, parse_substitutions, True)
+        updater = EClassroomUpdater(gimvicurnik.config.sources.eclassroom, session, parse_substitutions, parse_lunch_schedules, extract_circulars)
         updater.update()
+
+# fmt: on
 
 
 @click.command("update-menu", help="Update the menu data.")
