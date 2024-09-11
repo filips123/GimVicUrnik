@@ -63,6 +63,7 @@ class EClassroomUpdater(BaseMultiUpdater):
         session: Session,
         parse_substitutions: bool,
         parse_lunch_schedules: bool,
+        extract_circulars: bool,
     ) -> None:
         self.logger = logging.getLogger(__name__)
         self.config = config
@@ -70,6 +71,7 @@ class EClassroomUpdater(BaseMultiUpdater):
 
         self.parse_substitutions = parse_substitutions
         self.parse_lunch_schedules = parse_lunch_schedules
+        self.extract_circulars = extract_circulars
 
         super().__init__()
 
@@ -308,9 +310,9 @@ class EClassroomUpdater(BaseMultiUpdater):
     def document_needs_extraction(self, document: DocumentInfo) -> bool:
         """Return whether the document content needs to be extracted."""
 
-        # Only DOCX documents (circulars) can have content extracted
+        # Only DOCX documents (circulars and some other) can have content extracted
         if document.extension == "docx":
-            return True
+            return self.extract_circulars
 
         return False
 
