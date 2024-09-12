@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import { AccentColorName } from '@/utils/colors'
+
 export enum EntityType {
   Class = 'class',
   Teacher = 'teacher',
@@ -58,6 +60,7 @@ export const useSettingsStore = defineStore('settings', {
     dataCollectionCrashes: true,
 
     themeType: ThemeType.System,
+    accentColor: AccentColorName.green,
 
     moodleToken: '',
     circularsPassword: '',

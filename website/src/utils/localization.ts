@@ -1,4 +1,5 @@
 import { EntityType, LunchType, MenuType, SnackType, ThemeType } from '@/stores/settings'
+import { AccentColorName } from '@/utils/colors'
 
 // Day Localization
 
@@ -109,5 +110,24 @@ export function localizeThemeType(themeType: ThemeType) {
       return 'Svetla'
     case ThemeType.Dark:
       return 'Temna'
+  }
+}
+
+export function localizeAccentColorName(accentColor: AccentColorName) {
+  switch (accentColor) {
+    case AccentColorName.red:
+      return 'Rdeča'
+    case AccentColorName.orange:
+      return 'Oranžna'
+    case AccentColorName.green:
+      return 'Zelena'
+    case AccentColorName.blue:
+      return 'Modra'
+    case AccentColorName.purple:
+      return 'Vijolična'
+    case AccentColorName.pink:
+      return 'Roza'
+    case AccentColorName.black:
+      return 'Črna'
   }
 }

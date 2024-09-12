@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => {
       keywords: env.VITE_KEYWORDS.split(','),
       lang: 'sl',
 
-      theme_color: '#007300',
+      theme_color: '#43A047',
       background_color: '#ffffff',
 
       icons: [
