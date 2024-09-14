@@ -34,8 +34,8 @@ const touchOptions = {
   <v-window v-if="mobile" v-model="day" :touch="touchOptions" class="h-100">
     <v-window-item v-for="(_, dayIndex) in localizedWeekdays" :key="dayIndex" :value="dayIndex">
       <TimetableDisplay
-        v-model:detailsDialog="detailsDialog"
-        v-model:detailsProps="detailsProps"
+        v-model:details-dialog="detailsDialog"
+        v-model:details-props="detailsProps"
         :target-day="dayIndex"
       />
     </v-window-item>
@@ -43,8 +43,8 @@ const touchOptions = {
 
   <TimetableDisplay
     v-else
-    v-model:detailsDialog="detailsDialog"
-    v-model:detailsProps="detailsProps"
+    v-model:details-dialog="detailsDialog"
+    v-model:details-props="detailsProps"
   />
 
   <TimetableDetails v-model="detailsDialog" v-bind="detailsProps" />

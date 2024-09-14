@@ -42,9 +42,9 @@ PyYAML = "^6.0.2"
 flask = "^3.0.3"
 click = "^8.1.7"
 attrs = "~24.2.0"
-cattrs = "~23.2.3"
+cattrs = "~24.1.1"
 requests = "^2.32.3"
-SQLAlchemy = "^2.0.32"
+SQLAlchemy = "^2.0.34"
 pdfplumber = "^0.11.4"
 openpyxl = "^3.1.5"
 mammoth = "^1.8.0"
@@ -52,7 +52,7 @@ icalendar = "^5.0.13"
 beautifulsoup4 = { version = "^4.12.3", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { version = "^2.13.0", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+sentry-sdk = { version = "^2.14.0", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.1.1", optional = true }
@@ -61,7 +61,7 @@ psycopg2 = { version = "^2.9.9", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.11.2"
-ruff = "^0.6.2"
+ruff = "^0.6.5"
 types-pyyaml = "^6.0.12"
 types-openpyxl = "^3.1.5"
 types-requests = "^2.32.0"
