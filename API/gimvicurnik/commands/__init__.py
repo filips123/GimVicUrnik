@@ -29,6 +29,7 @@ def update_timetable_command() -> None:
 
 
 # fmt: off
+
 @click.command("update-eclassroom", help="Update the e-classroom data.")
 @click.option("--parse-substitutions/--no-parse-substitutions", "-s/-no-s", help="Parse substitutions.", default=False)
 @click.option("--parse-lunch-schedules/--no-parse-lunch-schedules", "-l/-no-l", help="Parse lunch schedules.", default=True)
