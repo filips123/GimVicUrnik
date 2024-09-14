@@ -113,6 +113,7 @@ export default function registerSentry(app: App, router: Router) {
       'Enable Lesson Details': settingsStore.enableLessonDetails,
       'Enable Pull To Refresh': settingsStore.enablePullToRefresh,
       'Theme Type': settingsStore.themeType,
+      'Accent Color': settingsStore.accentColor,
     }
 
     event.contexts['Settings - Entity'] = {
@@ -133,6 +134,7 @@ export default function registerSentry(app: App, router: Router) {
     event.tags['settings.highlight_current_time'] = settingsStore.highlightCurrentTime
     event.tags['settings.enable_lesson_details'] = settingsStore.enableLessonDetails
     event.tags['settings.enable_pull_to_refresh'] = settingsStore.enablePullToRefresh
+    event.tags['settings.accent_color'] = settingsStore.accentColor
     event.tags['settings.has_moodle_token'] = !!settingsStore.moodleToken
     event.tags['settings.has_circulars_password'] = !!settingsStore.circularsPassword
     event.tags['settings.type.theme'] = settingsStore.themeType

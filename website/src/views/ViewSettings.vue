@@ -3,6 +3,7 @@ import {
   mdiDatabaseImportOutline,
   mdiInformationOutline,
   mdiKeyOutline,
+  mdiPalette,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
@@ -13,6 +14,7 @@ import { ref } from 'vue'
 import SettingsAbout from '@/components/SettingsAbout.vue'
 import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
 import SettingsBaseSwitch from '@/components/SettingsBaseSwitch.vue'
+import SettingsSelectAccentColor from '@/components/SettingsSelectAccentColor.vue'
 import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
 import SettingsSelectMenuLunch from '@/components/SettingsSelectMenuLunch.vue'
 import SettingsSelectMenuSnack from '@/components/SettingsSelectMenuSnack.vue'
@@ -21,6 +23,7 @@ import SettingsSetDataCollection from '@/components/SettingsSetDataCollection.vu
 import SettingsSetMoodleToken from '@/components/SettingsSetMoodleToken.vue'
 import { useSettingsStore } from '@/stores/settings'
 import {
+  localizeAccentColorName,
   localizeDataCollection,
   localizeEntityLabel,
   localizeLunchType,
@@ -43,6 +46,7 @@ const {
   dataCollectionPerformance,
   dataCollectionCrashes,
   themeType,
+  accentColor,
   moodleToken,
   dataVersion,
 } = storeToRefs(useSettingsStore())
@@ -51,6 +55,7 @@ const selectEntityDialog = ref(false)
 const selectSnackDialog = ref(false)
 const selectLunchDialog = ref(false)
 const selectThemeDialog = ref(false)
+const selectAccentColorDialog = ref(false)
 const setDataCollectionDialog = ref(false)
 const setMoodleTokenDialog = ref(false)
 const aboutDialog = ref(false)
@@ -106,6 +111,13 @@ async function updateApp() {
     />
 
     <SettingsBaseAction
+      v-model="selectAccentColorDialog"
+      label="Barva označevanja"
+      :messages="localizeAccentColorName(accentColor)"
+      :icon="mdiPalette"
+    />
+
+    <SettingsBaseAction
       v-model="setDataCollectionDialog"
       label="Zbiranje tehničnih podatkov"
       :messages="localizeDataCollection(dataCollectionPerformance, dataCollectionCrashes)"
@@ -148,6 +160,7 @@ async function updateApp() {
     <SettingsSelectMenuSnack v-model="selectSnackDialog" />
     <SettingsSelectMenuLunch v-model="selectLunchDialog" />
     <SettingsSelectTheme v-model="selectThemeDialog" />
+    <SettingsSelectAccentColor v-model="selectAccentColorDialog" />
     <SettingsSetDataCollection v-model="setDataCollectionDialog" />
     <SettingsSetMoodleToken v-model="setMoodleTokenDialog" />
     <SettingsAbout v-model="aboutDialog" />
