@@ -1,35 +1,22 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
-import { useTheme } from 'vuetify'
 
 import { useSettingsStore } from '@/stores/settings'
-import { ACCENT_COLORS } from '@/utils/colors'
+import { accentColors } from '@/utils/colors'
 
 const dialog = defineModel<boolean>()
 
-const theme = useTheme()
+const swatches = accentColors.map(({ primary }) => [primary])
 
 const { accentColor } = storeToRefs(useSettingsStore())
-
-const swatches = ACCENT_COLORS.map(({ primary }) => [primary])
-const swatchesColor = ref(ACCENT_COLORS.find(color => color.name === accentColor.value)!.primary)
+const selectedColor = ref(accentColors.find(color => color.name === accentColor.value)!.primary)
 
 watch(
-  swatchesColor,
-  swatchesColor => {
-    const color = ACCENT_COLORS.find(color => color.primary === swatchesColor)!
-
+  selectedColor,
+  selectedColor => {
+    const color = accentColors.find(color => color.primary === selectedColor.toLowerCase())!
     accentColor.value = color.name
-
-    theme.themes.value.light.colors.primary = color.primary
-    theme.themes.value.light.colors.secondary = color.secondary
-    theme.themes.value.light.variables['current-time-color'] = color.currentTime
-
-    theme.themes.value.dark.colors.primary = color.primary
-    theme.themes.value.dark.colors.secondary = color.secondary
-
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color.theme)
   },
   { immediate: true },
 )
@@ -40,13 +27,15 @@ watch(
     <v-card title="Izberite barvo označevanja">
       <template #text>
         <v-color-picker
-          v-model="swatchesColor"
+          v-model="selectedColor"
+          class="align-center mx-auto"
           :swatches
           hide-canvas
           hide-sliders
           hide-inputs
           show-swatches
           elevation="0"
+          width="min(100%, 350px)"
         />
       </template>
       <template #actions>
@@ -58,6 +47,7 @@ watch(
 
 <style>
 .v-color-picker-swatches > div {
-  justify-content: left;
+  padding-top: 10px !important;
+  padding-bottom: 0 !important;
 }
 </style>

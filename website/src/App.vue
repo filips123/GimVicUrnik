@@ -21,7 +21,7 @@ import NavigationMobile from '@/components/NavigationMobile.vue'
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useSessionStore } from '@/stores/session'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
-import { ACCENT_COLORS } from '@/utils/colors'
+import { accentColors } from '@/utils/colors'
 import { updateAllData } from '@/utils/update'
 
 const router = useRouter()
@@ -78,14 +78,14 @@ watch(
 watch(
   accentColor,
   accentColor => {
-    const color = ACCENT_COLORS.find(color => color.name === accentColor)!
+    const color = accentColors.find(color => color.name === accentColor)!
 
     theme.themes.value.light.colors.primary = color.primary
-    theme.themes.value.light.colors.secondary = color.secondary
+    theme.themes.value.light.colors.secondary = color.secondaryLight
     theme.themes.value.light.variables['current-time-color'] = color.currentTime
 
     theme.themes.value.dark.colors.primary = color.primary
-    theme.themes.value.dark.colors.secondary = color.secondary
+    theme.themes.value.dark.colors.secondary = color.secondaryDark
 
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color.theme)
   },

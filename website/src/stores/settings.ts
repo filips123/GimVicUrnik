@@ -60,7 +60,7 @@ export const useSettingsStore = defineStore('settings', {
     dataCollectionCrashes: true,
 
     themeType: ThemeType.System,
-    accentColor: AccentColorName.green,
+    accentColor: AccentColorName.Green,
 
     moodleToken: '',
     circularsPassword: '',
@@ -74,11 +74,18 @@ export const useSettingsStore = defineStore('settings', {
         // Load the raw store from local storage
         const deserialized = JSON.parse(string)
 
-        // Validate each enum value
+        // Validate each type enum value
         deserialized.entityType = validateEnum(EntityType, deserialized.entityType, EntityType.None)
         deserialized.snackType = validateEnum(SnackType, deserialized.snackType, SnackType.Normal)
         deserialized.lunchType = validateEnum(LunchType, deserialized.lunchType, LunchType.Normal)
         deserialized.themeType = validateEnum(ThemeType, deserialized.themeType, ThemeType.System)
+
+        // Validate accent color enum value
+        deserialized.accentColor = validateEnum(
+          AccentColorName,
+          deserialized.accentColor,
+          AccentColorName.Green,
+        )
 
         // Validate entity list
         if (!Array.isArray(deserialized.entityList)) deserialized.entityList = []

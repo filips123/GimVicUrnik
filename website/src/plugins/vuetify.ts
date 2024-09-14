@@ -6,15 +6,15 @@ import { VBtn, VCard, VDivider, VSheet, VTable } from 'vuetify/components'
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 import { sl } from 'vuetify/locale'
 
-import { ACCENT_COLORS, AccentColorName } from '@/utils/colors'
+import { AccentColorName, accentColors } from '@/utils/colors'
 
-const ACCENT_COLOR = ACCENT_COLORS.find(color => color.name === AccentColorName.green)!
+const accentColor = accentColors.find(color => color.name === AccentColorName.Green)!
 
 const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
-    primary: ACCENT_COLOR.primary,
-    secondary: ACCENT_COLOR.secondary,
+    primary: accentColor.primary,
+    secondary: accentColor.secondaryLight,
     'surface-subtle': '#f6f6f6',
     'surface-medium': '#e6e6e6',
     'surface-highlighted': '#efefef',
@@ -22,7 +22,7 @@ const lightTheme: ThemeDefinition = {
   variables: {
     'app-subtitle-opacity': 0.8,
     'card-subtitle-opacity': 0.8,
-    'current-time-color': ACCENT_COLOR.currentTime,
+    'current-time-color': accentColor.currentTime,
     'current-time-opacity': 0.1,
     'overlay-color': '#000000',
     'overlay-opacity': 0.42,
@@ -32,8 +32,8 @@ const lightTheme: ThemeDefinition = {
 const darkTheme: ThemeDefinition = {
   dark: true,
   colors: {
-    primary: ACCENT_COLOR.primary,
-    secondary: ACCENT_COLOR.secondary,
+    primary: accentColor.primary,
+    secondary: accentColor.secondaryDark,
     'surface-subtle': '#1c1c1c',
     'surface-medium': '#262626',
     'surface-highlighted': '#2c2c2c',
