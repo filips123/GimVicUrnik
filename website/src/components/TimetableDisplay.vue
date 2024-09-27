@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import { useIntervalFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import TimetableEmptyClassrooms from '@/components/TimetableEmptyClassrooms.vue'
 import TimetableLesson from '@/components/TimetableLesson.vue'
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
-import { getCurrentDay } from '@/utils/days'
+import { getCurrentDay, getIsWeekend } from '@/utils/days'
 import { localizedWeekdays } from '@/utils/localization'
 import { getCurrentTime, lessonTimes } from '@/utils/times'
 
@@ -25,9 +26,15 @@ const { lessons } = storeToRefs(useTimetableStore())
 const { showHoursInTimetable, highlightCurrentTime, enableLessonDetails } =
   storeToRefs(useSettingsStore())
 
-const isWeekend = [0, 6].includes(new Date().getDay())
-const currentDay = getCurrentDay()
-const currentTime = getCurrentTime()
+const isWeekend = ref(getIsWeekend())
+const currentDay = ref(getCurrentDay())
+const currentTime = ref(getCurrentTime())
+
+useIntervalFn(() => {
+  isWeekend.value = getIsWeekend()
+  currentDay.value = getCurrentDay()
+  currentTime.value = getCurrentTime()
+}, 30000)
 
 /**
  * Determines the range of lesson times that need to be displayed in the timetable.
@@ -48,7 +55,7 @@ function lessonStyles(dayIndex: number, timeIndex: number) {
   // prettier-ignore
   return {
     'bg-surface-highlighted': lessons.value[timeIndex][dayIndex]?.find(lesson => lesson.isSubstitution),
-    'current-time': highlightCurrentTime.value && !isWeekend && dayIndex === currentDay && timeIndex === currentTime,
+    'current-time': highlightCurrentTime.value && !isWeekend.value && dayIndex === currentDay.value && timeIndex === currentTime.value,
   }
 }
 

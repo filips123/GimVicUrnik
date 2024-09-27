@@ -90,7 +90,7 @@ class MenuUpdater(BaseMultiUpdater):
         # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
         date = re.search(
-            r"jedilnik-(?:kosilo|malica)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)", document.url
+            r"jedilnik-(?:kosilo|malica|K|M)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)", document.url
         )
 
         # The specified date is commonly Monday of the effective week

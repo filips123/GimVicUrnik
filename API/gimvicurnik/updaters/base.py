@@ -163,15 +163,22 @@ class BaseMultiUpdater(ABC):
         span.set_tag("document.modified", document.modified)
         span.set_tag("document.action", "crashed")
 
+        # == DOCUMENT EFFECTIVE
+
+        # Get the document's effective date using the subclassed method
+        # This may return none for documents without an effective date
+        # If this fails, we can't do anything other than to skip the document
+        effective = self.get_document_effective(document)
+
         # == DOCUMENT RECORD (GET)
 
         # Try to find an existing document record
-        record = self.retrieve_document(document)
+        record = self.retrieve_document(document, effective)
 
         # == DOCUMENT PROCESSING
 
         # Get the modified time if it is set, otherwise use the current time
-        created = document.created or datetime.datetime.utcnow()
+        created = document.created or datetime.datetime.now(datetime.timezone.utc)
         modified = document.modified or created
 
         # Check if the document has changed without downloading it and comparing hashes
@@ -193,8 +200,8 @@ class BaseMultiUpdater(ABC):
             # If this fails, we can't do anything other than to skip the document
             stream, new_hash = self.download_document(document)
 
-            # Check if the document hash has changed
-            if record and record.parsed and record.hash == new_hash:
+            # Check if the document hash or document URL have changed
+            if record and record.parsed and record.hash == new_hash and record.url == document.url:
                 changed = False
             else:
                 action = "updated"
@@ -232,11 +239,6 @@ class BaseMultiUpdater(ABC):
             span.set_tag("document.action", "skipped")
 
             return
-
-        # Get the document's effective date using the subclassed method
-        # This may return none for documents without an effective date
-        # If this fails, we can't do anything other than to skip the document
-        effective = self.get_document_effective(document)
 
         if parsable:
             # If there is no date, we can't do anything other than to skip the document
@@ -320,14 +322,17 @@ class BaseMultiUpdater(ABC):
                 self.logger.info("Skipped because the %s document for %s is already stored", document.type.value, effective)
         # fmt: on
 
-    def retrieve_document(self, document: DocumentInfo) -> Document | None:
+    def retrieve_document(self, document: DocumentInfo, effective: datetime.date | None) -> Document | None:
         """Get a document record from the database. May be set by subclasses."""
 
-        return (
-            self.session.query(Document)
-            .filter(Document.type == document.type, Document.url == document.url)
-            .first()
-        )
+        # Normally, the document URL should match
+        criterion = Document.url == document.url
+
+        if effective:
+            # If effective date is set, it may also match instead of the URL
+            criterion |= Document.effective == effective
+
+        return self.session.query(Document).filter(Document.type == document.type, criterion).first()
 
     @with_span(op="download")
     def download_document(self, document: DocumentInfo) -> tuple[BytesIO, str]:

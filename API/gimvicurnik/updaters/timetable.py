@@ -4,7 +4,7 @@ import logging
 import re
 import typing
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 
 import requests
@@ -167,7 +167,7 @@ class TimetableUpdater:
             created = False
 
         document.type = DocumentType.TIMETABLE
-        document.modified = datetime.utcnow()
+        document.modified = datetime.now(timezone.utc)
         document.url = self.config.url
         document.hash = new_hash
         self.session.add(document)
