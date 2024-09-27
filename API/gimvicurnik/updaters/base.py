@@ -178,7 +178,7 @@ class BaseMultiUpdater(ABC):
         # == DOCUMENT PROCESSING
 
         # Get the modified time if it is set, otherwise use the current time
-        created = document.created or datetime.datetime.now(datetime.UTC)
+        created = document.created or datetime.datetime.now(datetime.timezone.utc)
         modified = document.modified or created
 
         # Check if the document has changed without downloading it and comparing hashes
