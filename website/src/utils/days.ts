@@ -23,6 +23,13 @@ export function getCurrentDay(): number {
 }
 
 /**
+ * Returns whether it is currently a weekend.
+ */
+export function getIsWeekend(): boolean {
+  return [0, 6].includes(new Date().getDay())
+}
+
+/**
  * Returns the weekdays of the week of the given date.
  *
  * The weekdays are returned as an array of `Date` objects, where the first
@@ -54,5 +61,9 @@ export function getWeekdays(date: Date): Date[] {
  * Returns the ISO date string of the given date.
  */
 export function getISODate(date: Date): string {
+  // Make sure the date is UTC midnight, otherwise, conversion to ISO may be wrong
+  date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+
+  // Convert the date into ISO format and return the date part
   return date.toISOString().split('T')[0]
 }
