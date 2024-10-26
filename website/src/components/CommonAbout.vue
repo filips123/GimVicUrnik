@@ -6,6 +6,7 @@ defineProps<{
   showDataCollection?: boolean
   showDevelopers?: boolean
   showFeedback?: boolean
+  showLongFeedback?: boolean
 }>()
 </script>
 
@@ -43,5 +44,27 @@ defineProps<{
         >uradnem repozitoriju</a
       >.
     </p>
+    <div v-if="showLongFeedback">
+      <p>Ker se aplikacija stalno razvija, so nam vaše povratne informacije zelo pomembne.</p>
+      <p>
+        Če ste odkrili napako v aplikaciji ali podatkih, želite prispevati k razvoju ali ponuditi
+        povratne informacije, lahko to naredite na
+        <a href="https://github.com/filips123/GimVicUrnik/wiki/Povratne-informacije" target="_blank"
+          >uradnem repozitoriju</a
+        >
+        (potreben je brezplačen GitHub račun). Če nimate GitHub računa, lahko povratne informacije
+        do nadaljnjega sporočite tudi prek
+        <a href="https://forms.gle/Ffhii1NvczBKimB18" target="_blank">vprašalnika</a>, ki je
+        dostopen brez prijave. V primeru večjih težav nam lahko pišete na:
+        <a href="mailto:gimvicurnik@gmail.com">gimvicurnik@gmail.com</a>.
+      </p>
+      <p>
+        <strong>Pozor:</strong> Žal ne moremo ugoditi vsem vašim predlogom, vendar predlagamo, da si
+        že obstoječe funkcije pogledate na
+        <a href="https://github.com/filips123/GimVicUrnik/wiki" target="_blank"
+          >uradni dokumentaciji</a
+        >, saj se jih veliko uporabnikov morda ne zaveda.
+      </p>
+    </div>
   </div>
 </template>

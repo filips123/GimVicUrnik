@@ -3,6 +3,7 @@ import {
   mdiDatabaseImportOutline,
   mdiInformationOutline,
   mdiKeyOutline,
+  mdiMessageAlertOutline,
   mdiPalette,
   mdiTuneVariant,
   mdiUpdate,
@@ -14,6 +15,7 @@ import { ref } from 'vue'
 import SettingsAbout from '@/components/SettingsAbout.vue'
 import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
 import SettingsBaseSwitch from '@/components/SettingsBaseSwitch.vue'
+import SettingsFeedback from '@/components/SettingsFeedback.vue'
 import SettingsSelectAccentColor from '@/components/SettingsSelectAccentColor.vue'
 import SettingsSelectEntity from '@/components/SettingsSelectEntity.vue'
 import SettingsSelectMenuLunch from '@/components/SettingsSelectMenuLunch.vue'
@@ -59,6 +61,7 @@ const selectAccentColorDialog = ref(false)
 const setDataCollectionDialog = ref(false)
 const setMoodleTokenDialog = ref(false)
 const aboutDialog = ref(false)
+const feedbackDialog = ref(false)
 
 const appVersion = import.meta.env.VITE_VERSION
 
@@ -156,6 +159,12 @@ async function updateApp() {
       :icon="mdiInformationOutline"
     />
 
+    <SettingsBaseAction
+      v-model="feedbackDialog"
+      label="Povratne informacije"
+      :icon="mdiMessageAlertOutline"
+    />
+
     <SettingsSelectEntity v-model="selectEntityDialog" />
     <SettingsSelectMenuSnack v-model="selectSnackDialog" />
     <SettingsSelectMenuLunch v-model="selectLunchDialog" />
@@ -164,5 +173,6 @@ async function updateApp() {
     <SettingsSetDataCollection v-model="setDataCollectionDialog" />
     <SettingsSetMoodleToken v-model="setMoodleTokenDialog" />
     <SettingsAbout v-model="aboutDialog" />
+    <SettingsFeedback v-model="feedbackDialog" />
   </v-column>
 </template>
