@@ -3,7 +3,7 @@ import {
   mdiDatabaseImportOutline,
   mdiInformationOutline,
   mdiKeyOutline,
-  mdiPalette,
+  mdiPaletteOutline,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
@@ -114,7 +114,7 @@ async function updateApp() {
       v-model="selectAccentColorDialog"
       label="Barva označevanja"
       :messages="localizeAccentColorName(accentColor)"
-      :icon="mdiPalette"
+      :icon="mdiPaletteOutline"
     />
 
     <SettingsBaseAction
