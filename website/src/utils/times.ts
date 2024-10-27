@@ -19,12 +19,14 @@ export function getCurrentTime(): number {
 
   let timeIndex = 0
 
-  for (const [startTime, endTime] of lessonTimes) {
-    const startTimes = startTime.split(':').map(Number)
-    const endTimes = endTime.split(':').map(Number)
+  for (let i = 0; i < lessonTimes.length; i++) {
+    // Current time starts at the end of the previous lesson (except for pre-lessons)
+    // and ends on the end of the current lesson
+    const startTimes = lessonTimes[i > 0 ? i - 1 : i][i > 0 ? 1 : 0].split(':').map(Number)
+    const endTimes = lessonTimes[i][1].split(':').map(Number)
 
     startDateTime.setHours(startTimes[0], startTimes[1], 0)
-    endDateTime.setHours(endTimes[0], endTimes[1] + 5, 0)
+    endDateTime.setHours(endTimes[0], endTimes[1], 0)
 
     if (startDateTime <= time && time <= endDateTime) return timeIndex
     timeIndex++
