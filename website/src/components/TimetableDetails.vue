@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import TimetableLessonLink from '@/components/TimetableLessonLink.vue'
 import type { MergedLesson } from '@/stores/timetable'
 import { getCurrentDate } from '@/utils/days'
 import { localizeDate, localizedWeekdays } from '@/utils/localization'
@@ -33,7 +34,7 @@ function displayDifferent(value1: string | null, value2: string | null): string 
 </script>
 
 <template>
-  <v-dialog v-model="dialog">
+  <v-dialog v-model="dialog" close-on-content-click>
     <v-card :title :subtitle>
       <template v-if="substitutions.length" #text>
         <div
@@ -45,7 +46,7 @@ function displayDifferent(value1: string | null, value2: string | null): string 
           <v-list dense class="lesson-details pa-0">
             <v-list-item class="px-0">
               <v-list-item-title>Razred</v-list-item-title>
-              <v-list-item-subtitle>{{ substitution.class }}</v-list-item-subtitle>
+              <v-list-item-subtitle><TimetableLessonLink link-type='classes' :link-value="substitution.class" /></v-list-item-subtitle>
             </v-list-item>
             <v-list-item class="px-0">
               <v-list-item-title>Predmet</v-list-item-title>
@@ -53,11 +54,21 @@ function displayDifferent(value1: string | null, value2: string | null): string 
             </v-list-item>
             <v-list-item class="px-0">
               <v-list-item-title>Profesor</v-list-item-title>
-              <v-list-item-subtitle>{{ displayDifferent(substitution.teacher, substitution.substitutionTeacher) }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                <TimetableLessonLink link-type='teachers' :link-value="substitution.teacher" />
+                <template v-if="substitution.teacher !== substitution.substitutionTeacher">
+                  → <TimetableLessonLink link-type='teachers' :link-value="substitution.substitutionTeacher" />
+                </template>
+              </v-list-item-subtitle>
             </v-list-item>
             <v-list-item class="px-0">
               <v-list-item-title>Učilnica</v-list-item-title>
-              <v-list-item-subtitle>{{ displayDifferent(substitution.classroom, substitution.substitutionClassroom) }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                <TimetableLessonLink link-type='classrooms' :link-value="substitution.classroom" />
+                <template v-if="substitution.classroom !== substitution.substitutionClassroom">
+                  → <TimetableLessonLink link-type='classrooms' :link-value="substitution.substitutionClassroom" />
+                </template>
+              </v-list-item-subtitle>
             </v-list-item>
             <v-list-item v-if="substitution.notes" class="px-0">
               <v-list-item-title>Opombe</v-list-item-title>
