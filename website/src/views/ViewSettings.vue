@@ -4,7 +4,7 @@ import {
   mdiInformationOutline,
   mdiKeyOutline,
   mdiMessageAlertOutline,
-  mdiPalette,
+  mdiPaletteOutline,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
@@ -117,7 +117,7 @@ async function updateApp() {
       v-model="selectAccentColorDialog"
       label="Barva označevanja"
       :messages="localizeAccentColorName(accentColor)"
-      :icon="mdiPalette"
+      :icon="mdiPaletteOutline"
     />
 
     <SettingsBaseAction
