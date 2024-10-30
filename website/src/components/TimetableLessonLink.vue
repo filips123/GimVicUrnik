@@ -18,5 +18,6 @@ const { showLinksInTimetable } = storeToRefs(useSettingsStore())
     class="text-decoration-none"
     >{{ linkValue }}</router-link
   >
-  <template v-else>{{ linkValue }}</template>
+  <template v-else-if="linkValue">{{ linkValue }}</template>
+  <template v-else>/</template>
 </template>
