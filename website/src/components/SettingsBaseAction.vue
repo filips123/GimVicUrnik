@@ -3,7 +3,7 @@ const model = defineModel<boolean>()
 
 const { callback } = defineProps<{
   icon: string
-  messages: string
+  messages?: string
   label: string
   callback?: () => void
 }>()
