@@ -87,10 +87,15 @@ class MenuUpdater(BaseMultiUpdater):
     def get_document_effective(self, document: DocumentInfo) -> datetime.date:
         """Return the document effective date in a local timezone from the URL."""
 
+        # Example URL formats (with variations):
         # jedilnik-kosilo-YYYY-MM-DD(-popravek).pdf
         # jedilnik-malica-YYYY-MM-DD(-popravek).pdf
+        # 01-splet-K-YYYY-MM-DD(-popravek).pdf
+        # 01-splet-M-YYYY-MM-DD(-popravek).pdf
+
         date = re.search(
-            r"jedilnik-(?:kosilo|malica|K|M)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)", document.url
+            r"(?:jedilnik|\d+-splet)-(?:kosilo|malica|K|M)-(\d+)-(\d+)-(\d+)(?:-[\w-]*)?\.(?:pdf|xlsx)",
+            document.url,
         )
 
         # The specified date is commonly Monday of the effective week
