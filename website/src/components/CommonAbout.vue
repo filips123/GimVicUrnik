@@ -55,8 +55,8 @@ defineProps<{
         (potreben je brezplačen GitHub račun). Če nimate GitHub računa, lahko povratne informacije
         do nadaljnjega sporočite tudi prek
         <a href="https://forms.gle/Ffhii1NvczBKimB18" target="_blank">vprašalnika</a>, ki je
-        dostopen brez prijave. V primeru večjih težav nam lahko pišete na:
-        <a href="mailto:gimvicurnik@gmail.com">gimvicurnik@gmail.com</a>.
+        dostopen brez prijave. V primeru večjih težav nam lahko pišete na
+        <a href="mailto:gimvicurnik@gmail.com" target="_blank">gimvicurnik@gmail.com</a>.
       </p>
       <p>
         <strong>Pozor:</strong> Žal ne moremo ugoditi vsem vašim predlogom, vendar predlagamo, da si
