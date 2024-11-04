@@ -76,6 +76,25 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
   if (typeof targetDay !== 'undefined') return [lessonsTime[targetDay]]
   return lessonsTime
 }
+
+function handleSubstitutionsSpacialCase(lessonsTimeDay: MergedLesson[]) {
+  if (lessonsTimeDay.length > 1) {
+    for (const lesson of lessonsTimeDay) {
+      if (lesson.isSubstitution && lesson.substitutionSubject !== lesson.subject) {
+        const sharedSubstitutionLesson = lesson
+
+        sharedSubstitutionLesson.subject = ''
+        sharedSubstitutionLesson.teacher = ''
+        sharedSubstitutionLesson.classroom = ''
+        sharedSubstitutionLesson.notes ??= 'ves razred'
+
+        lessonsTimeDay = [sharedSubstitutionLesson]
+      }
+    }
+  }
+
+  return lessonsTimeDay
+}
 </script>
 
 <template>
@@ -127,7 +146,7 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
               class="w-100"
             >
               <tr
-                v-for="lesson in lessonsTimeDay"
+                v-for="lesson in handleSubstitutionsSpacialCase(lessonsTimeDay)"
                 :key="`${lesson.time}-${lesson.day}-${lesson.class}-${lesson.teacher}-${lesson.classroom}`"
               >
                 <TimetableLesson :lesson="lesson" />
