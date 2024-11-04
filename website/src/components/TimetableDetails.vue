@@ -125,5 +125,6 @@ function closeDialogOnRedirect() {
 
 .lesson-details .v-list-item-subtitle {
   white-space: break-spaces;
+  display: block;
 }
 </style>
