@@ -1,12 +1,12 @@
 <script setup lang="ts">
 const checked = defineModel<boolean>()
-defineProps<{ label: string }>()
+defineProps<{ label: string; icon?: string }>()
 </script>
 
 <template>
   <v-row>
     <v-col>
-      <v-switch v-model="checked" class="settings-base-switch">
+      <v-switch v-model="checked" :true-icon="icon" :false-icon="icon" class="settings-base-switch">
         <template #label>{{ label }}</template>
       </v-switch>
     </v-col>
