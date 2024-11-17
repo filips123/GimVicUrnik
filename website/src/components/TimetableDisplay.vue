@@ -8,8 +8,8 @@ import TimetableLesson from '@/components/TimetableLesson.vue'
 import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
-import { getCurrentDay, getIsWeekend } from '@/utils/days'
-import { localizedWeekdays } from '@/utils/localization'
+import { getCurrentDate, getCurrentDay, getIsWeekend, getWeekdays } from '@/utils/days'
+import { localizeDay, localizeDate } from '@/utils/localization'
 import { getCurrentTime, lessonTimes } from '@/utils/times'
 
 const { targetDay } = defineProps<{ targetDay?: number }>()
@@ -23,7 +23,7 @@ const detailsProps = defineModel<{ day: number; time: number; lessons: MergedLes
 const { currentEntityType } = storeToRefs(useSessionStore())
 const { lessons } = storeToRefs(useTimetableStore())
 
-const { showHoursInTimetable, highlightCurrentTime, enableLessonDetails } =
+const { showDatesInTimetable, showHoursInTimetable, highlightCurrentTime, enableLessonDetails } =
   storeToRefs(useSettingsStore())
 
 const isWeekend = ref(getIsWeekend())
@@ -81,14 +81,16 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
 <template>
   <v-table-main>
     <thead v-if="!daySpecific">
-      <tr class="bg-surface-subtle text-h6">
-        <th :colspan="!daySpecific && showHoursInTimetable ? 2 : 1">Ura</th>
+      <tr class="bg-surface-subtle">
+        <th :colspan="showHoursInTimetable ? 2 : 1" class="text-h6">Ura</th>
         <th
-          v-for="(weekday, index) in localizedWeekdays"
+          v-for="(date, index) in getWeekdays(getCurrentDate())"
           :key="index"
           :class="{ 'bg-surface-medium': index === currentDay && !isWeekend }"
-          v-text="weekday"
-        />
+        >
+          <span class="text-h6">{{ localizeDay(date) }}</span>
+          <div v-if="showDatesInTimetable" class="pb-2 opacity-70">{{ localizeDate(date) }}</div>
+        </th>
       </tr>
     </thead>
 
