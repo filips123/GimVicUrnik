@@ -9,7 +9,7 @@ import { useSessionStore } from '@/stores/session'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { type MergedLesson, useTimetableStore } from '@/stores/timetable'
 import { getCurrentDate, getCurrentDay, getIsWeekend, getWeekdays } from '@/utils/days'
-import { localizeDay, localizeDate } from '@/utils/localization'
+import { localizeDate, localizeDay } from '@/utils/localization'
 import { getCurrentTime, lessonTimes } from '@/utils/times'
 
 const { targetDay } = defineProps<{ targetDay?: number }>()
@@ -86,10 +86,13 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
         <th
           v-for="(date, index) in getWeekdays(getCurrentDate())"
           :key="index"
-          :class="{ 'bg-surface-medium': index === currentDay && !isWeekend }"
+          :class="{
+            'bg-surface-medium': index === currentDay && !isWeekend,
+            'py-1': showDatesInTimetable,
+          }"
         >
           <span class="text-h6">{{ localizeDay(date) }}</span>
-          <div v-if="showDatesInTimetable" class="pb-2 opacity-70">{{ localizeDate(date) }}</div>
+          <div v-if="showDatesInTimetable" class="pb-1 opacity-70">{{ localizeDate(date) }}</div>
         </th>
       </tr>
     </thead>
