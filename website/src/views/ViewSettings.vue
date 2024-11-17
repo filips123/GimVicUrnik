@@ -41,6 +41,7 @@ const {
   lunchType,
   showSubstitutions,
   showLinksInTimetable,
+  showDatesInTimetable,
   showHoursInTimetable,
   highlightCurrentTime,
   enableLessonDetails,
@@ -99,6 +100,7 @@ async function updateApp() {
 
     <SettingsBaseSwitch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <SettingsBaseSwitch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
+    <SettingsBaseSwitch v-model="showDatesInTimetable" label="Prikaži datume v urniku" />
     <SettingsBaseSwitch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <SettingsBaseSwitch v-model="highlightCurrentTime" label="Označi trenutno uro" />
     <SettingsBaseSwitch v-model="enableLessonDetails" label="Klikni za podrobnosti" />

@@ -51,6 +51,7 @@ export const useSettingsStore = defineStore('settings', {
 
     showSubstitutions: true,
     showLinksInTimetable: true,
+    showDatesInTimetable: true,
     showHoursInTimetable: true,
     highlightCurrentTime: true,
     enableLessonDetails: true,
