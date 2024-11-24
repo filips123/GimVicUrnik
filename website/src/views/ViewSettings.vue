@@ -4,7 +4,9 @@ import {
   mdiInformationOutline,
   mdiKeyOutline,
   mdiMessageAlertOutline,
+  mdiMonitor,
   mdiPaletteOutline,
+  mdiTabletCellphone,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
@@ -100,11 +102,26 @@ async function updateApp() {
 
     <SettingsBaseSwitch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <SettingsBaseSwitch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
-    <SettingsBaseSwitch v-model="showDatesInTimetable" label="Prikaži datume v urniku" />
-    <SettingsBaseSwitch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <SettingsBaseSwitch v-model="highlightCurrentTime" label="Označi trenutno uro" />
     <SettingsBaseSwitch v-model="enableLessonDetails" label="Klikni za podrobnosti" />
-    <SettingsBaseSwitch v-model="enablePullToRefresh" label="Potegni za posodobitev" />
+
+    <v-divider-settings />
+
+    <SettingsBaseSwitch
+      v-model="showDatesInTimetable"
+      label="Prikaži datume v urniku"
+      :icon="mdiMonitor"
+    />
+    <SettingsBaseSwitch
+      v-model="showHoursInTimetable"
+      label="Prikaži ure v urniku"
+      :icon="mdiMonitor"
+    />
+    <SettingsBaseSwitch
+      v-model="enablePullToRefresh"
+      label="Potegni za posodobitev"
+      :icon="mdiTabletCellphone"
+    />
 
     <v-divider-settings />
 
