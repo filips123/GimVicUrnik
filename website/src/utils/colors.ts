@@ -13,7 +13,7 @@ export enum AccentColorName {
   Black = 'black',
 }
 
-export type AccentColor = {
+export interface AccentColor {
   /**
    * The name of the accent color.
    */
