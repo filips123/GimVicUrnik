@@ -51,11 +51,10 @@ export const useSettingsStore = defineStore('settings', {
 
     showSubstitutions: true,
     showLinksInTimetable: true,
-    highlightCurrentTime: true,
-    enableLessonDetails: true,
-
     showDatesInTimetable: true,
     showHoursInTimetable: true,
+    highlightCurrentTime: true,
+    enableLessonDetails: true,
     enablePullToRefresh: true,
 
     dataCollectionPerformance: navigator.doNotTrack !== '1' && !navigator.globalPrivacyControl,

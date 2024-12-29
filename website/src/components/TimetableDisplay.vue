@@ -77,14 +77,13 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
   return lessonsTime
 }
 
-function handleSubstitutionsSpacialCase(lessonsTimeDay: MergedLesson[]) {
-  // Important: this can cause breaking changes when multiple entities have overlapping times
+function handleSubstitutionsSpecialCase(lessonsTimeDay: MergedLesson[]) {
+  // Important: This can cause breaking changes when multiple entities have overlapping times
 
-  // Special cases occur only when multiple lessons happen at the same time (only in class view).
-  // This counts for ŠVM/ŠVŽ, INFV/INF and language lessons happening at the same time (FRA/ITA/NEM/ŠPA)
+  // Special cases occur only when multiple lessons happen at the same time in the class view
+  // This accounts for ŠVM/ŠVŽ, INFV/INF and language lessons happening at the same time (FRA/ITA/NEM/ŠPA)
   if (currentEntityType.value === EntityType.Class && lessonsTimeDay.length > 1) {
-    // If subjects that are not in the timetable originally appear,
-    // we replace the original subjects with them
+    // If subjects that are not in the timetable originally appear, we replace the original subjects with them
     if (lessonsTimeDay.find(l => l.subject === null)) {
       return lessonsTimeDay.filter(l => l.subject === null)
     }
@@ -96,12 +95,11 @@ function handleSubstitutionsSpacialCase(lessonsTimeDay: MergedLesson[]) {
 
     if (!lesson) return lessonsTimeDay
 
-    // We need to treat ŠVM/ŠVŽ and INFV/INF as the same subject,
-    // so what happens to one happens to another
+    // We need to treat ŠVM/ŠVŽ and INFV/INF as the same subject, so that what happens to one also happens to another
     if (['ŠVM', 'ŠVŽ', 'INFV', 'INF'].includes(lesson.subject!)) {
       if (lessonsTimeDay.length > 2) {
-        // When there are more than 2 subject it means a new subject has appeared.
-        // We need to delete the original subjects then
+        // When there are more than two subjects, it means a new subject has appeared
+        // We then need to delete the original subjects
         return lessonsTimeDay.filter(l => !['ŠVM', 'ŠVŽ', 'INFV', 'INF'].includes(l.subject || ''))
       } else {
         // We keep only the element of the subject pair that changed
@@ -116,7 +114,7 @@ function handleSubstitutionsSpacialCase(lessonsTimeDay: MergedLesson[]) {
 
     if (!LanguageLesson) return lessonsTimeDay
 
-    // If a subject was changed for another then all the languages are substituted with the new subject
+    // If a subject was changed for another, then all the languages are substituted with the new subject
     return [LanguageLesson!]
   }
 
@@ -173,7 +171,7 @@ function handleSubstitutionsSpacialCase(lessonsTimeDay: MergedLesson[]) {
               class="w-100"
             >
               <tr
-                v-for="lesson in handleSubstitutionsSpacialCase(lessonsTimeDay)"
+                v-for="lesson in handleSubstitutionsSpecialCase(lessonsTimeDay)"
                 :key="`${lesson.time}-${lesson.day}-${lesson.class}-${lesson.teacher}-${lesson.classroom}`"
               >
                 <TimetableLesson :lesson="lesson" />
