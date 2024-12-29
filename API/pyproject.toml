@@ -39,29 +39,29 @@ gimvicurnik = "gimvicurnik.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "^6.0.2"
-flask = "^3.0.3"
-click = "^8.1.7"
-attrs = "~24.2.0"
+flask = "^3.1.0"
+click = "^8.1.8"
+attrs = "~24.3.0"
 cattrs = "~24.1.2"
 requests = "^2.32.3"
 SQLAlchemy = "^2.0.36"
 pdfplumber = "^0.11.4"
 openpyxl = "^3.1.5"
 mammoth = "^1.8.0"
-icalendar = "^6.0.1"
+icalendar = "^6.1.0"
 beautifulsoup4 = { version = "^4.12.3", extras = ["lxml"] }
 
 # Optional support for Sentry integration
-sentry-sdk = { version = "^2.17.0", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
+sentry-sdk = { version = "^2.19.2", extras = ["flask", "sqlalchemy", "pure_eval"], optional = true }
 
 # Optional support for different databases
 PyMySQL = { version = "^1.1.1", optional = true }
-mysqlclient = { version = "^2.2.5", optional = true }
+mysqlclient = { version = "^2.2.6", optional = true }
 psycopg2 = { version = "^2.9.10", optional = true }
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.13.0"
-ruff = "^0.7.2"
+mypy = "^1.14.0"
+ruff = "^0.8.4"
 types-pyyaml = "^6.0.12"
 types-openpyxl = "^3.1.5"
 types-requests = "^2.32.0"
