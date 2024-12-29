@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
     SP = ParamSpec("SP")
     SR = TypeVar("SR")
 
-__all__ = ["start_transaction", "start_span", "with_transaction", "with_span", "sentry_available"]
+__all__ = ["sentry_available", "start_span", "start_transaction", "with_span", "with_transaction"]
 
 
 class WithMock(Mock):

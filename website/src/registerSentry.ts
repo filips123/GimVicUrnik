@@ -10,14 +10,17 @@ import {
   setHttpStatus,
   startBrowserTracingNavigationSpan,
 } from '@sentry/browser'
-import type { Integration, Span, SpanAttributes, TransactionSource } from '@sentry/types'
+import type { Integration, Span, SpanAttributes, TransactionSource } from '@sentry/core'
 import {
   browserProfilingIntegration,
+  browserSessionIntegration,
   extraErrorDataIntegration,
   httpClientIntegration,
+  httpContextIntegration,
   init as sentryInit,
   reportingObserverIntegration,
   thirdPartyErrorFilterIntegration,
+  vueIntegration,
 } from '@sentry/vue'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
@@ -38,23 +41,6 @@ export default function registerSentry(app: App, router: Router) {
   const tracesSampleRate = import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE
   const profilesSampleRate = import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE
 
-  // Include additional always-enabled integrations
-  const integrations = [
-    extraErrorDataIntegration({ depth: 8 }),
-    reportingObserverIntegration(),
-    httpClientIntegration(),
-    thirdPartyErrorFilterIntegration({
-      filterKeys: [import.meta.env.VITE_SENTRY_APPLICATION_KEY],
-      behaviour: 'apply-tag-if-contains-third-party-frames',
-    }),
-  ]
-
-  // Add performance integrations if enabled in settings
-  if (dataCollectionPerformance) {
-    if (tracesSampleRate) integrations.push(browserTracingIntegration(router))
-    if (profilesSampleRate) integrations.push(browserProfilingIntegration())
-  }
-
   // Track only base components for performance
   const trackedComponents = [
     'VApp',
@@ -74,6 +60,30 @@ export default function registerSentry(app: App, router: Router) {
     'NotFound',
   ]
 
+  // Include additional always-enabled integrations
+  const integrations = [
+    extraErrorDataIntegration({ depth: 8 }),
+    reportingObserverIntegration(),
+    httpClientIntegration(),
+    httpContextIntegration(),
+    thirdPartyErrorFilterIntegration({
+      filterKeys: [import.meta.env.VITE_SENTRY_APPLICATION_KEY],
+      behaviour: 'apply-tag-if-contains-third-party-frames',
+    }),
+    vueIntegration({
+      tracingOptions: {
+        trackComponents: dataCollectionPerformance ? trackedComponents : false,
+      },
+    }),
+  ]
+
+  // Add performance integrations if enabled in settings
+  if (dataCollectionPerformance) {
+    integrations.push(browserSessionIntegration())
+    if (tracesSampleRate) integrations.push(browserTracingIntegration(router))
+    if (profilesSampleRate) integrations.push(browserProfilingIntegration())
+  }
+
   // Init the Sentry SDK
   sentryInit({
     app,
@@ -87,9 +97,6 @@ export default function registerSentry(app: App, router: Router) {
 
     environment: import.meta.env.MODE,
     release: releasePrefix + import.meta.env.VITE_VERSION + releaseSuffix,
-
-    autoSessionTracking: dataCollectionPerformance,
-    trackComponents: dataCollectionPerformance ? trackedComponents : false,
 
     integrations,
   })

@@ -6,6 +6,7 @@ import Vue, { Options as VueOptions } from '@vitejs/plugin-vue'
 import { defineConfig, loadEnv, PluginOption } from 'vite'
 import { createHtmlPlugin as Html } from 'vite-plugin-html'
 import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa'
+import VueDevTools from 'vite-plugin-vue-devtools'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 import { version as appVersion } from './package.json'
@@ -103,6 +104,7 @@ export default defineConfig(({ mode }) => {
 
   const plugins: PluginOption = [
     Vue(vueConfig),
+    VueDevTools(),
     Vuetify(),
     Html(htmlConfig),
     VitePWA(pwaConfig),

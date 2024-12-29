@@ -68,7 +68,7 @@ const feedbackDialog = ref(false)
 
 const appVersion = import.meta.env.VITE_VERSION
 
-async function updateApp() {
+function updateApp() {
   // Add GET parameter to invalidate the cache of the index HTML file
   // The service worker waiting is skipped on the next load
   location.href = '?update=' + new Date().getTime()
