@@ -76,6 +76,50 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
   if (typeof targetDay !== 'undefined') return [lessonsTime[targetDay]]
   return lessonsTime
 }
+
+function handleSubstitutionsSpecialCase(lessonsTimeDay: MergedLesson[]) {
+  // Important: This can cause breaking changes when multiple entities have overlapping times
+
+  // Special cases occur only when multiple lessons happen at the same time in the class view
+  // This accounts for ŠVM/ŠVŽ, INFV/INF and language lessons happening at the same time (FRA/ITA/NEM/ŠPA)
+  if (currentEntityType.value === EntityType.Class && lessonsTimeDay.length > 1) {
+    // If subjects that are not in the timetable originally appear, we replace the original subjects with them
+    if (lessonsTimeDay.find(l => l.subject === null)) {
+      return lessonsTimeDay.filter(l => l.subject === null)
+    }
+
+    // A subject change needs to be present as this is the breaking point
+    const lesson: MergedLesson | undefined = lessonsTimeDay.find(
+      l => l.isSubstitution && l.substitutionSubject !== l.subject,
+    )
+
+    if (!lesson) return lessonsTimeDay
+
+    // We need to treat ŠVM/ŠVŽ and INFV/INF as the same subject, so that what happens to one also happens to another
+    if (['ŠVM', 'ŠVŽ', 'INFV', 'INF'].includes(lesson.subject!)) {
+      if (lessonsTimeDay.length > 2) {
+        // When there are more than two subjects, it means a new subject has appeared
+        // We then need to delete the original subjects
+        return lessonsTimeDay.filter(l => !['ŠVM', 'ŠVŽ', 'INFV', 'INF'].includes(l.subject || ''))
+      } else {
+        // We keep only the element of the subject pair that changed
+        return lessonsTimeDay.filter(l => l === lesson)
+      }
+    }
+
+    // At this point we are left only with languages
+    const LanguageLesson: MergedLesson | undefined = lessonsTimeDay.find(
+      l => l.isSubstitution && !['FRA', 'ITA', 'NEM', 'ŠPA', null].includes(l.substitutionSubject),
+    )
+
+    if (!LanguageLesson) return lessonsTimeDay
+
+    // If a subject was changed for another, then all the languages are substituted with the new subject
+    return [LanguageLesson!]
+  }
+
+  return lessonsTimeDay
+}
 </script>
 
 <template>
@@ -127,7 +171,7 @@ function filterForTargetDay(lessonsTime: MergedLesson[][]) {
               class="w-100"
             >
               <tr
-                v-for="lesson in lessonsTimeDay"
+                v-for="lesson in handleSubstitutionsSpecialCase(lessonsTimeDay)"
                 :key="`${lesson.time}-${lesson.day}-${lesson.class}-${lesson.teacher}-${lesson.classroom}`"
               >
                 <TimetableLesson :lesson="lesson" />

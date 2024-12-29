@@ -7,7 +7,7 @@ A system for a school timetable, substitutions and menus at Gimnazija Vič.
 
 This repository contains a system for a Progressive Web App to show the timetable, substitutions, menus and lunch schedules for students and teachers at Gimnazija Vič.
 
-It uses Python API built with Flask and SQLAlchemy to download and parse the data from the official sources (e-classroom, website) using pdf2docx and bs4. The website is built using Vue.js framework and Vuetify theme. The source code can be found in [`API`](API) and [`website`](website) subdirectories.
+It uses Python API built with Flask and SQLAlchemy to download and parse the data from the official sources (e-classroom, website) using pdfplumber and bs4. The website is built using Vue.js framework and Vuetify theme. The source code can be found in [`API`](API) and [`website`](website) subdirectories.
 
 The website is currently deployed at [urnik.gimvic.org](https://urnik.gimvic.org).
 
