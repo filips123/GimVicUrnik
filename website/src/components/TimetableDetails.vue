@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import TimetableLessonLink from '@/components/TimetableLessonLink.vue'
 import { useSettingsStore } from '@/stores/settings'
 import type { MergedLesson } from '@/stores/timetable'
-import { getCurrentDate } from '@/utils/days'
+import { getCurrentDate, getWeekdays } from '@/utils/days'
 import { localizeDate, localizedWeekdays } from '@/utils/localization'
 import { lessonTimes } from '@/utils/times'
 
@@ -18,9 +18,7 @@ const lessonDay = computed(() => localizedWeekdays[props.day])
 const lessonDuration = computed(() => lessonTimes[props.time].join('–'))
 
 const lessonDate = computed(() => {
-  const currentDate = getCurrentDate()
-  currentDate.setDate(currentDate.getDate() - currentDate.getDay() + props.day + 1)
-  return localizeDate(currentDate)
+  return localizeDate(getWeekdays(getCurrentDate())[props.day])
 })
 
 const title = computed(() => (props.time ? `${props.time}. ura` : 'Predura'))
