@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useListsStore } from '@/stores/lists'
+import { useNotificationsStore } from '@/stores/notifications'
 import { EntityType, useSettingsStore } from '@/stores/settings'
 import { sortEntities } from '@/utils/entities'
 import { localizeSelectEntityNotSelected, localizeSelectEntityTitle } from '@/utils/localization'
@@ -15,6 +16,8 @@ const displayed = defineModel<boolean>()
 const { fullPage } = defineProps<{ fullPage?: boolean }>()
 
 const router = useRouter()
+
+const notificationsStore = useNotificationsStore()
 
 const settingsStore = useSettingsStore()
 const { displaySnackbar } = useSnackbarStore()
@@ -197,6 +200,8 @@ function handleSaveEntityList() {
   // Navigate to the correct timetable route or close the dialog
   if (fullPage) router.push(generateTimetableRoute(selectedType.value, selectedList.value))
   else displayed.value = false
+
+  notificationsStore.updateUserFirestoreData()
 }
 </script>
 

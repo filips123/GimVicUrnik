@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  mdiBellOutline,
   mdiCog,
   mdiFileDocumentOutline,
   mdiFood,
@@ -95,6 +96,7 @@ watch(
 const pages: { title: string; link: string; icon: string }[] = [
   { title: 'Viri', link: 'sources', icon: mdiFileDocumentOutline },
   { title: 'Naročanje', link: 'subscribe', icon: mdiRss },
+  { title: 'Sporočila', link: 'notifications', icon: mdiBellOutline },
   { title: 'Nastavitve', link: 'settings', icon: mdiCog },
 ]
 
