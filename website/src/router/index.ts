@@ -2,6 +2,7 @@ import { nextTick } from 'vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
 import { homeGuard, timetableGuard, welcomeGuard } from '@/router/guards'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useSessionStore } from '@/stores/session'
 
 const Timetable = () => import('../views/ViewTimetable.vue')
@@ -43,6 +44,10 @@ router.beforeEach((to, from) => {
   // Call welcome guard that redirects the user to timetable if it has the entity set
   // Included just in case the route priority changes and welcome is matched first
   if (to.name === 'welcome') return welcomeGuard()
+
+  // Check the notifications
+  const notificationsStore = useNotificationsStore()
+  notificationsStore.updateNotifications()
 
   // Call timetable guard that redirects the user to the correct entity
   if (to.name === 'timetable') return timetableGuard(to, from)

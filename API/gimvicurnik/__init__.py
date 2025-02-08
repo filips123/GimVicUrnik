@@ -16,6 +16,7 @@ from .blueprints import (
     FeedHandler,
     ListHandler,
     MenusHandler,
+    NotificationsHandler,
     ScheduleHandler,
     SubstitutionsHandler,
     TimetableHandler,
@@ -258,6 +259,7 @@ class GimVicUrnik:
         TimetableHandler.register(self.app, self.config)
         SubstitutionsHandler.register(self.app, self.config)
         MenusHandler.register(self.app, self.config)
+        NotificationsHandler.register(self.app, self.config)
         ScheduleHandler.register(self.app, self.config)
         DocumentsHandler.register(self.app, self.config)
         FeedHandler.register(self.app, self.config)

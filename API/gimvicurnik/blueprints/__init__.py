@@ -3,6 +3,7 @@ from .documents import DocumentsHandler
 from .feed import FeedHandler
 from .list import ListHandler
 from .menus import MenusHandler
+from .notifications import NotificationsHandler
 from .schedule import ScheduleHandler
 from .substitutions import SubstitutionsHandler
 from .timetable import TimetableHandler

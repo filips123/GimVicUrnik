@@ -3,9 +3,11 @@ import { mdiClockOutline } from '@mdi/js'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
+import NotificationsList from '@/components/NotificationsList.vue'
 import NotificationsSetTime from '@/components/NotificationsSetTime.vue'
 import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
 import SettingsBaseSwitch from '@/components/SettingsBaseSwitch.vue'
+import { useSnackbarStore } from '@/composables/snackbar'
 import { useNotificationsStore } from '@/stores/notifications'
 
 const {
@@ -16,9 +18,11 @@ const {
   circularsNotificationsEnabled,
   snackMenuNotificationsEnabled,
   lunchMenuNotificationsEnabled,
+  seen,
 } = storeToRefs(useNotificationsStore())
 
 const notificationsStore = useNotificationsStore()
+const snackbarStore = useSnackbarStore()
 
 const setCurrentDayTimeDialog = ref(false)
 const setNextDayTimeDialog = ref(false)
@@ -58,6 +62,11 @@ function requestPermission() {
   Notification.requestPermission().then(permission => {
     permissionGranted.value = permission === 'granted'
   })
+}
+
+if (!seen.value) {
+  snackbarStore.$reset()
+  seen.value = true
 }
 </script>
 
@@ -122,15 +131,20 @@ function requestPermission() {
       />
     </div>
 
-    <NotificationsSetTime
-      v-model:dialog="setCurrentDayTimeDialog"
-      v-model:time="substitutionsNotificationsCurrentDayTime"
-      title="Izberite uro za trenutni dan"
-    />
-    <NotificationsSetTime
-      v-model:dialog="setNextDayTimeDialog"
-      v-model:time="substitutionsNotificationsNextDayTime"
-      title="Izberite uro za naslednji dan"
-    />
+    <v-divider-settings />
+
+    <NotificationsList />
   </v-column>
+
+  <NotificationsSetTime
+    v-model:dialog="setCurrentDayTimeDialog"
+    v-model:time="substitutionsNotificationsCurrentDayTime"
+    title="Izberite uro za trenutni dan"
+  />
+
+  <NotificationsSetTime
+    v-model:dialog="setNextDayTimeDialog"
+    v-model:time="substitutionsNotificationsNextDayTime"
+    title="Izberite uro za naslednji dan"
+  />
 </template>
