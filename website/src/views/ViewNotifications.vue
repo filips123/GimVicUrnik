@@ -11,10 +11,10 @@ import { useSnackbarStore } from '@/composables/snackbar'
 import { useNotificationsStore } from '@/stores/notifications'
 
 const {
-  substitutionsNotificationsImmediate,
-  substitutionsNotificationsSetTime,
-  substitutionsNotificationsCurrentDayTime,
-  substitutionsNotificationsNextDayTime,
+  immediateSubstitutionsNotificationsEnabled,
+  scheduledSubstitutionsNotificationsEnabled,
+  scheduledSubstitutionsNotificationsCurrentDayTime,
+  scheduledSubstitutionsNotificationsNextDayTime,
   circularsNotificationsEnabled,
   snackMenuNotificationsEnabled,
   lunchMenuNotificationsEnabled,
@@ -30,27 +30,33 @@ const setNextDayTimeDialog = ref(false)
 const permissionGranted = ref(Notification.permission === 'granted')
 
 const currentDayTimeMessage = computed(() => {
-  if (substitutionsNotificationsCurrentDayTime.value) {
-    return 'Pošlji za trenutni dan ob '.concat(substitutionsNotificationsCurrentDayTime.value)
+  if (scheduledSubstitutionsNotificationsCurrentDayTime.value) {
+    return 'Pošlji za trenutni dan ob '.concat(
+      scheduledSubstitutionsNotificationsCurrentDayTime.value,
+    )
   } else {
     return 'Ni nastavljeno'
   }
 })
 
 const nextDayTimeMessage = computed(() => {
-  if (substitutionsNotificationsNextDayTime.value) {
-    return 'Pošlji za naslednji dan ob '.concat(substitutionsNotificationsNextDayTime.value)
+  if (scheduledSubstitutionsNotificationsNextDayTime.value) {
+    return 'Pošlji za naslednji dan ob '.concat(
+      scheduledSubstitutionsNotificationsNextDayTime.value,
+    )
   } else {
     return 'Ni nastavljeno'
   }
 })
 
+watch(permissionGranted, () => (permissionGranted.value ? notificationsStore.getFCMToken() : null))
+
 watch(
   [
-    substitutionsNotificationsImmediate,
-    substitutionsNotificationsSetTime,
-    substitutionsNotificationsCurrentDayTime,
-    substitutionsNotificationsNextDayTime,
+    immediateSubstitutionsNotificationsEnabled,
+    scheduledSubstitutionsNotificationsEnabled,
+    scheduledSubstitutionsNotificationsCurrentDayTime,
+    scheduledSubstitutionsNotificationsNextDayTime,
     circularsNotificationsEnabled,
     snackMenuNotificationsEnabled,
     lunchMenuNotificationsEnabled,
@@ -74,21 +80,21 @@ if (!seen.value) {
   <v-column>
     <div @click="!permissionGranted ? requestPermission() : null">
       <SettingsBaseSwitch
-        v-model="substitutionsNotificationsImmediate"
+        v-model="immediateSubstitutionsNotificationsEnabled"
         :disabled="!permissionGranted"
         label="Nadomeščanja"
         messages="Pošilji sporočilo, ko pride do nadomeščanja"
       />
 
       <SettingsBaseSwitch
-        v-model="substitutionsNotificationsSetTime"
+        v-model="scheduledSubstitutionsNotificationsEnabled"
         :disabled="!permissionGranted"
         label="Povzetek nadomeščanj"
         messages="Pošlji sporočilo s povzetkom nadomeščanj ob določeni uri"
       />
 
       <SettingsBaseAction
-        v-if="substitutionsNotificationsSetTime"
+        v-if="scheduledSubstitutionsNotificationsEnabled"
         v-model="setCurrentDayTimeDialog"
         :disabled="!permissionGranted"
         label="Trenutni dan"
@@ -97,7 +103,7 @@ if (!seen.value) {
       />
 
       <SettingsBaseAction
-        v-if="substitutionsNotificationsSetTime"
+        v-if="scheduledSubstitutionsNotificationsEnabled"
         v-model="setNextDayTimeDialog"
         :disabled="!permissionGranted"
         label="Naslednji dan"
@@ -138,13 +144,13 @@ if (!seen.value) {
 
   <NotificationsSetTime
     v-model:dialog="setCurrentDayTimeDialog"
-    v-model:time="substitutionsNotificationsCurrentDayTime"
+    v-model:time="scheduledSubstitutionsNotificationsCurrentDayTime"
     title="Izberite uro za trenutni dan"
   />
 
   <NotificationsSetTime
     v-model:dialog="setNextDayTimeDialog"
-    v-model:time="substitutionsNotificationsNextDayTime"
+    v-model:time="scheduledSubstitutionsNotificationsNextDayTime"
     title="Izberite uro za naslednji dan"
   />
 </template>

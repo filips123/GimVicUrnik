@@ -28,6 +28,7 @@ from .commands import (
     update_solsis_command,
     cleanup_database_command,
     update_timetable_command,
+    handle_notifications_command,
 )
 from .config import Config
 from .database import Session, SessionFactory
@@ -251,6 +252,7 @@ class GimVicUrnik:
         self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)
         self.app.cli.add_command(create_database_command)
+        self.app.cli.add_command(handle_notifications_command)
 
     def register_routes(self) -> None:
         """Register all application routes."""

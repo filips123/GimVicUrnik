@@ -1,8 +1,10 @@
 import { doc, setDoc } from 'firebase/firestore'
+import { getMessaging, getToken } from 'firebase/messaging'
 import { defineStore } from 'pinia'
 import { useFirestore } from 'vuefire'
 
 import { useSnackbarStore } from '@/composables/snackbar'
+import firebaseApp from '@/plugins/firebase'
 import router from '@/router'
 import { useSettingsStore } from '@/stores/settings'
 import { updateWrapper } from '@/utils/update'
@@ -17,10 +19,10 @@ export const useNotificationsStore = defineStore('notifications', {
   state: () => ({
     token: '',
 
-    substitutionsNotificationsImmediate: false,
-    substitutionsNotificationsSetTime: false,
-    substitutionsNotificationsCurrentDayTime: '07:00',
-    substitutionsNotificationsNextDayTime: '',
+    immediateSubstitutionsNotificationsEnabled: false,
+    scheduledSubstitutionsNotificationsEnabled: false,
+    scheduledSubstitutionsNotificationsCurrentDayTime: '',
+    scheduledSubstitutionsNotificationsNextDayTime: '20:00',
 
     circularsNotificationsEnabled: false,
 
@@ -33,27 +35,42 @@ export const useNotificationsStore = defineStore('notifications', {
   }),
 
   actions: {
+    getFCMToken() {
+      const messaging = getMessaging(firebaseApp)
+      getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY }).then(
+        currentToken => {
+          if (currentToken) {
+            this.token = currentToken
+            this.updateUserFirestoreData()
+          } else {
+            console.log('Could not get FCM token')
+          }
+        },
+      )
+    },
+
     async updateUserFirestoreData() {
       if (!this.token) return
 
-      const { entityList, snackType, lunchType } = useSettingsStore()
+      const { entityType, entityList } = useSettingsStore()
 
       const db = useFirestore()
 
       await setDoc(doc(db, 'users', this.token), {
-        substitutionsNotificationsImmediate: this.substitutionsNotificationsImmediate,
-        substitutionsNotificationsSetTime: this.substitutionsNotificationsSetTime,
-        substitutionsNotificationsCurrentDayTime: this.substitutionsNotificationsCurrentDayTime,
-        substitutionsNotificationsNextDayTime: this.substitutionsNotificationsNextDayTime,
+        immediateSubstitutionsNotificationsEnabled: this.immediateSubstitutionsNotificationsEnabled,
+        scheduledSubstitutionsNotificationsEnabled: this.scheduledSubstitutionsNotificationsEnabled,
+        scheduledSubstitutionsNotificationsCurrentDayTime:
+          this.scheduledSubstitutionsNotificationsCurrentDayTime,
+        scheduledSubstitutionsNotificationsNextDayTime:
+          this.scheduledSubstitutionsNotificationsNextDayTime,
 
         circularsNotificationsEnabled: this.circularsNotificationsEnabled,
 
         snackMenuNotificationsEnabled: this.snackMenuNotificationsEnabled,
         lunchMenuNotificationsEnabled: this.lunchMenuNotificationsEnabled,
 
+        entityType: entityType,
         entityList: entityList,
-        snackType: snackType,
-        lunchType: lunchType,
       })
     },
 

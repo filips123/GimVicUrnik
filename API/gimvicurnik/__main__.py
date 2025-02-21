@@ -44,6 +44,7 @@ class GimVicUrnikGroup(FlaskGroup):
             pdfminer_version = metadata.version("pdfminer.six")
             openpyxl_version = metadata.version("openpyxl")
             mammoth_version = metadata.version("mammoth")
+            firebase_admin_version = metadata.version("firebase-admin")
 
             try:
                 sentry_version = metadata.version("sentry-sdk")
@@ -61,6 +62,7 @@ class GimVicUrnikGroup(FlaskGroup):
                 f"pdfminer: {pdfminer_version}\n"
                 f"openpyxl: {openpyxl_version}\n"
                 f"mammoth: {mammoth_version}\n"
+                f"firebase admin: {firebase_admin_version}\n"
                 f"Sentry SDK: {sentry_version}",
                 color=ctx.color,
             )
