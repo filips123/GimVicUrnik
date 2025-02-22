@@ -1,20 +1,13 @@
 <script setup lang="ts">
-import { mdiClockOutline } from '@mdi/js'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import NotificationsList from '@/components/NotificationsList.vue'
-import NotificationsSetTime from '@/components/NotificationsSetTime.vue'
-import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
 import SettingsBaseSwitch from '@/components/SettingsBaseSwitch.vue'
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useNotificationsStore } from '@/stores/notifications'
 
 const {
-  immediateSubstitutionsNotificationsEnabled,
-  scheduledSubstitutionsNotificationsEnabled,
-  scheduledSubstitutionsNotificationsCurrentDayTime,
-  scheduledSubstitutionsNotificationsNextDayTime,
   circularsNotificationsEnabled,
   snackMenuNotificationsEnabled,
   lunchMenuNotificationsEnabled,
@@ -24,43 +17,12 @@ const {
 const notificationsStore = useNotificationsStore()
 const snackbarStore = useSnackbarStore()
 
-const setCurrentDayTimeDialog = ref(false)
-const setNextDayTimeDialog = ref(false)
-
 const permissionGranted = ref(Notification.permission === 'granted')
-
-const currentDayTimeMessage = computed(() => {
-  if (scheduledSubstitutionsNotificationsCurrentDayTime.value) {
-    return 'Pošlji za trenutni dan ob '.concat(
-      scheduledSubstitutionsNotificationsCurrentDayTime.value,
-    )
-  } else {
-    return 'Ni nastavljeno'
-  }
-})
-
-const nextDayTimeMessage = computed(() => {
-  if (scheduledSubstitutionsNotificationsNextDayTime.value) {
-    return 'Pošlji za naslednji dan ob '.concat(
-      scheduledSubstitutionsNotificationsNextDayTime.value,
-    )
-  } else {
-    return 'Ni nastavljeno'
-  }
-})
 
 watch(permissionGranted, () => (permissionGranted.value ? notificationsStore.getFCMToken() : null))
 
 watch(
-  [
-    immediateSubstitutionsNotificationsEnabled,
-    scheduledSubstitutionsNotificationsEnabled,
-    scheduledSubstitutionsNotificationsCurrentDayTime,
-    scheduledSubstitutionsNotificationsNextDayTime,
-    circularsNotificationsEnabled,
-    snackMenuNotificationsEnabled,
-    lunchMenuNotificationsEnabled,
-  ],
+  [circularsNotificationsEnabled, snackMenuNotificationsEnabled, lunchMenuNotificationsEnabled],
   () => notificationsStore.updateUserFirestoreData(),
 )
 
@@ -79,40 +41,6 @@ if (!seen.value) {
 <template>
   <v-column>
     <div @click="!permissionGranted ? requestPermission() : null">
-      <SettingsBaseSwitch
-        v-model="immediateSubstitutionsNotificationsEnabled"
-        :disabled="!permissionGranted"
-        label="Nadomeščanja"
-        messages="Pošilji sporočilo, ko pride do nadomeščanja"
-      />
-
-      <SettingsBaseSwitch
-        v-model="scheduledSubstitutionsNotificationsEnabled"
-        :disabled="!permissionGranted"
-        label="Povzetek nadomeščanj"
-        messages="Pošlji sporočilo s povzetkom nadomeščanj ob določeni uri"
-      />
-
-      <SettingsBaseAction
-        v-if="scheduledSubstitutionsNotificationsEnabled"
-        v-model="setCurrentDayTimeDialog"
-        :disabled="!permissionGranted"
-        label="Trenutni dan"
-        :messages="currentDayTimeMessage"
-        :icon="mdiClockOutline"
-      />
-
-      <SettingsBaseAction
-        v-if="scheduledSubstitutionsNotificationsEnabled"
-        v-model="setNextDayTimeDialog"
-        :disabled="!permissionGranted"
-        label="Naslednji dan"
-        :messages="nextDayTimeMessage"
-        :icon="mdiClockOutline"
-      />
-
-      <v-divider-settings />
-
       <SettingsBaseSwitch
         v-model="circularsNotificationsEnabled"
         :disabled="!permissionGranted"
@@ -141,16 +69,4 @@ if (!seen.value) {
 
     <NotificationsList />
   </v-column>
-
-  <NotificationsSetTime
-    v-model:dialog="setCurrentDayTimeDialog"
-    v-model:time="scheduledSubstitutionsNotificationsCurrentDayTime"
-    title="Izberite uro za trenutni dan"
-  />
-
-  <NotificationsSetTime
-    v-model:dialog="setNextDayTimeDialog"
-    v-model:time="scheduledSubstitutionsNotificationsNextDayTime"
-    title="Izberite uro za naslednji dan"
-  />
 </template>
