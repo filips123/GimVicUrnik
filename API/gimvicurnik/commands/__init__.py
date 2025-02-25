@@ -141,7 +141,9 @@ def handle_notifications_command(
     with SessionFactory.begin() as session:
         gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
 
-        notifications = PushNotificationsHandler(gimvicurnik.config.firebase, session)
+        notifications = PushNotificationsHandler(
+            gimvicurnik.config.firebase, gimvicurnik.config.urls, session
+        )
 
         if not any([immediate_substitutions, scheduled_substitutions, circulars, menus]):
             notifications.send_immediate_substitutions_notifications()

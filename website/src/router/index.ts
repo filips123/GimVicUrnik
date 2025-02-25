@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/menu', name: 'menu', component: Menu, meta: { title: 'Jedilnik', allowPullToRefresh: true, showDayTabs: true } },
   { path: '/circulars', name: 'circulars', component: Circulars, meta: { title: 'Okrožnice', allowPullToRefresh: true } },
   { path: '/sources', name: 'sources', component: Sources, meta: { title: 'Viri', allowPullToRefresh: true } },
-  { path: '/notifications', name: 'notifications', component: Notifications, meta: { title: 'Sporočila' } },
+  { path: '/notifications', name: 'notifications', component: Notifications, meta: { title: 'Sporočila', allowPullToRefresh: true } },
   { path: '/settings', name: 'settings', component: Settings, meta: { title: 'Nastavitve' } },
   { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFound, meta: { title: 'Stran ni najdena' } },
 ]

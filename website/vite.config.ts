@@ -98,6 +98,7 @@ export default defineConfig(({ mode }) => {
     '^/menu$': 'src/views/ViewMenu.vue',
     '^/circulars$': 'src/views/ViewCirculars.vue',
     '^/sources$': 'src/views/ViewSources.vue',
+    '^/notifications$': 'src/views/ViewNotifications.vue',
     '^/settings$': 'src/views/ViewSettings.vue',
   }
 

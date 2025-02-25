@@ -54,6 +54,7 @@ export default function registerSentry(app: App, router: Router) {
     'ViewMenu',
     'ViewCirculars',
     'ViewSources',
+    'ViewNotifications',
     'ViewSettings',
     'ViewWelcome',
     'NotFound',
