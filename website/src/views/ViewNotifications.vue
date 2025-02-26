@@ -19,8 +19,6 @@ const snackbarStore = useSnackbarStore()
 
 const permissionGranted = ref(Notification.permission === 'granted')
 
-watch(permissionGranted, () => (permissionGranted.value ? notificationsStore.getFCMToken() : null))
-
 watch(
   [circularsNotificationsEnabled, snackMenuNotificationsEnabled, lunchMenuNotificationsEnabled],
   () => notificationsStore.updateUserFirestoreData(),
@@ -29,6 +27,7 @@ watch(
 function requestPermission() {
   Notification.requestPermission().then(permission => {
     permissionGranted.value = permission === 'granted'
+    if (permissionGranted.value) notificationsStore.getFCMToken()
   })
 }
 

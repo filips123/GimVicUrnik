@@ -20,5 +20,3 @@ def get_page_name(type: NotificationType) -> str:
             return "circulars"
         case NotificationType.LUNCH_MENU | NotificationType.SNACK_MENU:
             return "menu"
-
-    return ""

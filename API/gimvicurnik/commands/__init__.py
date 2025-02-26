@@ -129,10 +129,15 @@ def create_database_command(ctx: click.Context, recreate: bool) -> None:
 @click.option("--immediate-substitutions", help="Send immediate substitutions.", is_flag=True)
 @click.option("--scheduled-substitutions", help="Send scheduled substitutions.", is_flag=True)
 @click.option("--circulars", help="Send circulars.", is_flag=True)
-@click.option("--menus", help="Send menus.", is_flag=True)
+@click.option("--menu", help="Send menus.", is_flag=True)
+@click.option("--cleanup-users", help="Cleanup probably inactive users from the store.", is_flag=True)
 @with_transaction(name="handle-notifications", op="command")
 def handle_notifications_command(
-    immediate_substitutions: bool, scheduled_substitutions: bool, circulars: bool, menus: bool
+    immediate_substitutions: bool,
+    scheduled_substitutions: bool,
+    circulars: bool,
+    menu: bool,
+    cleanup_users: bool,
 ) -> None:
     """Handle the notifications."""
 
@@ -145,7 +150,7 @@ def handle_notifications_command(
             gimvicurnik.config.firebase, gimvicurnik.config.urls, session
         )
 
-        if not any([immediate_substitutions, scheduled_substitutions, circulars, menus]):
+        if not any([immediate_substitutions, scheduled_substitutions, circulars, menu, cleanup_users]):
             notifications.send_immediate_substitutions_notifications()
             notifications.send_scheduled_substitutions_notifications()
             notifications.send_circulars_notifications()
@@ -157,5 +162,7 @@ def handle_notifications_command(
                 notifications.send_scheduled_substitutions_notifications()
             if circulars:
                 notifications.send_circulars_notifications()
-            if menus:
+            if menu:
                 notifications.send_menu_notifications()
+            if cleanup_users:
+                notifications.cleanup_users()

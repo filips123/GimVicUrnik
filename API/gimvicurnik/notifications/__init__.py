@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import and_
 
-import firebase_admin
+import firebase_admin  # type: ignore
 from firebase_admin import credentials, firestore
-from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore import FieldFilter, And  # type: ignore
 
 from ..database import DocumentType, Document
+from ..errors import NotificationsFirestoreError
 from ..utils.notifications import NotificationType, get_page_name
 from ..utils.sentry import sentry_available
 
@@ -36,7 +37,10 @@ class PushNotificationsHandler:
         self.db = firestore.client()
 
     def _get_user_tokens(self, field: str) -> list[str]:
-        users = self.db.collection("users").where(filter=FieldFilter(field, "==", True)).stream()
+        try:
+            users = self.db.collection("users").where(filter=FieldFilter(field, "==", True)).stream()
+        except Exception as error:
+            raise NotificationsFirestoreError("Error while filtering users collection") from error
 
         return [user.id for user in users]
 
@@ -156,3 +160,28 @@ class PushNotificationsHandler:
                     "Jedilnik za kosilo",
                     f'{menu["start"]} - {menu["end"]}',
                 )
+
+    def cleanup_users(self) -> None:
+        try:
+            # Users that do not have any notifications enabled are probably stale
+            users = (
+                self.db.collection("users")
+                .where(
+                    filter=And(
+                        [
+                            FieldFilter("immediateSubstitutionsNotificationsEnabled", "==", False),
+                            FieldFilter("scheduledSubstitutionsNotificationsEnabled", "==", False),
+                            FieldFilter("circularsNotificationsEnabled", "==", False),
+                            FieldFilter("snackMenuNotificationsEnabled", "==", False),
+                            FieldFilter("lunchMenuNotificationsEnabled", "==", False),
+                        ]
+                    )
+                )
+                .stream()
+            )
+        except Exception as error:
+            raise NotificationsFirestoreError("Error while filtering users collection") from error
+
+        for user in users:
+            self.db.collection("users").document(user.id).delete()
+            self.logger.info("Deleted user from firestore:", user.id)

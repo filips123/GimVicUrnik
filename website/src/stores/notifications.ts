@@ -50,7 +50,12 @@ export const useNotificationsStore = defineStore('notifications', {
     },
 
     async updateUserFirestoreData() {
-      if (!this.token) return
+      if (Notification.permission !== 'granted') return
+
+      if (!this.token) {
+        this.getFCMToken()
+        return
+      }
 
       const { entityType, entityList } = useSettingsStore()
 
