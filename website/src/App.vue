@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {
+  mdiBellOutline,
   mdiCog,
   mdiFileDocumentOutline,
   mdiFood,
   mdiNewspaper,
-  mdiRss,
   mdiTimetable,
 } from '@mdi/js'
 import { usePreferredDark } from '@vueuse/core'
@@ -94,7 +94,7 @@ watch(
 
 const pages: { title: string; link: string; icon: string }[] = [
   { title: 'Viri', link: 'sources', icon: mdiFileDocumentOutline },
-  { title: 'Naročanje', link: 'subscribe', icon: mdiRss },
+  { title: 'Sporočila', link: 'notifications', icon: mdiBellOutline },
   { title: 'Nastavitve', link: 'settings', icon: mdiCog },
 ]
 

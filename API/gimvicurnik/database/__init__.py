@@ -291,3 +291,16 @@ class LunchMenu(Base):
 
     normal: Mapped[text | None]
     vegetarian: Mapped[text | None]
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[intpk]
+
+    date: Mapped[date_] = mapped_column(index=True)
+
+    title: Mapped[text]
+    content: Mapped[longtext | None]
+
+    visible: Mapped[bool]

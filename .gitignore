@@ -126,5 +126,11 @@ web_modules/
 config.yaml
 *.db
 
+# GimVicUrnik Firebase credentials
+firebasecredentials.json
+
+# Firebase service worker
+firebase-messaging-sw.js
+
 # Do not ignore .gitkeep files
 !.gitkeep

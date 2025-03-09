@@ -67,6 +67,20 @@ class ConfigURLs:
     api: str
 
 
+# --------- FIREBASE CONFIG ------
+
+
+@define(kw_only=True)
+class ConfigFirebase:
+    apiKey: str
+    authDomain: str
+    projectId: str
+    storageBucket: str
+    messagingSenderId: int
+    appId: str
+    vapidKey: str
+
+
 # -------- SENTRY CONFIG ---------
 
 
@@ -115,6 +129,7 @@ class Config:
     urls: ConfigURLs
     database: str
     cors: list[str] = Factory(list)
+    firebase: ConfigFirebase
     sentry: ConfigSentry | None = None
     logging: dict | str | None = field(default=None, converter=_identity_convertor)
     lessonTimes: list[ConfigLessonTime]

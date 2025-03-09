@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
 
+import { useNotificationsStore } from '@/stores/notifications'
 import { LunchType, useSettingsStore } from '@/stores/settings'
 import { localizeLunchType } from '@/utils/localization'
 
 const dialog = defineModel<boolean>()
 
 const { lunchType } = storeToRefs(useSettingsStore())
+
+const notificationsStore = useNotificationsStore()
+
+watch(lunchType, () => notificationsStore.updateUserFirestoreData())
 </script>
 
 <template>

@@ -5,6 +5,7 @@ import { useSnackbarStore } from '@/composables/snackbar'
 import { useDocumentsStore } from '@/stores/documents'
 import { useFoodStore } from '@/stores/food'
 import { useListsStore } from '@/stores/lists'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useSettingsStore } from '@/stores/settings'
 import { useTimetableStore } from '@/stores/timetable'
 
@@ -13,6 +14,7 @@ export async function updateAllData(showSuccess: boolean = true): Promise<void> 
   const foodStore = useFoodStore()
   const timetableStore = useTimetableStore()
   const listsStore = useListsStore()
+  const notificationsStore = useNotificationsStore()
 
   const { displaySnackbar } = useSnackbarStore()
 
@@ -33,6 +35,7 @@ export async function updateAllData(showSuccess: boolean = true): Promise<void> 
     timetableStore.updateSubstitutions(),
     timetableStore.updateEmptyClassrooms(),
     listsStore.updateLists(),
+    notificationsStore.updateNotifications(),
   ])
 
   if (showSuccess) {

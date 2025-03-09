@@ -16,6 +16,7 @@ from .blueprints import (
     FeedHandler,
     ListHandler,
     MenusHandler,
+    NotificationsHandler,
     ScheduleHandler,
     SubstitutionsHandler,
     TimetableHandler,
@@ -27,6 +28,7 @@ from .commands import (
     update_solsis_command,
     cleanup_database_command,
     update_timetable_command,
+    handle_notifications_command,
 )
 from .config import Config
 from .database import Session, SessionFactory
@@ -250,6 +252,7 @@ class GimVicUrnik:
         self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)
         self.app.cli.add_command(create_database_command)
+        self.app.cli.add_command(handle_notifications_command)
 
     def register_routes(self) -> None:
         """Register all application routes."""
@@ -258,6 +261,7 @@ class GimVicUrnik:
         TimetableHandler.register(self.app, self.config)
         SubstitutionsHandler.register(self.app, self.config)
         MenusHandler.register(self.app, self.config)
+        NotificationsHandler.register(self.app, self.config)
         ScheduleHandler.register(self.app, self.config)
         DocumentsHandler.register(self.app, self.config)
         FeedHandler.register(self.app, self.config)
