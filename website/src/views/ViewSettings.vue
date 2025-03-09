@@ -7,12 +7,14 @@ import {
   mdiMonitor,
   mdiPaletteOutline,
   mdiTabletCellphone,
+  mdiThemeLightDark,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
+  mdiWeatherSunny,
 } from '@mdi/js'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import SettingsAbout from '@/components/SettingsAbout.vue'
 import SettingsBaseAction from '@/components/SettingsBaseAction.vue'
@@ -25,7 +27,7 @@ import SettingsSelectMenuSnack from '@/components/SettingsSelectMenuSnack.vue'
 import SettingsSelectTheme from '@/components/SettingsSelectTheme.vue'
 import SettingsSetDataCollection from '@/components/SettingsSetDataCollection.vue'
 import SettingsSetMoodleToken from '@/components/SettingsSetMoodleToken.vue'
-import { useSettingsStore } from '@/stores/settings'
+import { ThemeType, useSettingsStore } from '@/stores/settings'
 import {
   localizeAccentColorName,
   localizeDataCollection,
@@ -65,6 +67,18 @@ const setDataCollectionDialog = ref(false)
 const setMoodleTokenDialog = ref(false)
 const aboutDialog = ref(false)
 const feedbackDialog = ref(false)
+
+const themeTypeIcon = computed(() => {
+  switch (themeType.value) {
+    case ThemeType.Light:
+      return mdiWeatherSunny
+    case ThemeType.Dark:
+      return mdiWeatherNight
+    case ThemeType.System:
+    default:
+      return mdiThemeLightDark
+  }
+})
 
 const appVersion = import.meta.env.VITE_VERSION
 
@@ -129,7 +143,7 @@ function updateApp() {
       v-model="selectThemeDialog"
       label="Barvna tema"
       :messages="localizeThemeType(themeType)"
-      :icon="mdiWeatherNight"
+      :icon="themeTypeIcon"
     />
 
     <SettingsBaseAction
