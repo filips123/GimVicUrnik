@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
   mdiDatabaseImportOutline,
-  mdiDesktopClassic,
   mdiInformationOutline,
   mdiKeyOutline,
   mdiMessageAlertOutline,
   mdiMonitor,
   mdiPaletteOutline,
   mdiTabletCellphone,
+  mdiThemeLightDark,
   mdiTuneVariant,
   mdiUpdate,
   mdiWeatherNight,
@@ -70,14 +70,13 @@ const feedbackDialog = ref(false)
 
 const themeTypeIcon = computed(() => {
   switch (themeType.value) {
-    case ThemeType.System:
-      return mdiDesktopClassic
     case ThemeType.Light:
       return mdiWeatherSunny
     case ThemeType.Dark:
       return mdiWeatherNight
+    case ThemeType.System:
     default:
-      return mdiWeatherNight
+      return mdiThemeLightDark
   }
 })
 
