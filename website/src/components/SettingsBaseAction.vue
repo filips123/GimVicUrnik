@@ -2,9 +2,10 @@
 const model = defineModel<boolean>()
 
 const { callback } = defineProps<{
-  icon: string
-  messages?: string
   label: string
+  messages?: string
+  icon: string
+  disabled?: boolean
   callback?: () => void
 }>()
 
@@ -18,6 +19,7 @@ function doAction() {
   <v-row>
     <v-col>
       <v-input
+        :disabled
         :messages
         :append-icon="icon"
         class="settings-base-action"
@@ -58,5 +60,11 @@ function doAction() {
 
 .settings-base-action:focus-visible {
   outline-color: rgba(var(--v-theme-secondary), calc(0.25 * var(--v-theme-overlay-multiplier)));
+}
+
+/* Style disabled element text */
+
+.settings-base-action.v-input--disabled > .v-input__control {
+  opacity: var(--v-disabled-opacity);
 }
 </style>
