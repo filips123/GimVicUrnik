@@ -21,6 +21,7 @@ import NavigationMobile from '@/components/NavigationMobile.vue'
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useSessionStore } from '@/stores/session'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
+import { accentColors } from '@/utils/colors'
 import { updateAllData } from '@/utils/update'
 
 const router = useRouter()
@@ -28,7 +29,7 @@ const { mobile } = useDisplay()
 const theme = useTheme()
 
 const { currentEntityList } = storeToRefs(useSessionStore())
-const { themeType, enablePullToRefresh } = storeToRefs(useSettingsStore())
+const { themeType, accentColor, enablePullToRefresh } = storeToRefs(useSettingsStore())
 
 const routerTitle = computed(() => router.currentRoute.value.meta.title)
 
@@ -70,6 +71,23 @@ watch(
     } else {
       theme.global.name.value = themeType
     }
+  },
+  { immediate: true },
+)
+
+watch(
+  accentColor,
+  accentColor => {
+    const color = accentColors.find(color => color.name === accentColor)!
+
+    theme.themes.value.light.colors.primary = color.primary
+    theme.themes.value.light.colors.secondary = color.secondaryLight
+    theme.themes.value.light.variables['current-time-color'] = color.currentTime
+
+    theme.themes.value.dark.colors.primary = color.primary
+    theme.themes.value.dark.colors.secondary = color.secondaryDark
+
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color.theme)
   },
   { immediate: true },
 )
