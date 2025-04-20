@@ -8,7 +8,7 @@ import { sl } from 'vuetify/locale'
 
 import { AccentColorName, accentColors } from '@/utils/colors'
 
-const accentColor = accentColors.find(color => color.name === AccentColorName.Black)!
+const accentColor = accentColors.find(color => color.name === AccentColorName.Green)!
 
 const lightTheme: ThemeDefinition = {
   dark: false,
