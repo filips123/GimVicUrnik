@@ -2,13 +2,14 @@ import { nextTick } from 'vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
 import { homeGuard, timetableGuard, welcomeGuard } from '@/router/guards'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useSessionStore } from '@/stores/session'
 
 const Timetable = () => import('../views/ViewTimetable.vue')
 const Menu = () => import('../views/ViewMenu.vue')
 const Circulars = () => import('../views/ViewCirculars.vue')
 const Sources = () => import('../views/ViewSources.vue')
-const Subscribe = () => import('../views/ViewSubscribe.vue')
+const Notifications = () => import('../views/ViewNotifications.vue')
 const Settings = () => import('../views/ViewSettings.vue')
 const Welcome = () => import('../views/ViewWelcome.vue')
 const NotFound = () => import('../views/NotFound.vue')
@@ -22,7 +23,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/menu', name: 'menu', component: Menu, meta: { title: 'Jedilnik', allowPullToRefresh: true, showDayTabs: true } },
   { path: '/circulars', name: 'circulars', component: Circulars, meta: { title: 'Okrožnice', allowPullToRefresh: true } },
   { path: '/sources', name: 'sources', component: Sources, meta: { title: 'Viri', allowPullToRefresh: true } },
-  { path: '/subscribe', name: 'subscribe', component: Subscribe, meta: { title: 'Naročanje' } },
+  { path: '/notifications', name: 'notifications', component: Notifications, meta: { title: 'Sporočila', allowPullToRefresh: true } },
   { path: '/settings', name: 'settings', component: Settings, meta: { title: 'Nastavitve' } },
   { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFound, meta: { title: 'Stran ni najdena' } },
 ]
@@ -41,6 +42,10 @@ router.beforeEach((to, from) => {
   // Call welcome guard that redirects the user to timetable if it has the entity set
   // Included just in case the route priority changes and welcome is matched first
   if (to.name === 'welcome') return welcomeGuard()
+
+  // Check the notifications
+  const notificationsStore = useNotificationsStore()
+  notificationsStore.updateNotifications()
 
   // Call timetable guard that redirects the user to the correct entity
   if (to.name === 'timetable') return timetableGuard(to, from)

@@ -4,6 +4,7 @@ import type { ThemeDefinition } from 'vuetify'
 import { createVuetify } from 'vuetify'
 import { VBtn, VCard, VDivider, VSheet, VTable } from 'vuetify/components'
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
+import { VTimePicker } from 'vuetify/labs/VTimePicker'
 import { sl } from 'vuetify/locale'
 
 import { AccentColorName, accentColors } from '@/utils/colors'
@@ -70,6 +71,10 @@ const vuetify = createVuetify({
   locale: {
     locale: 'sl',
     messages: { sl },
+  },
+
+  components: {
+    VTimePicker,
   },
 
   aliases: {
