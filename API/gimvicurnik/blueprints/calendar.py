@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from hashlib import sha256
 
 from flask import make_response, request
-from icalendar import Calendar, Event, vDuration, vRecur  # type: ignore
+from icalendar import Calendar, Event, vDuration, vRecur
 
 from .base import BaseHandler
 from ..database import Class, LunchSchedule, Session
@@ -175,8 +175,8 @@ def create_school_calendar(
     # Add all lessons to the calendar
     for day in range(len(weektable)):
         for time in range(len(weektable[0])):
-            if weektable[day][time]:
-                calendar.add_component(weektable[day][time])
+            if event := weektable[day][time]:  # type: ignore[assignment]
+                calendar.add_component(event)
 
     # Convert to iCal and return response
     response = make_response(calendar.to_ical().decode("utf-8").replace("\\", ""))
