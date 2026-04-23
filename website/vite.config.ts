@@ -142,6 +142,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_BUILDTIME': new Date(),
       // Convert Sentry variables to the correct types for better treeshaking
       'import.meta.env.VITE_SENTRY_ENABLED': env.VITE_SENTRY_ENABLED === 'true',
+      'import.meta.env.VITE_SENTRY_COLLECT_PII': env.VITE_SENTRY_COLLECT_PII === 'true',
+      'import.meta.env.VITE_SENTRY_ENABLE_LOGS': env.VITE_SENTRY_ENABLE_LOGS === 'true',
+      'import.meta.env.VITE_SENTRY_ENABLE_METRICS': env.VITE_SENTRY_ENABLE_METRICS === 'true',
       'import.meta.env.VITE_SENTRY_MAX_BREADCRUMBS': parseInt(env.VITE_SENTRY_MAX_BREADCRUMBS) || 100,
       'import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_TRACES_SAMPLE_RATE) || 0,
       'import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE': parseFloat(env.VITE_SENTRY_PROFILES_SAMPLE_RATE) || 0,
@@ -153,7 +156,7 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: true,
       manifest: true,
-      rollupOptions: {
+      rolldownOptions: {
         output: {
           // Use Webpack prefix for easier matching
           sourcemapPathTransform: file => {
@@ -174,8 +177,8 @@ export default defineConfig(({ mode }) => {
                 : name
             return `js/${name}.[hash].js`
           },
-          assetFileNames: ({ name }) => {
-            const extension = name!.split('.').at(1)
+          assetFileNames: ({ names }) => {
+            const extension = names[0].split('.').at(1)
             if (extension === 'css') return 'css/[name].[hash][extname]'
             if (/svg|png|jpe?g|gif|ico|bmp|tiff|webp/.test(extension!)) return 'img/[name].[hash][extname]'
             if (/woff|woff2|eot|ttf|otf/.test(extension!)) return 'font/[name].[hash][extname]'

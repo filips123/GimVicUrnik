@@ -39,6 +39,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      'vue/require-default-prop': 'off',
       'simple-import-sort/imports': 'error',
       eqeqeq: 'error',
       'no-cond-assign': 'error',

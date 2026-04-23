@@ -89,6 +89,8 @@ class ConfigSentry:
     dsn: str
     enabled: bool = True
     collectIPs: bool = False
+    enableLogs: bool = True
+    enableMetrics: bool = True
     releasePrefix: str = ""
     releaseSuffix: str = ""
     maxBreadcrumbs: int = 100

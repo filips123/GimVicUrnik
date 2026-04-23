@@ -15,8 +15,13 @@ jobs:
       url: https://urnik.gimvic.org/
 
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -24,7 +29,7 @@ jobs:
         run: corepack enable
 
       - name: Configure Poetry cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.cache/pip
@@ -35,7 +40,7 @@ jobs:
           restore-keys: ${{ runner.os }}-poetry-
 
       - name: Configure Yarn cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.cache/yarn
@@ -46,9 +51,9 @@ jobs:
           restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install Poetry
         run: |
@@ -57,9 +62,9 @@ jobs:
           echo "~/.local/bin" >> $GITHUB_PATH
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Prepare the SSH configuration
         run: |
@@ -71,7 +76,7 @@ jobs:
           ssh urnik "whoami"
 
       - name: Download the project configuration
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: ${{ secrets.CONFIG_REPOSITORY_NAME }}
           ssh-key: ${{ secrets.CONFIG_REPOSITORY_PRIVATE_KEY }}
@@ -110,7 +115,7 @@ jobs:
           ssh urnik "rm -rf $GIMVICURNIK_ROOT/app/*"
           scp -r dist/* urnik:$GIMVICURNIK_ROOT/app/
           export PREFIX="export VIRTUAL_ENV=$GIMVICURNIK_ROOT/venv PATH=$GIMVICURNIK_ROOT/venv/bin:\$PATH"
-          export SUFFIX="-C $GIMVICURNIK_ROOT/app --only main -E sentry -E mysql-c --sync"
+          export SUFFIX="-C $GIMVICURNIK_ROOT/app --only main -E sentry -E mysql --sync"
           ssh urnik "$PREFIX; sh -c '/opt/poetry/bin/poetry install $SUFFIX'"
 
       - name: Deploy the frontend
@@ -123,7 +128,7 @@ jobs:
         run: ssh urnik "sudo systemctl reload apache2.service"
 
       - name: Create a Sentry release
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@5657c9e888b4e2cc85f4d29143ea4131fde4a73a # v3.6.0
         env:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -131,3 +136,4 @@ jobs:
           projects: ${{ secrets.SENTRY_BACKEND_PROJECT }} ${{ secrets.SENTRY_FRONTEND_PROJECT }}
           version: ${{ env.VERSION }}
           environment: production
+          inject: false

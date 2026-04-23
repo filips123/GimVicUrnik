@@ -144,6 +144,8 @@ class GimVicUrnik:
             sentry_sdk.init(
                 dsn=sentry_config.dsn,
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
+                enable_logs=sentry_config.enableLogs,
+                enable_metrics=sentry_config.enableMetrics,
                 traces_sampler=_sentry_traces_sampler,
                 profiles_sampler=_sentry_profiler_sampler,
                 event_scrubber=EventScrubber(denylist=denylist),
