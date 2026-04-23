@@ -2,6 +2,10 @@
 /// <reference types="vite-plugin-pwa/client" />
 /// <reference types="vite-plugin-pwa/info" />
 
+// Declare Vuetify types, should be unnecessary in Vuetify v4
+// See: https://github.com/vuetifyjs/vuetify/issues/22766
+declare module 'vuetify/styles';
+
 interface ImportMetaEnv {
   readonly VITE_TITLE: string
   readonly VITE_SHORT: string
@@ -19,6 +23,9 @@ interface ImportMetaEnv {
 
   readonly VITE_SENTRY_DSN: string
   readonly VITE_SENTRY_ENABLED: boolean
+  readonly VITE_SENTRY_COLLECT_PII: boolean
+  readonly VITE_SENTRY_ENABLE_LOGS: boolean
+  readonly VITE_SENTRY_ENABLE_METRICS: boolean
   readonly VITE_SENTRY_MAX_BREADCRUMBS: number
   readonly VITE_SENTRY_TRACES_SAMPLE_RATE: number
   readonly VITE_SENTRY_PROFILES_SAMPLE_RATE: number

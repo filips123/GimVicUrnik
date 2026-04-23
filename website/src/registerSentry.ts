@@ -14,6 +14,7 @@ import type { Integration, Span, SpanAttributes, TransactionSource } from '@sent
 import {
   browserProfilingIntegration,
   browserSessionIntegration,
+  elementTimingIntegration,
   extraErrorDataIntegration,
   httpClientIntegration,
   httpContextIntegration,
@@ -66,6 +67,7 @@ export default function registerSentry(app: App, router: Router) {
     reportingObserverIntegration(),
     httpClientIntegration(),
     httpContextIntegration(),
+    elementTimingIntegration(),
     thirdPartyErrorFilterIntegration({
       filterKeys: [import.meta.env.VITE_SENTRY_APPLICATION_KEY],
       behaviour: 'apply-tag-if-contains-third-party-frames',
@@ -97,6 +99,10 @@ export default function registerSentry(app: App, router: Router) {
 
     environment: import.meta.env.MODE,
     release: releasePrefix + import.meta.env.VITE_VERSION + releaseSuffix,
+
+    sendDefaultPii: import.meta.env.VITE_SENTRY_COLLECT_PII,
+    enableLogs: import.meta.env.VITE_SENTRY_ENABLE_LOGS,
+    enableMetrics: import.meta.env.VITE_SENTRY_ENABLE_METRICS,
 
     integrations,
   })
