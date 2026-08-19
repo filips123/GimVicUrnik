@@ -10,6 +10,7 @@ const Circulars = () => import('../views/ViewCirculars.vue')
 const Sources = () => import('../views/ViewSources.vue')
 const Subscribe = () => import('../views/ViewSubscribe.vue')
 const Settings = () => import('../views/ViewSettings.vue')
+const Sports = () => import('../views/ViewSports.vue')
 const Welcome = () => import('../views/ViewWelcome.vue')
 const NotFound = () => import('../views/NotFound.vue')
 
@@ -21,6 +22,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/timetable/:type?/:value?', name: 'timetable', component: Timetable, meta: { title: 'Urnik', allowPullToRefresh: true, showDayTabs: true, showEntityName: true } },
   { path: '/menu', name: 'menu', component: Menu, meta: { title: 'Jedilnik', allowPullToRefresh: true, showDayTabs: true } },
   { path: '/circulars', name: 'circulars', component: Circulars, meta: { title: 'Okrožnice', allowPullToRefresh: true } },
+  { path: '/sports/:section?', name: 'sports', component: Sports, meta: { title: 'Tekme', allowPullToRefresh: true } },
   { path: '/sources', name: 'sources', component: Sources, meta: { title: 'Viri', allowPullToRefresh: true } },
   { path: '/subscribe', name: 'subscribe', component: Subscribe, meta: { title: 'Naročanje' } },
   { path: '/settings', name: 'settings', component: Settings, meta: { title: 'Nastavitve' } },

@@ -1,0 +1,5 @@
+Sports and future schema changes are managed with Alembic.
+
+Set GIMVICURNIK_CONFIG to the normal API YAML configuration, then run:
+
+    alembic upgrade head

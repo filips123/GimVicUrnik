@@ -3,14 +3,16 @@ import {
   mdiCog,
   mdiFileDocumentOutline,
   mdiFood,
+  mdiInformationOutline,
   mdiNewspaper,
   mdiRss,
   mdiTimetable,
+  mdiTrophy,
 } from '@mdi/js'
 import { usePreferredDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import PullToRefresh from 'pulltorefreshjs'
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { useDisplay, useTheme } from 'vuetify'
 
@@ -21,8 +23,14 @@ import NavigationMobile from '@/components/NavigationMobile.vue'
 import { useSnackbarStore } from '@/composables/snackbar'
 import { useSessionStore } from '@/stores/session'
 import { ThemeType, useSettingsStore } from '@/stores/settings'
+import type { SportSlug } from '@/stores/sports'
 import { accentColors } from '@/utils/colors'
 import { updateAllData } from '@/utils/update'
+
+const NavigationSportsMobile = defineAsyncComponent(
+  () => import('@/components/NavigationSportsMobile.vue'),
+)
+const SportsAdminLogin = defineAsyncComponent(() => import('@/components/SportsAdminLogin.vue'))
 
 const router = useRouter()
 const { mobile } = useDisplay()
@@ -35,7 +43,23 @@ const routerTitle = computed(() => router.currentRoute.value.meta.title)
 
 const allowPullToRefresh = computed(() => !!router.currentRoute.value.meta.allowPullToRefresh)
 const showEntityName = computed(() => !!router.currentRoute.value.meta.showEntityName)
-const showDayTabs = computed(() => !!router.currentRoute.value.meta.showDayTabs)
+const sportsRoute = computed(() => router.currentRoute.value.name === 'sports')
+const sportsSection = computed<SportSlug | 'schedule'>(() => {
+  const value = String(router.currentRoute.value.params.section || 'schedule')
+  return ['football', 'volleyball', 'basketball', 'schedule'].includes(value)
+    ? (value as SportSlug | 'schedule')
+    : 'schedule'
+})
+const sportsAdminSport = computed<SportSlug>(() =>
+  sportsSection.value === 'schedule' ? 'football' : sportsSection.value,
+)
+const showDayTabs = computed(
+  () =>
+    !!router.currentRoute.value.meta.showDayTabs ||
+    (sportsRoute.value && sportsSection.value === 'schedule'),
+)
+const sportsAdminDialog = ref(false)
+const sportsHelpDialog = ref(false)
 
 onMounted(() => {
   PullToRefresh.init({
@@ -49,7 +73,7 @@ onMounted(() => {
     shouldPullToRefresh: () =>
       enablePullToRefresh.value && allowPullToRefresh.value && !window.scrollY,
     onRefresh: (): void => {
-      updateAllData()
+      updateAllData(true, sportsRoute.value ? sportsSection.value : undefined)
     },
   })
 
@@ -102,6 +126,7 @@ const navigation: { title: string; link: string; icon: string }[] = [
   { title: 'Urnik', link: 'timetable', icon: mdiTimetable },
   { title: 'Jedilnik', link: 'menu', icon: mdiFood },
   { title: 'Okrožnice', link: 'circulars', icon: mdiNewspaper },
+  { title: 'Tekme', link: 'sports', icon: mdiTrophy },
 ]
 </script>
 
@@ -109,7 +134,18 @@ const navigation: { title: string; link: string; icon: string }[] = [
   <v-app>
     <v-app-bar class="app-bar pr-2">
       <v-app-bar-title>
-        <h1 class="app-title">{{ routerTitle }}</h1>
+        <div class="app-title-row">
+          <h1 class="app-title">{{ routerTitle }}</h1>
+          <v-btn
+            v-if="sportsRoute"
+            :icon="mdiInformationOutline"
+            title="Kako uporabljati Tekme"
+            aria-label="Kako uporabljati Tekme"
+            size="small"
+            variant="text"
+            @click="sportsHelpDialog = true"
+          />
+        </div>
         <div v-if="showEntityName" class="app-subtitle">{{ currentEntityList.join(', ') }}</div>
       </v-app-bar-title>
       <div role="navigation">
@@ -128,14 +164,44 @@ const navigation: { title: string; link: string; icon: string }[] = [
         <NavigationDay />
       </template>
     </v-app-bar>
-    <NavigationDesktop v-if="!mobile" :navigation="navigation" />
-    <v-main id="main">
+    <NavigationDesktop
+      v-if="!mobile"
+      :navigation="navigation"
+      @sports-admin="sportsAdminDialog = true"
+    />
+    <v-main id="main" :class="{ 'sports-main-active': mobile && sportsRoute }">
       <div id="ptr--target"></div>
       <v-container fluid class="h-100">
         <router-view />
       </v-container>
     </v-main>
-    <NavigationMobile v-if="mobile" :navigation="navigation" />
+    <NavigationMobile
+      v-if="mobile"
+      :navigation="navigation"
+      :dim-others="sportsRoute"
+      :sports-active="sportsRoute"
+      @sports-admin="sportsAdminDialog = true"
+    />
+    <NavigationSportsMobile v-if="mobile && sportsRoute" :section="sportsSection" />
+    <SportsAdminLogin
+      v-if="sportsAdminDialog"
+      v-model="sportsAdminDialog"
+      :initial-sport="sportsAdminSport"
+    />
+    <v-dialog v-model="sportsHelpDialog" max-width="560">
+      <v-card title="Kako uporabljati Tekme">
+        <v-card-text>
+          <ul class="sports-help-list">
+            <li>Kliknite na ime skupine, da odprete celotno statistiko skupine.</li>
+            <li>Kliknite razred v lestvici, da odprete statistiko te ekipe.</li>
+            <li>Pravila odprete z gumbom spodaj desno.</li>
+          </ul>
+        </v-card-text>
+        <v-card-actions
+          ><v-spacer /><v-btn text="Zapri" @click="sportsHelpDialog = false"
+        /></v-card-actions>
+      </v-card>
+    </v-dialog>
     <AppSnackbar />
   </v-app>
 </template>
@@ -155,6 +221,16 @@ const navigation: { title: string; link: string; icon: string }[] = [
   overflow-x: hidden;
 }
 
+.app-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sports-help-list li {
+  margin-bottom: 0.6rem;
+}
+
 .app-subtitle {
   font-size: 0.9rem;
   color: rgba(var(--v-theme-on-primary), var(--v-app-subtitle-opacity));
@@ -168,5 +244,9 @@ const navigation: { title: string; link: string; icon: string }[] = [
 .ptr--icon,
 .ptr--text {
   color: rgb(var(--v-theme-on-background)) !important;
+}
+
+.sports-main-active {
+  padding-bottom: 56px;
 }
 </style>

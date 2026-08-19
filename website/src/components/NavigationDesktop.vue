@@ -7,6 +7,18 @@ defineProps<{
 }>()
 
 const rail = ref(true)
+const emit = defineEmits<{ sportsAdmin: [] }>()
+let holdTimer: ReturnType<typeof setTimeout> | undefined
+
+function startHold(link: string) {
+  if (link !== 'sports') return
+  holdTimer = setTimeout(() => emit('sportsAdmin'), 700)
+}
+
+function cancelHold() {
+  if (holdTimer) clearTimeout(holdTimer)
+  holdTimer = undefined
+}
 </script>
 
 <template>
@@ -20,6 +32,10 @@ const rail = ref(true)
         :prepend-icon="page.icon"
         :to="{ name: page.link }"
         tabindex="0"
+        @pointerdown="startHold(page.link)"
+        @pointerup="cancelHold"
+        @pointerleave="cancelHold"
+        @contextmenu="page.link === 'sports' ? $event.preventDefault() : undefined"
       />
     </v-list>
     <template #append>

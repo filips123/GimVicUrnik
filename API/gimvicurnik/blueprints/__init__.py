@@ -4,5 +4,6 @@ from .feed import FeedHandler
 from .list import ListHandler
 from .menus import MenusHandler
 from .schedule import ScheduleHandler
+from .sports import SportsHandler
 from .substitutions import SubstitutionsHandler
 from .timetable import TimetableHandler

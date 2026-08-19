@@ -31,11 +31,27 @@ GimVičUrnik API uses YAML file for configuration. Example file can be found at 
 
 You need to obtain the e-classroom token as specified in the [Moodle Forum Discussion](https://moodle.org/mod/forum/discuss.php?d=193857). To run Solsis updater, you will also need Solsis API token. If you don't have one, you can use the e-classroom updater with the parse substitutions option instead, to parse substitution from PDF files.
 
+Sports administration requires `sports.secretKey` and three password hashes in the configuration. Generate each hash interactively with:
+
+```bash
+gimvicurnik hash-sports-password
+```
+
+Store the printed hashes under `sports.passwords.football`, `sports.passwords.volleyball` and `sports.passwords.basketball`. Never store plaintext passwords in the configuration.
+
 It is recommended to set the configuration file as `GIMVICURNIK_CONFIG` environment variable, but setting `--config` argument also mostly works.
 
 ### Preparation
 
 You need to run `gimvicurnik create-database` to create all required database tables before running other commands or the server.
+
+Existing deployments must back up their database and apply schema migrations before deploying a newer API version:
+
+```bash
+alembic upgrade head
+```
+
+Set `GIMVICURNIK_CONFIG` before running Alembic so it uses the same database as the API.
 
 ### Fetching Data
 

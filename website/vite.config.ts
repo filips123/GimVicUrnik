@@ -6,7 +6,6 @@ import Vue, { Options as VueOptions } from '@vitejs/plugin-vue'
 import { defineConfig, loadEnv, PluginOption } from 'vite'
 import { createHtmlPlugin as Html } from 'vite-plugin-html'
 import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa'
-import VueDevTools from 'vite-plugin-vue-devtools'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 import { version as appVersion } from './package.json'
@@ -41,6 +40,29 @@ export default defineConfig(({ mode }) => {
       cacheId: 'gimvicurnik',
       navigateFallback: 'index.html',
       navigateFallbackDenylist: [/\./, /\/api(?:[/?].*)?$/, /\?update=/],
+      // Admin editors contain no useful public offline data and are fetched only after login.
+      globIgnores: [
+        '**/SportsAdminLogin.*',
+        '**/SportsGroupEditor.*',
+        '**/SportsMatchDialog.*',
+        '**/SportsMatchCalendar.*',
+      ],
+      runtimeCaching: [
+        {
+          urlPattern: ({ request, url }) =>
+            request.method === 'GET' &&
+            /\/sports\/(?!admin(?:\/|$))(?:seasons(?:\/|$)|[^/]+\/seasons\/|schedule\/week\/)/.test(
+              url.pathname,
+            ),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'sports-public',
+            networkTimeoutSeconds: 4,
+            cacheableResponse: { statuses: [0, 200] },
+            expiration: { maxEntries: 60, maxAgeSeconds: 7 * 24 * 60 * 60 },
+          },
+        },
+      ],
     },
 
     manifest: {
@@ -97,6 +119,7 @@ export default defineConfig(({ mode }) => {
     '^/timetable(?:\\/)?': 'src/views/ViewTimetable.vue',
     '^/menu$': 'src/views/ViewMenu.vue',
     '^/circulars$': 'src/views/ViewCirculars.vue',
+    '^/sports(?:\\/)?': 'src/views/ViewSports.vue',
     '^/sources$': 'src/views/ViewSources.vue',
     '^/subscribe$': 'src/views/ViewSubscribe.vue',
     '^/settings$': 'src/views/ViewSettings.vue',
@@ -104,7 +127,6 @@ export default defineConfig(({ mode }) => {
 
   const plugins: PluginOption = [
     Vue(vueConfig),
-    VueDevTools(),
     Vuetify(),
     Html(htmlConfig),
     VitePWA(pwaConfig),

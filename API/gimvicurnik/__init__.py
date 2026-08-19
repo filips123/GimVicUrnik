@@ -17,6 +17,7 @@ from .blueprints import (
     ListHandler,
     MenusHandler,
     ScheduleHandler,
+    SportsHandler,
     SubstitutionsHandler,
     TimetableHandler,
 )
@@ -26,6 +27,7 @@ from .commands import (
     update_menu_command,
     update_solsis_command,
     cleanup_database_command,
+    hash_sports_password_command,
     update_timetable_command,
 )
 from .config import Config
@@ -71,6 +73,14 @@ class GimVicUrnik:
 
         self.app = Flask("gimvicurnik", static_folder=None, template_folder=None)
         self.app.config["GIMVICURNIK"] = self
+        if self.config.sports.secretKey:
+            self.app.secret_key = self.config.sports.secretKey
+        self.app.config.update(
+            SESSION_COOKIE_HTTPONLY=True,
+            SESSION_COOKIE_SAMESITE="Strict",
+            SESSION_COOKIE_SECURE=self.config.urls.website.startswith("https://"),
+            PERMANENT_SESSION_LIFETIME=datetime.timedelta(hours=self.config.sports.sessionHours),
+        )
 
         self.create_error_hooks()
         self.create_sentry_hooks()
@@ -213,14 +223,20 @@ class GimVicUrnik:
                 return response
 
             # Set request origin as allowed origin if it is allowed in config
-            if "*" in self.config.cors:
-                response.headers["Access-Control-Allow-Origin"] = "*"
+            if "*" in self.config.cors and "Origin" in request.headers:
+                response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
             elif "Origin" in request.headers and request.headers["Origin"] in self.config.cors:
                 response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
 
             # Allow Sentry-Trace and other tracing headers
-            tracing_headers = "Sentry-Trace, Traceparent, Tracestate, Baggage"
-            response.headers["Access-Control-Allow-Headers"] = tracing_headers
+            allowed_headers = (
+                "Content-Type, X-CSRF-Token, If-None-Match, Sentry-Trace, Traceparent, Tracestate, Baggage"
+            )
+            response.headers["Access-Control-Allow-Headers"] = allowed_headers
+            response.headers["Access-Control-Expose-Headers"] = "ETag"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Vary"] = "Origin"
 
             return response
 
@@ -252,6 +268,7 @@ class GimVicUrnik:
         self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)
         self.app.cli.add_command(create_database_command)
+        self.app.cli.add_command(hash_sports_password_command)
 
     def register_routes(self) -> None:
         """Register all application routes."""
@@ -261,6 +278,7 @@ class GimVicUrnik:
         SubstitutionsHandler.register(self.app, self.config)
         MenusHandler.register(self.app, self.config)
         ScheduleHandler.register(self.app, self.config)
+        SportsHandler.register(self.app, self.config)
         DocumentsHandler.register(self.app, self.config)
         FeedHandler.register(self.app, self.config)
         CalendarHandler.register(self.app, self.config)

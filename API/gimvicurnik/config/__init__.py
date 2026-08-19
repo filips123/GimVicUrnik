@@ -108,6 +108,25 @@ class ConfigLessonTime:
     end: timedelta = field(converter=_timedelta_convertor)
 
 
+# ---------- SPORTS CONFIG ----------
+
+
+@define(kw_only=True)
+class ConfigSportsPasswords:
+    football: str = ""
+    volleyball: str = ""
+    basketball: str = ""
+
+
+@define(kw_only=True)
+class ConfigSports:
+    secretKey: str = ""
+    passwords: ConfigSportsPasswords = Factory(ConfigSportsPasswords)
+    sessionHours: int = 2
+    loginAttempts: int = 5
+    loginWindowMinutes: int = 15
+
+
 # --------- MAIN CONFIG ----------
 
 
@@ -120,3 +139,4 @@ class Config:
     sentry: ConfigSentry | None = None
     logging: dict | str | None = field(default=None, converter=_identity_convertor)
     lessonTimes: list[ConfigLessonTime]
+    sports: ConfigSports = Factory(ConfigSports)

@@ -3,6 +3,7 @@ import typing
 
 import click
 from flask import current_app
+from werkzeug.security import generate_password_hash
 
 from datetime import datetime, timedelta
 from sqlalchemy import and_, or_
@@ -122,3 +123,11 @@ def create_database_command(ctx: click.Context, recreate: bool) -> None:
 
     logging.getLogger(__name__).info("Creating the database")
     Base.metadata.create_all(gimvicurnik.engine)
+
+
+@click.command("hash-sports-password", help="Generate a secure hash for a sports password.")
+@click.password_option(confirmation_prompt=True)
+def hash_sports_password_command(password: str) -> None:
+    """Print a password hash suitable for the sports configuration."""
+
+    click.echo(generate_password_hash(password, method="scrypt"))

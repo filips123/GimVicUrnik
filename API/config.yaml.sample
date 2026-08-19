@@ -20,6 +20,17 @@ urls:
 
 database: sqlite:///app.db
 
+sports:
+  # Generate hashes with: gimvicurnik hash-sports-password
+  secretKey: YOUR-LONG-RANDOM-SECRET-HERE
+  passwords:
+    football: YOUR-SCRYPT-HASH-HERE
+    volleyball: YOUR-SCRYPT-HASH-HERE
+    basketball: YOUR-SCRYPT-HASH-HERE
+  sessionHours: 2
+  loginAttempts: 5
+  loginWindowMinutes: 15
+
 sentry:
   dsn: YOUR-DSN-HERE
   enabled: true
