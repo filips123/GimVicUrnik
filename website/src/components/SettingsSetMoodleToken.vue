@@ -37,7 +37,6 @@ const inputShow = ref(false)
           label="Moodle žeton"
           :append-inner-icon="inputShow ? mdiEye : mdiEyeOff"
           :type="inputShow ? 'text' : 'password'"
-          autofocus
           @click:append-inner="inputShow = !inputShow"
           @keydown.enter="dialog = false"
         />

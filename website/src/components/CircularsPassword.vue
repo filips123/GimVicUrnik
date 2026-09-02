@@ -41,7 +41,6 @@ function closeDialog() {
           label="Geslo"
           :append-inner-icon="inputShow ? mdiEye : mdiEyeOff"
           :type="inputShow ? 'text' : 'password'"
-          autofocus
           @click:append-inner="inputShow = !inputShow"
           @keydown.enter="closeDialog()"
         />
