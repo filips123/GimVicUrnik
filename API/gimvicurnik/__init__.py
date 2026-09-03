@@ -21,17 +21,16 @@ from .blueprints import (
     TimetableHandler,
 )
 from .commands import (
+    cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
     update_solsis_command,
-    cleanup_database_command,
     update_timetable_command,
 )
 from .config import Config
 from .database import Session, SessionFactory
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
-from .utils.errors import format_exception
 from .utils.flask import DateConverter, ListConverter
 
 if typing.TYPE_CHECKING:
@@ -62,8 +61,8 @@ class GimVicUrnik:
         except yaml.YAMLError as error:
             raise ConfigParseError(str(error)) from error
         except cattrs.errors.BaseValidationError as error:
-            msg = "Failed to validate config\n" + format_exception(error)
-            raise ConfigValidationError(msg) from error
+            details = "\n".join(f"  - {msg}" for msg in cattrs.transform_error(error))
+            raise ConfigValidationError("Failed to validate config\n" + details) from error
 
         self.configure_logging()
         self.configure_sentry()

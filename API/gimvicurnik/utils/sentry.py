@@ -5,14 +5,8 @@ from unittest.mock import Mock
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
-    from typing import Any, TypeVar, ParamSpec
+    from typing import Any
     from collections.abc import Callable
-
-    TP = ParamSpec("TP")
-    TR = TypeVar("TR")
-
-    SP = ParamSpec("SP")
-    SR = TypeVar("SR")
 
 __all__ = ["sentry_available", "start_span", "start_transaction", "with_span", "with_transaction"]
 
@@ -44,10 +38,10 @@ except ImportError:
     sentry_available = False
 
 
-def with_transaction(
+def with_transaction[**P, R](
     pass_transaction: bool = False,
     **kwargs: Any,
-) -> Callable[[Callable[TP, TR]], Callable[TP, TR]]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Wrap the function inside the Sentry transaction.
 
@@ -60,8 +54,8 @@ def with_transaction(
     :return: The function decorator
     """
 
-    def _transaction_decorator(function: Callable[TP, TR]) -> Callable[TP, TR]:
-        def _transaction_wrapper(*fargs: TP.args, **fkwargs: TP.kwargs) -> TR:
+    def _transaction_decorator(function: Callable[P, R]) -> Callable[P, R]:
+        def _transaction_wrapper(*fargs: P.args, **fkwargs: P.kwargs) -> R:
             if not sentry_available:
                 if pass_transaction:
                     fkwargs["transaction"] = Mock()
@@ -77,10 +71,10 @@ def with_transaction(
     return _transaction_decorator
 
 
-def with_span(
+def with_span[**P, R](
     pass_span: bool = False,
     **kwargs: Any,
-) -> Callable[[Callable[SP, SR]], Callable[SP, SR]]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Wrap the function inside the Sentry span.
 
@@ -93,8 +87,8 @@ def with_span(
     :return: The function decorator
     """
 
-    def _span_decorator(function: Callable[SP, SR]) -> Callable[SP, SR]:
-        def _span_wrapper(*fargs: SP.args, **fkwargs: SP.kwargs) -> SR:
+    def _span_decorator(function: Callable[P, R]) -> Callable[P, R]:
+        def _span_wrapper(*fargs: P.args, **fkwargs: P.kwargs) -> R:
             if not sentry_available:
                 if pass_span:
                     fkwargs["span"] = Mock()
