@@ -6,7 +6,7 @@ sources:
     webserviceUrl: https://ucilnica.gimvic.org/webservice/rest/server.php
     pluginFileWebserviceUrl: https://ucilnica.gimvic.org/webservice/pluginfile.php
     pluginFileNormalUrl: https://ucilnica.gimvic.org/pluginfile.php
-    course: 118
+    course: 530
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
   solsis:
@@ -24,8 +24,6 @@ sentry:
   dsn: YOUR-DSN-HERE
   enabled: true
   collectIPs: false
-  enableLogs: true
-  enableMetrics: true
   maxBreadcrumbs: 100
   tracesSampleRate:
     commands: 1.0

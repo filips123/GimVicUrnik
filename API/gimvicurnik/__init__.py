@@ -101,6 +101,8 @@ class GimVicUrnik:
             import sentry_sdk
             from sentry_sdk.integrations.flask import FlaskIntegration
             from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+            from sentry_sdk.integrations.pyreqwest import PyreqwestIntegration
+            from sentry_sdk.integrations.logging import LoggingIntegration
             from sentry_sdk.integrations.pure_eval import PureEvalIntegration
             from sentry_sdk.scrubber import EventScrubber, DEFAULT_DENYLIST
 
@@ -143,14 +145,14 @@ class GimVicUrnik:
             sentry_sdk.init(
                 dsn=sentry_config.dsn,
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
-                enable_logs=sentry_config.enableLogs,
-                enable_metrics=sentry_config.enableMetrics,
                 traces_sampler=_sentry_traces_sampler,
                 profiles_sampler=_sentry_profiler_sampler,
                 event_scrubber=EventScrubber(denylist=denylist),
                 integrations=[
                     FlaskIntegration(transaction_style="url"),
                     SqlalchemyIntegration(),
+                    PyreqwestIntegration(),
+                    LoggingIntegration(capture_sentry_logs=True),
                     PureEvalIntegration(),
                 ],
                 environment=environment,

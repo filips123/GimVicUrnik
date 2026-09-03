@@ -34,10 +34,10 @@ from ..utils.pdf import extract_tables
 from ..utils.sentry import with_span
 
 if typing.TYPE_CHECKING:
-    from typing import Any
     from collections.abc import Iterator
     from io import BytesIO
     from mammoth.documents import Image, Hyperlink  # type: ignore
+    from pyreqwest.types import QueryParams, FormParams
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
     from ..config import ConfigSourcesEClassroom
@@ -86,35 +86,33 @@ class EClassroomUpdater(BaseMultiUpdater):
     def _mark_course_viewed(self) -> None:
         """Mark the course as viewed, so we are not removed for inactivity."""
 
-        params = {
+        params: QueryParams = {
             "moodlewsrestformat": "json",
         }
-        data = {
+        data: FormParams = {
             "courseid": self.config.course,
             "wstoken": self.config.token,
             "wsfunction": "core_course_view_course",
         }
 
         try:
-            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
-            response.raise_for_status()
+            self.client.post(self.config.webserviceUrl).query(params).form(data).build().send()
 
         except (OSError, ValueError) as error:
             raise ClassroomApiError("Error while accessing e-classroom API") from error
 
     def _get_internal_urls(self) -> Iterator[DocumentInfo]:
-        params = {
+        params: QueryParams = {
             "moodlewsrestformat": "json",
         }
-        data = {
+        data: FormParams = {
             "courseid": self.config.course,
             "wstoken": self.config.token,
             "wsfunction": "core_course_get_contents",
         }
 
         try:
-            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
-            response.raise_for_status()
+            response = self.client.post(self.config.webserviceUrl).query(params).form(data).build().send()
             contents = response.json()
 
         except (OSError, ValueError) as error:
@@ -159,17 +157,16 @@ class EClassroomUpdater(BaseMultiUpdater):
                 )
 
     def _get_external_urls(self) -> Iterator[DocumentInfo]:
-        params = {
+        params: QueryParams = {
             "moodlewsrestformat": "json",
         }
-        data = {
+        data: FormParams = {
             "wstoken": self.config.token,
             "wsfunction": "mod_url_get_urls_by_courses",
         }
 
         try:
-            response = self.requests.post(self.config.webserviceUrl, params=params, data=data)
-            response.raise_for_status()
+            response = self.client.post(self.config.webserviceUrl).query(params).form(data).build().send()
             contents = response.json()
 
         except (OSError, ValueError) as error:

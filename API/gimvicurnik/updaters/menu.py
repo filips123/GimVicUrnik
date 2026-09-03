@@ -41,13 +41,13 @@ class MenuUpdater(BaseMultiUpdater):
         """Download and parse the website to retrieve all menu URLs."""
 
         try:
-            response = self.requests.get(self.config.url)
-            response.raise_for_status()
+            response = self.client.get(self.config.url).build().send()
+            content = response.text()
         except OSError as error:
             raise MenuApiError("Error while downloading menu index") from error
 
         try:
-            soup = with_span(op="soup")(BeautifulSoup)(response.text, features="lxml")
+            soup = with_span(op="soup")(BeautifulSoup)(content, features="lxml")
         except ParserRejectedMarkup as error:
             raise MenuApiError("Error while parsing menu index") from error
 

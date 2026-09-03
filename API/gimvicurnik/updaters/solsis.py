@@ -7,7 +7,7 @@ from hashlib import sha256
 from itertools import product
 from random import getrandbits
 
-import requests
+from pyreqwest.client import SyncClientBuilder
 from sqlalchemy import insert
 
 from ..database import DocumentType, Substitution
@@ -117,7 +117,7 @@ class SolsisUpdater:
         date_to: date_,
     ) -> None:
         self.logger = logging.getLogger(__name__)
-        self.requests = requests.Session()
+        self.client = SyncClientBuilder().error_for_status(True).build()
         self.config = config
         self.session = session
 
@@ -196,8 +196,7 @@ class SolsisUpdater:
         url = f"{self.config.url}?{params}&signature={signature_hash}"
 
         try:
-            response = self.requests.get(url)
-            response.raise_for_status()
+            response = self.client.get(url).build().send()
             return typing.cast(TypeRoot, response.json())
 
         except (OSError, ValueError) as error:

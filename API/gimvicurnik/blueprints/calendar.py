@@ -175,7 +175,7 @@ def create_school_calendar(
     # Add all lessons to the calendar
     for day in range(len(weektable)):
         for time in range(len(weektable[0])):
-            if event := weektable[day][time]:  # type: ignore[assignment]
+            if event := weektable[day][time]:
                 calendar.add_component(event)
 
     # Convert to iCal and return response

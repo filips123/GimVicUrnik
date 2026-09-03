@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from hashlib import sha256
 
-import requests
+from pyreqwest.client import SyncClientBuilder
 from sqlalchemy import insert
 
 from ..database import Class, Classroom, Document, DocumentType, Lesson, Teacher
@@ -27,6 +27,7 @@ class TimetableUpdater:
 
     def __init__(self, config: ConfigSourcesTimetable, session: Session) -> None:
         self.logger = logging.getLogger(__name__)
+        self.client = SyncClientBuilder().error_for_status(True).build()
         self.config = config
         self.session = session
 
@@ -95,14 +96,13 @@ class TimetableUpdater:
         """Download the timetable JS file."""
 
         try:
-            response = requests.get(self.config.url)
-            response.raise_for_status()
-            content = response.content
+            response = self.client.get(self.config.url).build().send()
+            content = response.bytes()
 
         except OSError as error:
             raise TimetableApiError("Error while downloading the timetable") from error
 
-        return content.decode("utf8"), sha256(content).hexdigest()
+        return content.to_bytes().decode("utf8"), sha256(content).hexdigest()
 
     @with_span(op="parse")
     def _parse(self, document: Document | None, raw_data: str, new_hash: str, span: Span) -> None:
