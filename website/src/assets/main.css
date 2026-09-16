@@ -42,6 +42,16 @@ li {
   margin-left: 25px;
 }
 
+/* Add helper classes for trimming text edges */
+
+.text-trim-start {
+  text-box-trim: trim-start;
+}
+
+.text-trim-end {
+  text-box-trim: trim-end;
+}
+
 /* Add custom elevation style */
 
 .elevation-light {

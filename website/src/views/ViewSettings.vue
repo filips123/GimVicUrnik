@@ -178,7 +178,7 @@ function updateApp() {
 
     <SettingsBaseAction
       label="Posodobi podatke"
-      :messages="`Trenutna različica: ${dataVersion}`"
+      :messages="`Zadnja posodobitev: ${dataVersion}`"
       :callback="updateAllData"
       :icon="mdiUpdate"
     />
@@ -188,13 +188,14 @@ function updateApp() {
     <SettingsBaseAction
       v-model="aboutDialog"
       label="O aplikaciji"
-      :messages="`Trenutna različica: ${appVersion}`"
+      messages="Pomoč pri uporabi"
       :icon="mdiInformationOutline"
     />
 
     <SettingsBaseAction
       v-model="feedbackDialog"
       label="Povratne informacije"
+      messages="Prijava napak in predlogi"
       :icon="mdiMessageAlertOutline"
     />
 

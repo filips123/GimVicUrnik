@@ -20,6 +20,9 @@ const passwordDialog = ref(false)
 const selected = ref({} as Document)
 const action = ref<'content' | 'link'>('content')
 
+// We want to show the content tip only when the user clicks on a link for a document with a content
+const tip = computed(() => action.value === 'link' && Boolean(selected.value.content))
+
 const isUnlocked = computed(
   () =>
     !import.meta.env.VITE_CIRCULARS_PASSWORD ||
@@ -89,7 +92,7 @@ const circulars = computed(() => filterDocuments(['circular', 'other']))
     </v-lazy>
   </v-column>
 
-  <CircularsPassword v-model="passwordDialog" @update:callback="onAuth" />
+  <CircularsPassword v-model="passwordDialog" :tip="tip" @update:callback="onAuth" />
 
   <v-dialog v-model="contentDialog">
     <v-card :title="selected.title">

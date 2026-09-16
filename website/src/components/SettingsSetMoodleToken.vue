@@ -16,7 +16,7 @@ const inputShow = ref(false)
   <v-dialog v-model="dialog">
     <v-card title="Nastavite Moodle žeton">
       <template #text>
-        <p>
+        <p class="pb-4 text-trim-end">
           Nastavljanje Moodle žetona omogoča ogled dokumentov iz spletne učilnice brez dodatne
           prijave. Nastavljanje žetona ni obvezno, vendar se boste sicer pred ogledom dokumentov
           morda morali prijaviti. Žeton lahko pridobite po navodilih iz
@@ -26,11 +26,11 @@ const inputShow = ref(false)
             >dokumentacije</a
           >.
         </p>
-        <p class="pb-4">
+        <p class="border-s-md border-warning border-opacity-75 ps-3 py-0 mb-4">
           <strong>Opozorilo:</strong> Žetona ne zaupajte nikomur, saj omogoča prijavo v spletno
           učilnico z vašim računom. Žeton se shrani v shrambo spletne aplikacije in se ne pošilja
           strežnikom, razen spletni učilnici. Viden bo v vaši zgodovini brskalnika, zato jo primerno
-          zavarujte oziroma skrite.
+          zavarujte oziroma skrijte.
         </p>
         <v-text-field
           v-model="moodleToken"
