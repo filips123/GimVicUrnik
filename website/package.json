@@ -26,9 +26,9 @@
   "packageManager": "yarn@4.18.0",
   "dependencies": {
     "@mdi/js": "^7.4.47",
-    "@sentry/browser": "^10.50.0",
-    "@sentry/core": "^10.50.0",
-    "@sentry/vue": "^10.50.0",
+    "@sentry/browser": "^10.75.0",
+    "@sentry/core": "^10.75.0",
+    "@sentry/vue": "^10.75.0",
     "@vueuse/core": "^15.0.0",
     "pinia": "^4.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
