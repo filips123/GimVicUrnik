@@ -21,17 +21,17 @@ from .blueprints import (
     TimetableHandler,
 )
 from .commands import (
+    update_circulars_command,
+    cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
     update_menu_command,
     update_solsis_command,
-    cleanup_database_command,
     update_timetable_command,
 )
 from .config import Config
 from .database import Session, SessionFactory
 from .errors import ConfigError, ConfigParseError, ConfigReadError, ConfigValidationError
-from .utils.errors import format_exception
 from .utils.flask import DateConverter, ListConverter
 
 if typing.TYPE_CHECKING:
@@ -62,8 +62,8 @@ class GimVicUrnik:
         except yaml.YAMLError as error:
             raise ConfigParseError(str(error)) from error
         except cattrs.errors.BaseValidationError as error:
-            msg = "Failed to validate config\n" + format_exception(error)
-            raise ConfigValidationError(msg) from error
+            details = "\n".join(f"  - {msg}" for msg in cattrs.transform_error(error))
+            raise ConfigValidationError("Failed to validate config\n" + details) from error
 
         self.configure_logging()
         self.configure_sentry()
@@ -102,6 +102,8 @@ class GimVicUrnik:
             import sentry_sdk
             from sentry_sdk.integrations.flask import FlaskIntegration
             from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+            from sentry_sdk.integrations.pyreqwest import PyreqwestIntegration
+            from sentry_sdk.integrations.logging import LoggingIntegration
             from sentry_sdk.integrations.pure_eval import PureEvalIntegration
             from sentry_sdk.scrubber import EventScrubber, DEFAULT_DENYLIST
 
@@ -144,14 +146,14 @@ class GimVicUrnik:
             sentry_sdk.init(
                 dsn=sentry_config.dsn,
                 max_breadcrumbs=sentry_config.maxBreadcrumbs,
-                enable_logs=sentry_config.enableLogs,
-                enable_metrics=sentry_config.enableMetrics,
                 traces_sampler=_sentry_traces_sampler,
                 profiles_sampler=_sentry_profiler_sampler,
                 event_scrubber=EventScrubber(denylist=denylist),
                 integrations=[
                     FlaskIntegration(transaction_style="url"),
                     SqlalchemyIntegration(),
+                    PyreqwestIntegration(),
+                    LoggingIntegration(capture_sentry_logs=True),
                     PureEvalIntegration(),
                 ],
                 environment=environment,
@@ -248,6 +250,7 @@ class GimVicUrnik:
 
         self.app.cli.add_command(update_timetable_command)
         self.app.cli.add_command(update_eclassroom_command)
+        self.app.cli.add_command(update_circulars_command)
         self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)

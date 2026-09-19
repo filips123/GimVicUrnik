@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import and_, or_
 
 from ..database import Base, SessionFactory, Document, DocumentType
-from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, SolsisUpdater
+from ..updaters import EClassroomUpdater, MenuUpdater, TimetableUpdater, SolsisUpdater, CircularsUpdater
 from ..utils.sentry import with_transaction
 
 if typing.TYPE_CHECKING:
@@ -46,6 +46,19 @@ def update_eclassroom_command(parse_substitutions: bool, parse_lunch_schedules: 
         updater.update()
 
 # fmt: on
+
+
+@click.command("update-circulars", help="Update the circulars data.")
+@with_transaction(name="update-circulars", op="command")
+def update_circulars_command() -> None:
+    """Update circulars data from the e-classroom."""
+
+    logging.getLogger(__name__).info("Updating the circulars data")
+
+    with SessionFactory.begin() as session:
+        gimvicurnik: GimVicUrnik = current_app.config["GIMVICURNIK"]
+        updater = CircularsUpdater(gimvicurnik.config.sources.circulars, session)
+        updater.update()
 
 
 @click.command("update-menu", help="Update the menu data.")

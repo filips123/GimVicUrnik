@@ -1,3 +1,4 @@
+from .circulars import CircularsUpdater
 from .eclassroom import EClassroomUpdater
 from .menu import MenuUpdater
 from .solsis import SolsisUpdater

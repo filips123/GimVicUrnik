@@ -39,6 +39,14 @@ class ConfigSourcesEClassroom:
 
 
 @define(kw_only=True)
+class ConfigSourcesCirculars:
+    circularsUrl: str
+    attachmentsUrl: str
+    token: str
+    timezone: str = "Europe/Ljubljana"
+
+
+@define(kw_only=True)
 class ConfigSourcesMenu:
     url: str
 
@@ -54,6 +62,7 @@ class ConfigSourcesSolsis:
 class ConfigSources:
     timetable: ConfigSourcesTimetable
     eclassroom: ConfigSourcesEClassroom
+    circulars: ConfigSourcesCirculars
     menu: ConfigSourcesMenu
     solsis: ConfigSourcesSolsis
 
@@ -89,8 +98,6 @@ class ConfigSentry:
     dsn: str
     enabled: bool = True
     collectIPs: bool = False
-    enableLogs: bool = True
-    enableMetrics: bool = True
     releasePrefix: str = ""
     releaseSuffix: str = ""
     maxBreadcrumbs: int = 100

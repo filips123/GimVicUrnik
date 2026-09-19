@@ -1,0 +1,3 @@
+# Enable dependency cooldowns for security reasons
+[solver]
+min-release-age = 7

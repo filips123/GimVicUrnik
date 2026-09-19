@@ -64,7 +64,7 @@ export default function registerSentry(app: App, router: Router) {
   // Include additional always-enabled integrations
   const integrations = [
     extraErrorDataIntegration({ depth: 8 }),
-    reportingObserverIntegration(),
+    reportingObserverIntegration({ types: ['crash', 'intervention'] }),
     httpClientIntegration(),
     httpContextIntegration(),
     elementTimingIntegration(),

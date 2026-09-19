@@ -11,7 +11,7 @@ defineProps<{
 </script>
 
 <template>
-  <div>
+  <div class="d-flex flex-column ga-1">
     <p v-if="showDescription">
       Spletna aplikacija <em>Urnik Gimnazije Vič</em> prikazuje urnik, nadomeščanja, jedilnik ter
       razpored kosila za dijake in profesorje Gimnazije Vič.
@@ -31,15 +31,17 @@ defineProps<{
       napravi in uporabi za namene odpravljanja napak ter izboljšanja učinkovitosti. Podatki se ne
       uporabljajo za identifikacijo uporabnikov, oglaševanje ali druge namene.
     </p>
-    <span v-if="showDevelopers">Razvijalci:</span>
-    <ul v-if="showDevelopers">
-      <li>Filip Štamcar</li>
-      <li>Jakob Kralj</li>
-      <li>Peter Jereb</li>
-    </ul>
+    <div v-if="showDevelopers">
+      <p>Razvijalci:</p>
+      <ul>
+        <li>Filip Štamcar</li>
+        <li>Jakob Kralj</li>
+        <li>Peter Jereb</li>
+      </ul>
+    </div>
     <p v-if="showFeedback">
       Če ste odkrili napako v aplikaciji ali podatkih, želite prispevati k razvoju ali ponuditi
-      povratne informacije, lahko to naredite na
+      povratne informacije, lahko to storite na
       <a href="https://github.com/filips123/GimVicUrnik/wiki/Povratne-informacije" target="_blank"
         >uradnem repozitoriju</a
       >.
@@ -48,22 +50,21 @@ defineProps<{
       <p>Ker se aplikacija stalno razvija, so nam vaše povratne informacije zelo pomembne.</p>
       <p>
         Če ste odkrili napako v aplikaciji ali podatkih, želite prispevati k razvoju ali ponuditi
-        povratne informacije, lahko to naredite na
+        povratne informacije, lahko to storite na
         <a href="https://github.com/filips123/GimVicUrnik/wiki/Povratne-informacije" target="_blank"
           >uradnem repozitoriju</a
         >
-        (potreben je brezplačen GitHub račun). Če nimate GitHub računa, lahko povratne informacije
-        do nadaljnjega sporočite tudi prek
+        (potreben je brezplačen GitHub račun). Če nimate GitHub računa, nam lahko povratne
+        informacije sporočite tudi prek
         <a href="https://forms.gle/Ffhii1NvczBKimB18" target="_blank">vprašalnika</a>, ki je
-        dostopen brez prijave. V primeru večjih težav nam lahko pišete na
+        dostopen brez prijave. V primeru večjih težav pa nam lahko pišete na
         <a href="mailto:gimvicurnik@gmail.com" target="_blank">gimvicurnik@gmail.com</a>.
       </p>
       <p>
-        <strong>Pozor:</strong> Žal ne moremo ugoditi vsem vašim predlogom, vendar predlagamo, da si
-        že obstoječe funkcije pogledate na
-        <a href="https://github.com/filips123/GimVicUrnik/wiki" target="_blank"
-          >uradni dokumentaciji</a
-        >, saj se jih veliko uporabnikov morda ne zaveda.
+        Priporočamo še, da preverite
+        <a href="https://github.com/filips123/GimVicUrnik/wiki" target="_blank">dokumentacijo</a>,
+        kjer so podrobno opisane vse funkcionalnosti aplikacije ter navodila za namestitev in
+        uporabo.
       </p>
     </div>
   </div>

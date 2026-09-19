@@ -16,20 +16,47 @@ updateDocuments()
 
 const contentDialog = ref(false)
 const passwordDialog = ref(false)
+
 const selected = ref({} as Document)
+const action = ref<'content' | 'link'>('content')
 
-function handleDialog(clickedCircular: Document) {
-  selected.value = clickedCircular
+// We want to show the content tip only when the user clicks on a link for a document with a content
+const tip = computed(() => action.value === 'link' && Boolean(selected.value.content))
 
-  if (
+const isUnlocked = computed(
+  () =>
     !import.meta.env.VITE_CIRCULARS_PASSWORD ||
-    circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD
-  ) {
-    passwordDialog.value = false
+    circularsPassword.value === import.meta.env.VITE_CIRCULARS_PASSWORD,
+)
+
+function handleDialog(circular: Document) {
+  selected.value = circular
+  action.value = 'content'
+
+  if (isUnlocked.value) {
     contentDialog.value = true
   } else {
-    contentDialog.value = false
     passwordDialog.value = true
+  }
+}
+
+function handleLink(circular: Document) {
+  if (!isUnlocked.value) {
+    selected.value = circular
+    action.value = 'link'
+
+    passwordDialog.value = true
+  }
+}
+
+function onAuth() {
+  switch (action.value) {
+    case 'content':
+      contentDialog.value = true
+      break
+    case 'link':
+      window.open(tokenizeUrl(selected.value.url, moodleToken.value), '_blank')
+      break
   }
 }
 
@@ -43,21 +70,21 @@ const circulars = computed(() => filterDocuments(['circular', 'other']))
         :title="circular.title"
         :subtitle="localizeDate(circular.created)"
         :aria-label="circular.title"
-        :href="circular.content ? undefined : tokenizeUrl(circular.url, moodleToken)"
-        :target="circular.content ? undefined : '_blank'"
+        :href="!circular.content && isUnlocked ? tokenizeUrl(circular.url, moodleToken) : undefined"
+        :target="!circular.content && isUnlocked ? '_blank' : undefined"
         class="circular-item"
         height="48"
-        @[circular.content&&`click`]="handleDialog(circular)"
+        @click="circular.content ? handleDialog(circular) : handleLink(circular)"
       >
         <template v-if="circular.content" #append>
           <v-btn-icon
             :icon="mdiOpenInNew"
-            :href="tokenizeUrl(circular.url, moodleToken)"
-            target="_blank"
+            :href="isUnlocked ? tokenizeUrl(circular.url, moodleToken) : undefined"
+            :target="isUnlocked ? '_blank' : undefined"
             alt="Odpri dokument"
             title="Odpri dokument"
             aria-label="Odpri dokument"
-            @click.stop
+            @click.stop="handleLink(circular)"
             @keydown.stop
           />
         </template>
@@ -65,7 +92,7 @@ const circulars = computed(() => filterDocuments(['circular', 'other']))
     </v-lazy>
   </v-column>
 
-  <CircularsPassword v-model="passwordDialog" v-model:callback="contentDialog" />
+  <CircularsPassword v-model="passwordDialog" :tip="tip" @update:callback="onAuth" />
 
   <v-dialog v-model="contentDialog">
     <v-card :title="selected.title">
