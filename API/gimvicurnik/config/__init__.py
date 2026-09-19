@@ -43,7 +43,7 @@ class ConfigSourcesCirculars:
     circularsUrl: str
     attachmentsUrl: str
     token: str
-    timezone: str
+    timezone: str = "Europe/Ljubljana"
 
 
 @define(kw_only=True)
