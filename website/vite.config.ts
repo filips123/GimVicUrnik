@@ -139,7 +139,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Set environment variables about build environment
       'import.meta.env.VITE_VERSION': JSON.stringify(appVersion),
-      'import.meta.env.VITE_BUILDTIME': new Date(),
+      'import.meta.env.VITE_BUILDTIME': JSON.stringify(new Date().toISOString()),
       // Convert Sentry variables to the correct types for better treeshaking
       'import.meta.env.VITE_SENTRY_ENABLED': env.VITE_SENTRY_ENABLED === 'true',
       'import.meta.env.VITE_SENTRY_COLLECT_PII': env.VITE_SENTRY_COLLECT_PII === 'true',

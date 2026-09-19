@@ -9,7 +9,7 @@ This is the website part of the GimVičUrnik system. For more details see [the m
 
 ## Installation
 
-GimVičUrnik website requires Node.js 20 or later, and [Yarn](https://yarnpkg.com/) dependency manager, installed using [`corepack`](https://nodejs.org/docs/latest-v20.x/api/corepack.html):
+GimVičUrnik website requires Node.js 22 or later, and [Yarn](https://yarnpkg.com/) dependency manager, installed using [`corepack`](https://nodejs.org/docs/latest-v20.x/api/corepack.html):
 
 ```bash
 corepack enable
