@@ -7,7 +7,7 @@ import { useSnackbarStore } from '@/composables/snackbar'
 import { useSettingsStore } from '@/stores/settings'
 
 const dialog = defineModel<boolean>()
-const callback = defineModel<boolean>('callback', { default: undefined })
+const callback = defineModel<boolean>('callback', { default: false })
 
 defineProps<{ tip?: boolean }>()
 

@@ -2,6 +2,7 @@ import {
   addEventProcessor,
   browserTracingIntegration as originalBrowserTracingIntegration,
   captureException,
+  getAbsoluteUrl,
   getActiveSpan,
   getCurrentScope,
   getRootSpan,
@@ -10,7 +11,15 @@ import {
   setHttpStatus,
   startBrowserTracingNavigationSpan,
 } from '@sentry/browser'
+import {
+  NAVIGATION_ROUTE_ID,
+  SENTRY_OP,
+  URL_PATH_PARAMETER_KEY_BASE,
+  URL_TEMPLATE,
+} from '@sentry/conventions/attributes'
+import { BROWSER_NAVIGATION_SPAN_OP, BROWSER_PAGELOAD_SPAN_OP } from '@sentry/conventions/op'
 import type { Integration, Span, SpanAttributes, TransactionSource } from '@sentry/core'
+import { spanToJSON } from '@sentry/core'
 import {
   browserProfilingIntegration,
   browserSessionIntegration,
@@ -200,6 +209,8 @@ function browserTracingIntegration(router: Router): Integration {
   const instrumentNavigation = true
   const instrumentPageLoad = true
 
+  let hasHandledFirstPageLoad = false
+
   return {
     ...integration,
 
@@ -208,7 +219,9 @@ function browserTracingIntegration(router: Router): Integration {
 
       router.onError(error => captureException(error, { mechanism: { handled: false } }))
 
-      router.beforeEach((to, from) => {
+      router.beforeEach(to => {
+        const activePageLoadSpan = !hasHandledFirstPageLoad ? getActivePageLoadSpan() : undefined
+
         const attributes: SpanAttributes = {
           'route.name': to.name as string,
           'route.path': to.path as string,
@@ -216,6 +229,7 @@ function browserTracingIntegration(router: Router): Integration {
         }
 
         for (const key of Object.keys(to.params)) {
+          attributes[`${URL_PATH_PARAMETER_KEY_BASE}.${key}`] = to.params[key]
           attributes[`route.params.${key}`] = to.params[key]
         }
 
@@ -249,42 +263,54 @@ function browserTracingIntegration(router: Router): Integration {
           transactionHttpStatus = 404
         }
 
-        getCurrentScope().setTransactionName(transactionName)
-
-        const isPageLoadNavigation = from.name === undefined && from.matched.length === 0
-        const isNotFoundNavigation = from.path === to.path && to.name === 'notFound'
-
-        if (instrumentPageLoad && isPageLoadNavigation) {
-          const activeRootSpan = getActiveRootSpan()
-          if (activeRootSpan) {
-            // Replace the name of the existing root span
-            activeRootSpan.updateName(transactionName)
-
-            // Set router attributes on the existing pageload transaction
-            // This will override the source and origin and add params & query attributes
-            activeRootSpan.setAttributes({
-              ...attributes,
-              [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: transactionSource,
-              [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.pageload.vue',
-            })
-
-            // Set the HTTP status if it was specified
-            if (transactionHttpStatus) {
-              setHttpStatus(activeRootSpan, transactionHttpStatus)
-            }
-          }
+        if (transactionSource === 'route' && transactionHttpStatus !== 404) {
+          attributes[URL_TEMPLATE] = transactionName
         }
 
-        if (instrumentNavigation && !isPageLoadNavigation && !isNotFoundNavigation) {
-          attributes[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE] = transactionSource
-          attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN] = 'auto.navigation.vue'
+        if (to.name) {
+          attributes[NAVIGATION_ROUTE_ID] = to.name.toString()
+        }
 
-          // Start a new navigation transaction
-          const navigationSpan = startBrowserTracingNavigationSpan(client, {
-            name: transactionName,
-            op: 'navigation',
-            attributes,
+        getCurrentScope().setTransactionName(transactionName)
+
+        if (instrumentPageLoad && activePageLoadSpan) {
+          // Replace the name of the existing root span
+          activePageLoadSpan.updateName(transactionName)
+
+          // Set router attributes on the existing pageload transaction
+          // This will override the source and origin and add params & query attributes
+          activePageLoadSpan.setAttributes({
+            ...attributes,
+            [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: transactionSource,
+            [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.pageload.vue',
           })
+
+          // Set the HTTP status if it was specified
+          if (transactionHttpStatus) {
+            setHttpStatus(activePageLoadSpan, transactionHttpStatus)
+          }
+
+          hasHandledFirstPageLoad = true
+        }
+
+        if (instrumentNavigation && !activePageLoadSpan) {
+          // Start a new navigation transaction
+          const navigationSpan = startBrowserTracingNavigationSpan(
+            client,
+            {
+              name: transactionName,
+              op: 'navigation',
+              attributes: {
+                ...attributes,
+                [SENTRY_OP]: BROWSER_NAVIGATION_SPAN_OP,
+                [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: transactionSource,
+                [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.navigation.vue',
+              },
+            },
+            {
+              url: getAbsoluteUrl(to.fullPath ?? to.path),
+            },
+          )
 
           // Set the HTTP status if it was specified
           if (navigationSpan && transactionHttpStatus) {
@@ -296,7 +322,11 @@ function browserTracingIntegration(router: Router): Integration {
   }
 }
 
-function getActiveRootSpan(): Span | undefined {
+function getActivePageLoadSpan(): Span | undefined {
   const span = getActiveSpan()
-  if (span) return getRootSpan(span)
+
+  const rootSpan = span && getRootSpan(span)
+  if (!rootSpan) return undefined
+
+  return spanToJSON(rootSpan).data[SENTRY_OP] === BROWSER_PAGELOAD_SPAN_OP ? rootSpan : undefined
 }
