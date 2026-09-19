@@ -107,7 +107,7 @@ class BaseMultiUpdater(ABC):
                     import sentry_sdk
 
                     # fmt: off
-                    sentry_sdk.set_context("document", {
+                    sentry_sdk.set_context("Document", {
                         "URL": document.url,
                         "source": self.source,
                         "type​": document.type.value,
@@ -397,7 +397,7 @@ class BaseMultiUpdater(ABC):
             import sentry_sdk
 
             # fmt: off
-            sentry_sdk.set_context("document", {
+            sentry_sdk.set_context("Document", {
                 "URL": document.url,
                 "source": self.source,
                 "type​": document.type.value,

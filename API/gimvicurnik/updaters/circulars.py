@@ -62,7 +62,7 @@ class CircularsUpdater(BaseMultiUpdater):
             import sentry_sdk
 
             # fmt: off
-            sentry_sdk.set_context("document", {
+            sentry_sdk.set_context("Document", {
                 "URL": url,
                 "source": self.source,
                 "type​": doctype.value,
