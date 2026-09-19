@@ -39,6 +39,14 @@ class ConfigSourcesEClassroom:
 
 
 @define(kw_only=True)
+class ConfigSourcesCirculars:
+    circularsUrl: str
+    attachmentsUrl: str
+    token: str
+    timezone: str
+
+
+@define(kw_only=True)
 class ConfigSourcesMenu:
     url: str
 
@@ -54,6 +62,7 @@ class ConfigSourcesSolsis:
 class ConfigSources:
     timetable: ConfigSourcesTimetable
     eclassroom: ConfigSourcesEClassroom
+    circulars: ConfigSourcesCirculars
     menu: ConfigSourcesMenu
     solsis: ConfigSourcesSolsis
 

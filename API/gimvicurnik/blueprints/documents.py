@@ -31,7 +31,8 @@ class DocumentsHandler(BaseHandler):
                 )
                 .order_by(
                     Document.created,
-                    Document.modified,
+                    Document.title,
+                    Document.url,
                 )
             )
             # fmt: on

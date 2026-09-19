@@ -21,6 +21,7 @@ from .blueprints import (
     TimetableHandler,
 )
 from .commands import (
+    update_circulars_command,
     cleanup_database_command,
     create_database_command,
     update_eclassroom_command,
@@ -249,6 +250,7 @@ class GimVicUrnik:
 
         self.app.cli.add_command(update_timetable_command)
         self.app.cli.add_command(update_eclassroom_command)
+        self.app.cli.add_command(update_circulars_command)
         self.app.cli.add_command(update_menu_command)
         self.app.cli.add_command(update_solsis_command)
         self.app.cli.add_command(cleanup_database_command)

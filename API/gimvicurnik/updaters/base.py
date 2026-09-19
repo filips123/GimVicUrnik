@@ -13,7 +13,8 @@ from ..database import Document
 from ..utils.sentry import sentry_available, with_span
 
 if typing.TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, Literal
+    from collections.abc import Mapping
     from collections.abc import Iterator
     from logging import Logger
     from pyreqwest.client import SyncClient
@@ -178,9 +179,8 @@ class BaseMultiUpdater(ABC):
 
         # == DOCUMENT PROCESSING
 
-        # Get the modified time if it is set, otherwise use the current time
-        created = document.created or datetime.datetime.now(datetime.timezone.utc)
-        modified = document.modified or created
+        # Get the time when the processing started
+        current = datetime.datetime.now(datetime.timezone.utc)
 
         # Check if the document has changed without downloading it and comparing hashes
         # This may be done by comparing modified dates or other source-specific logic
@@ -191,18 +191,31 @@ class BaseMultiUpdater(ABC):
         parsable = self.document_needs_parsing(document)
         extractable = self.document_needs_extraction(document)
 
-        action = "skipped"
-        content = None
-        crashed = False
-        new_hash = None
+        # Check if the document needs to be downloaded
+        # This may happen also for other reasons than parsing or extraction
+        downloadable = self.document_needs_download(document) or parsable or extractable
 
-        if changed and (parsable or extractable):
+        action: Literal["created", "updated", "skipped", "crashed"] = "skipped"
+        crashed: bool = False
+
+        stream: BytesIO = BytesIO()
+        headers: Mapping[str, str] = {}
+        new_hash: str | None = None
+
+        if changed and downloadable:
             # Download the document and get its content and hash
             # If this fails, we can't do anything other than to skip the document
-            stream, new_hash = self.download_document(document)
+            stream, headers, new_hash = self.download_document(document)
 
             # Check if the document hash or document URL have changed
-            if record and record.parsed and record.hash == new_hash and record.url == document.url:
+            # Documents are considered unchanged if the hash and URL are the same, and if the document was successfully parsed before
+            # Unparsable documents (parsed in the database is none) are also considered unchanged if the hash and URL are the same
+            if (
+                record
+                and record.parsed is not False
+                and record.hash == new_hash
+                and record.url == document.url
+            ):
                 changed = False
             else:
                 action = "updated"
@@ -240,6 +253,26 @@ class BaseMultiUpdater(ABC):
             span.set_tag("document.action", "skipped")
 
             return
+
+        # Get the modified date from the subclassed method, by default obtained from the document info
+        # If not provided, use the start of the processing
+        modified = self.get_document_modified(document, stream, headers) or current
+        stream.seek(0)
+
+        # Get the created date from the subclassed method, by default obtained from the document info
+        # If not provided but document is already stored, use the existing created date
+        # If that is not provided, use the modified date
+        created = (
+            self.get_document_created(document, stream, headers)
+            or (record.created if record else None)
+            or modified
+        )
+        stream.seek(0)
+
+        span.set_tag("document.created", created)
+        span.set_tag("document.modified", modified)
+
+        content: str | None = None
 
         if parsable:
             # If there is no date, we can't do anything other than to skip the document
@@ -281,12 +314,13 @@ class BaseMultiUpdater(ABC):
             record.modified = modified
             record.effective = effective
 
-            if parsable:
+            if downloadable:
                 record.hash = new_hash
+
+            if parsable:
                 record.parsed = True
 
             if extractable:
-                record.hash = new_hash
                 record.content = content
                 record.parsed = True
 
@@ -336,14 +370,14 @@ class BaseMultiUpdater(ABC):
         return self.session.query(Document).filter(Document.type == document.type, criterion).first()
 
     @with_span(op="download")
-    def download_document(self, document: DocumentInfo) -> tuple[BytesIO, str]:
+    def download_document(self, document: DocumentInfo) -> tuple[BytesIO, Mapping[str, str], str]:
         """Download a document and return its content stream and hash"""
 
         try:
             response = self.client.get(self.tokenize_url(document.url)).build().send()
             content = response.bytes()
             sha = sha256(content).hexdigest()
-            return BytesIO(content), sha
+            return BytesIO(content), response.headers, sha
 
         except OSError as error:
             raise self.error(f"Error while downloading a {document.type.value} document") from error
@@ -398,13 +432,40 @@ class BaseMultiUpdater(ABC):
     def get_document_title(self, document: DocumentInfo) -> str:
         """Return the normalized document title. Must be set by subclasses."""
 
+    # noinspection PyMethodMayBeStatic
+    def get_document_created(
+        self,
+        document: DocumentInfo,
+        stream: BytesIO,
+        headers: Mapping[str, str],
+    ) -> datetime.datetime | None:
+        """Return the document created date from content or headers. May be set by subclasses. Defaults to date from document info."""
+
+        return document.created
+
+    # noinspection PyMethodMayBeStatic
+    def get_document_modified(
+        self,
+        document: DocumentInfo,
+        stream: BytesIO,
+        headers: Mapping[str, str],
+    ) -> datetime.datetime | None:
+        """Return the document modified date from content or headers. May be set by subclasses. Defaults to date from document info."""
+
+        return document.modified
+
     @abstractmethod
     def get_document_effective(self, document: DocumentInfo) -> datetime.date | None:
         """Return the document effective date in a local timezone. Must be set by subclasses."""
 
+    def document_needs_download(self, document: DocumentInfo) -> bool:
+        """Return whether the document must be downloaded. May be set by subclasses. Defaults to whether the document needs parsing or content extraction."""
+
+        return self.document_needs_parsing(document) or self.document_needs_extraction(document)
+
     # noinspection PyMethodMayBeStatic
     def document_has_changed(self, document: DocumentInfo, existing: Document) -> bool:
-        """Return whether the document has changed. May be set by subclasses."""
+        """Return whether the document has changed. May be set by subclasses. Defaults to always relying only on hash comparison."""
 
         # We treat all documents as changed by default
         # We won't reparse documents with the same hash anyway

@@ -7,6 +7,11 @@ sources:
     pluginFileWebserviceUrl: https://ucilnica.gimvic.org/webservice/pluginfile.php
     pluginFileNormalUrl: https://ucilnica.gimvic.org/pluginfile.php
     course: 530
+  circulars:
+    circularsUrl: CIRCULAR-LISTING-URL
+    attachmentsUrl: ATTACHMENT-LISTING-URL
+    token: YOUR-TOKEN-HERE
+    timezone: Europe/Ljubljana
   menu:
     url: https://www.gimvic.org/delovanjesole/solske_sluzbe_in_solski_organi/solska_prehrana/
   solsis:

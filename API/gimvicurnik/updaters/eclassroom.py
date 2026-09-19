@@ -9,7 +9,6 @@ from datetime import date, datetime, timezone
 from itertools import product
 from urllib.parse import urlparse
 
-import mammoth  # type: ignore
 from openpyxl import load_workbook
 from sqlalchemy import insert
 
@@ -23,6 +22,7 @@ from ..errors import (
     SubstitutionsFormatError,
 )
 from ..utils.database import get_or_create
+from ..utils.docx import extract_content
 from ..utils.normalizers import (
     format_substitution,
     normalize_classroom_name,
@@ -36,7 +36,6 @@ from ..utils.sentry import with_span
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator
     from io import BytesIO
-    from mammoth.documents import Image, Hyperlink  # type: ignore
     from pyreqwest.types import QueryParams, FormParams
     from sqlalchemy.orm import Session
     from sentry_sdk.tracing import Span
@@ -314,30 +313,15 @@ class EClassroomUpdater(BaseMultiUpdater):
         return False
 
     @with_span(op="content", pass_span=True)
-    def extract_document(self, document: DocumentInfo, content: bytes, span: Span) -> str | None:  # type: ignore[override]
+    def extract_document(self, document: DocumentInfo, content: BytesIO, span: Span) -> str | None:  # type: ignore[override]
         """Extract the document content and return it as HTML."""
 
         span.set_tag("document.source", self.source)
         span.set_tag("document.type", document.type.value)
         span.set_tag("document.format", document.extension)
 
-        def ignore_images(_image: Image) -> dict:
-            return {}
-
-        def transform_hyperlinks(hyperlink: Hyperlink) -> Hyperlink:
-            hyperlink.target_frame = "_blank"
-            return hyperlink
-
         # Convert DOCX to HTML
-        result = mammoth.convert_to_html(
-            content,
-            convert_image=ignore_images,
-            transform_document=mammoth.transforms.element_of_type(
-                mammoth.documents.Hyperlink,
-                transform_hyperlinks,
-            ),
-        )
-        return typing.cast(str, result.value)
+        return extract_content(content)
 
     def _parse_substitutions_pdf(self, stream: BytesIO, effective: date) -> None:
         """Parse the substitutions pdf document."""
