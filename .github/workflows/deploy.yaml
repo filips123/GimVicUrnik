@@ -115,8 +115,8 @@ jobs:
           ssh urnik "rm -rf $GIMVICURNIK_ROOT/app/*"
           scp -r dist/* urnik:$GIMVICURNIK_ROOT/app/
           export PREFIX="export VIRTUAL_ENV=$GIMVICURNIK_ROOT/venv PATH=$GIMVICURNIK_ROOT/venv/bin:\$PATH"
-          export SUFFIX="-C $GIMVICURNIK_ROOT/app --only main -E sentry -E mysql --sync"
-          ssh urnik "$PREFIX; sh -c '/opt/poetry/bin/poetry install $SUFFIX'"
+          export SUFFIX="-C $GIMVICURNIK_ROOT/app --only main -E sentry -E mysql"
+          ssh urnik "$PREFIX; sh -c '/opt/poetry/bin/poetry sync $SUFFIX'"
 
       - name: Deploy the frontend
         run: |
@@ -134,6 +134,6 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         with:
           projects: ${{ secrets.SENTRY_BACKEND_PROJECT }} ${{ secrets.SENTRY_FRONTEND_PROJECT }}
-          version: ${{ env.VERSION }}
+          release: ${{ env.VERSION }}
           environment: production
           inject: false
