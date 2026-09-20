@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import typing
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 
 from flask import make_response, request
@@ -21,6 +21,8 @@ if typing.TYPE_CHECKING:
 
 
 def create_calendar(name: str, url: str) -> Calendar:
+    """Construct a base iCalendar object."""
+
     calendar = Calendar()
 
     calendar.add("PRODID", "gimvicurnik")
@@ -36,6 +38,15 @@ def create_calendar(name: str, url: str) -> Calendar:
     calendar.add("REFRESH-INTERVAL", vDuration(timedelta(hours=1)))
 
     return calendar
+
+
+def add_property(event: Event, property: str, value: str | None, fallback: str | None = None) -> None:
+    """Add a property to an iCalendar event, using a fallback if the main value is not set."""
+
+    final = value or fallback
+
+    if final:
+        event.add(property, final)
 
 
 @with_span(op="generate")
@@ -74,7 +85,7 @@ def create_school_calendar(
 
                 # Create event and add internal properties
                 event = Event()
-                event.add("DTSTAMP", datetime.now())
+                event.add("DTSTAMP", datetime.now(timezone.utc))
                 event.add("CATEGORIES", ["Lesson", "Normal"])
                 event.add("COLOR", "darkgreen")
                 event.add(
@@ -92,10 +103,10 @@ def create_school_calendar(
                 )
 
                 # Add basic lesson properties
-                event.add("SUMMARY", subject["subject"])
-                event.add("ATTENDEE", subject["class"])
-                event.add("ORGANIZER", subject["teacher"])
-                event.add("LOCATION", subject["classroom"])
+                add_property(event, "SUMMARY", subject["subject"], "/")
+                add_property(event, "ATTENDEE", subject["class"])
+                add_property(event, "ORGANIZER", subject["teacher"])
+                add_property(event, "LOCATION", subject["classroom"])
                 event.add("DURATION", timedelta(minutes=45))
 
                 # Lesson "starts" on -08-31, so it can repeat properly
@@ -132,7 +143,7 @@ def create_school_calendar(
 
                 # Create event and add internal properties
                 event = Event()
-                event.add("DTSTAMP", datetime.now())
+                event.add("DTSTAMP", datetime.now(timezone.utc))
                 event.add("CATEGORIES", ["Lesson", "Substitution"])
                 event.add("COLOR", "darkred")
                 event.add(
@@ -153,11 +164,11 @@ def create_school_calendar(
                 )
 
                 # Add basic substitution properties
-                event.add("SUMMARY", subject["subject"])
-                event.add("DESCRIPTION", subject["notes"] or "")
-                event.add("ATTENDEE", subject["class"])
-                event.add("ORGANIZER", subject["teacher"])
-                event.add("LOCATION", subject["classroom"])
+                add_property(event, "SUMMARY", subject["subject"], "/")
+                add_property(event, "DESCRIPTION", subject["notes"])
+                add_property(event, "ATTENDEE", subject["class"])
+                add_property(event, "ORGANIZER", subject["teacher"])
+                add_property(event, "LOCATION", subject["classroom"])
 
                 # Add start and end dates
                 date_ = datetime.strptime(subject["date"], "%Y-%m-%d")
@@ -179,7 +190,7 @@ def create_school_calendar(
                 calendar.add_component(event)
 
     # Convert to iCal and return response
-    response = make_response(calendar.to_ical().decode("utf-8").replace("\\", ""))
+    response = make_response(calendar.to_ical().decode("utf-8"))
     response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
     response.headers["Content-Type"] = "text/calendar; charset=utf-8"
     return response
@@ -217,7 +228,7 @@ def create_schedule_calendar(
 
             # Create event and add internal properties
             event = Event()
-            event.add("DTSTAMP", datetime.now())
+            event.add("DTSTAMP", datetime.now(timezone.utc))
             event.add("CATEGORIES", ["Lunch"])
             event.add("COLOR", "darkblue")
             event.add(
@@ -237,9 +248,9 @@ def create_schedule_calendar(
             start = datetime.combine(model.date, model.time)
             end = start + timedelta(minutes=15)
             event.add("SUMMARY", "Kosilo")
-            event.add("DESCRIPTION", model.notes or "")
-            event.add("LOCATION", model.location or "")
-            event.add("ATTENDEE", classname)
+            add_property(event, "DESCRIPTION", model.notes)
+            add_property(event, "LOCATION", model.location)
+            add_property(event, "ATTENDEE", classname)
             event.add("DTSTART", start)
             event.add("DTEND", end)
 
